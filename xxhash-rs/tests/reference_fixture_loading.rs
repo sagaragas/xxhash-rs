@@ -7,6 +7,7 @@
 //! - The parity harness can invoke the reference and parse its output
 //! - Fixture metadata is recorded for reproducibility
 
+#[allow(dead_code)]
 mod fixtures;
 
 use fixtures::reference;

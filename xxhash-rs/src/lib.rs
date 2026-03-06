@@ -5,18 +5,22 @@
 //! Supported algorithms:
 //! - **XXH32** – 32-bit hash
 //! - **XXH64** – 64-bit hash
-//! - **XXH3_64** – XXH3 64-bit variant
-//! - **XXH3_128** – XXH3 128-bit variant
+//! - **XXH3_64** – XXH3 64-bit variant (planned)
+//! - **XXH3_128** – XXH3 128-bit variant (planned)
 //!
 //! This implementation is derived from the published xxHash specification and
 //! BSD-licensed reference library material. It does not incorporate any
 //! GPL-licensed CLI source code.
 
+/// Shared low-level helpers for byte-order reads, rotation, and avalanche.
+pub mod helpers;
+
 /// XXH32 algorithm implementation.
-pub mod xxh32 {}
+pub mod xxh32;
 
 /// XXH64 algorithm implementation.
-pub mod xxh64 {}
+pub mod xxh64;
 
 /// XXH3 algorithm family (64-bit and 128-bit variants).
+/// Planned for a later feature.
 pub mod xxh3 {}
