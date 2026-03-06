@@ -590,6 +590,8 @@ def _update_run_index(run_id: str, manifest: dict):
         "status": manifest["status"],
         "claim_ready": manifest["claim_ready"],
         "scenario_count": manifest["scenario_count"],
+        "revision": manifest.get("environment", {}).get("repo_revision", ""),
+        "manifest_hashes": manifest.get("manifest_hashes", {}),
     })
     _write_json(index_path, index)
 

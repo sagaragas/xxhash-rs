@@ -27,7 +27,7 @@
     "require_artifact_checksums": true,
     "require_matching_revision": true,
     "require_matching_manifests": true,
-    "minimum_runs": 1
+    "minimum_runs": 3
   },
   "latest_resolution": {
     "description": "latest resolves only to the most recent complete, claim-ready run",

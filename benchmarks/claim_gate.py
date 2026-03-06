@@ -153,8 +153,80 @@ def check_artifact_checksums(run_dir: Path) -> tuple[bool, list[str]]:
     return len(issues) == 0, issues
 
 
+def get_compatible_run_set(manifest: dict) -> list[dict]:
+    """Return the subset of claim-ready index entries that share the target
+    manifest's revision and manifest/policy hashes.
+
+    The compatible run set is the only set that may be counted toward
+    claim-readiness thresholds.  Runs with a different revision or
+    different scenario/comparator/policy hashes are excluded even if
+    they are individually claim-ready.
+    """
+    index_path = RUNS_DIR / "index.json"
+    if not index_path.exists():
+        return []
+
+    index = load_json(index_path)
+
+    target_revision = manifest.get("environment", {}).get("repo_revision")
+    target_hashes = manifest.get("manifest_hashes", {})
+
+    compatible = []
+    for entry in index.get("runs", []):
+        # Must be complete and claim-ready
+        if entry.get("status") != "complete" or entry.get("claim_ready") is not True:
+            continue
+
+        # Check revision match (from index entry or fall back to manifest file)
+        entry_revision = entry.get("revision")
+        entry_hashes = entry.get("manifest_hashes", {})
+
+        # If index entry lacks extended metadata, try loading from manifest file
+        if not entry_revision or not entry_hashes:
+            run_dir = RUNS_DIR / entry["run_id"]
+            manifest_path = run_dir / "manifest.json"
+            if manifest_path.exists():
+                run_manifest = load_json(manifest_path)
+                if not entry_revision:
+                    entry_revision = run_manifest.get("environment", {}).get("repo_revision")
+                if not entry_hashes:
+                    entry_hashes = run_manifest.get("manifest_hashes", {})
+
+        # Filter: revision must match
+        if entry_revision != target_revision:
+            continue
+
+        # Filter: all required hashes must match
+        required_keys = ["scenarios", "comparators", "policy"]
+        hashes_match = all(
+            entry_hashes.get(k) == target_hashes.get(k)
+            for k in required_keys
+        )
+        if not hashes_match:
+            continue
+
+        # Augment the entry with the resolved metadata for downstream callers
+        compatible.append({
+            **entry,
+            "revision": entry_revision,
+            "manifest_hashes": entry_hashes,
+        })
+
+    return compatible
+
+
 def check_run_set_consistency(manifest: dict, policy: dict) -> tuple[bool, list[str]]:
-    """Check that the run's revision and manifests are consistent with the run set."""
+    """Check that the run's revision and manifests are consistent with the
+    compatible run set.
+
+    The compatible run set consists of all claim-ready runs that share
+    the same revision and manifest/policy hashes as the target run.
+    Consistency requires:
+    1. The target run records a revision and all required manifest hashes.
+    2. The compatible run set is non-empty.
+    3. Every member of the compatible run set has exactly one unique
+       revision and one unique set of required hashes (singleton sets).
+    """
     issues = []
     claim_policy = policy.get("claim_readiness", {})
 
@@ -173,24 +245,39 @@ def check_run_set_consistency(manifest: dict, policy: dict) -> tuple[bool, list[
         if key not in manifest_hashes or not manifest_hashes[key]:
             issues.append(f"Manifest hash missing: {key}")
 
-    # If require_matching_manifests, check against current manifests
-    if claim_policy.get("require_matching_manifests"):
-        current_hashes = {}
-        for name in required_hashes:
-            path = HARNESS_DIR / f"{name}.json"
-            if path.exists():
-                current_hashes[name] = file_sha256(path)
+    # If any prerequisite metadata is missing, bail early
+    if issues:
+        return False, issues
 
-        for key in required_hashes:
-            recorded = manifest_hashes.get(key)
-            current = current_hashes.get(key)
-            if recorded and current and recorded != current:
-                issues.append(
-                    f"Manifest drift: {key} has changed since run "
-                    f"(run={recorded[:16]}..., current={current[:16]}...)"
-                )
+    # Build the compatible run set
+    compatible = get_compatible_run_set(manifest)
 
-    # Check policy version
+    if not compatible:
+        issues.append(
+            "Compatible run set is empty: no claim-ready runs share the "
+            "same revision and manifest/policy hashes as this run"
+        )
+        return False, issues
+
+    # Assert singleton revision set across compatible runs
+    revisions = {r.get("revision") for r in compatible}
+    if len(revisions) != 1:
+        issues.append(
+            f"Compatible run set has divergent revisions: {revisions}"
+        )
+
+    # Assert singleton hash set across compatible runs
+    hash_tuples = set()
+    for r in compatible:
+        h = r.get("manifest_hashes", {})
+        hash_tuples.add(tuple(h.get(k, "") for k in required_hashes))
+    if len(hash_tuples) != 1:
+        issues.append(
+            f"Compatible run set has divergent manifest/policy hashes: "
+            f"{len(hash_tuples)} distinct hash sets found"
+        )
+
+    # Check policy version consistency
     policy_version = manifest.get("policy_version")
     current_policy_version = policy.get("policy_version")
     if policy_version and current_policy_version and policy_version != current_policy_version:
@@ -201,25 +288,23 @@ def check_run_set_consistency(manifest: dict, policy: dict) -> tuple[bool, list[
     return len(issues) == 0, issues
 
 
-def check_minimum_run_set(policy: dict) -> tuple[bool, list[str]]:
-    """Check that the minimum number of claim-ready runs exist."""
+def check_minimum_run_set(manifest: dict, policy: dict) -> tuple[bool, list[str]]:
+    """Check that the minimum number of compatible claim-ready runs exist.
+
+    Only runs in the compatible run set (same revision and manifest/policy
+    hashes as the target manifest) are counted.  Heterogeneous global
+    runs are excluded.
+    """
     issues = []
     claim_policy = policy.get("claim_readiness", {})
     minimum_runs = claim_policy.get("minimum_runs", 1)
 
-    index_path = RUNS_DIR / "index.json"
-    if not index_path.exists():
-        return False, [f"Run index not found; need {minimum_runs} claim-ready run(s)"]
+    compatible = get_compatible_run_set(manifest)
+    compatible_count = len(compatible)
 
-    index = load_json(index_path)
-    claim_ready_count = sum(
-        1 for r in index.get("runs", [])
-        if r.get("status") == "complete" and r.get("claim_ready") is True
-    )
-
-    if claim_ready_count < minimum_runs:
+    if compatible_count < minimum_runs:
         issues.append(
-            f"Minimum run set: {claim_ready_count} claim-ready run(s) < "
+            f"Minimum run set: {compatible_count} compatible claim-ready run(s) < "
             f"required {minimum_runs}"
         )
         return False, issues
@@ -261,7 +346,7 @@ def run_claim_gate(run_arg: str) -> int:
         ("Matrix completeness", check_matrix_completeness(manifest)),
         ("Artifact checksums", check_artifact_checksums(run_dir)),
         ("Run-set consistency", check_run_set_consistency(manifest, policy)),
-        ("Minimum run set", check_minimum_run_set(policy)),
+        ("Minimum run set", check_minimum_run_set(manifest, policy)),
     ]
 
     print(f"\n--- Claim Gate Checks ---")
