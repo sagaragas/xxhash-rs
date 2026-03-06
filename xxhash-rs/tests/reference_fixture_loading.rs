@@ -284,6 +284,158 @@ fn reference_fixture_loading_reference_with_seed() {
 }
 
 // ============================================================================
+// Tagged output parsing
+// ============================================================================
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_gnu_format() {
+    // GNU format: "e4c191d091bd8853  stdin"
+    let digest = reference::parse_digest_from_line("e4c191d091bd8853  stdin");
+    assert_eq!(
+        digest.as_deref(),
+        Some("e4c191d091bd8853"),
+        "Should extract digest from GNU format"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_xxh3_gnu_format() {
+    // XXH3 GNU format: "XXH3_99fc819aaba2462a  stdin"
+    let digest = reference::parse_digest_from_line("XXH3_99fc819aaba2462a  stdin");
+    assert_eq!(
+        digest.as_deref(),
+        Some("99fc819aaba2462a"),
+        "Should strip XXH3_ prefix and extract digest"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_bsd_format() {
+    // BSD tagged format: "XXH64 (stdin) = e4c191d091bd8853"
+    let digest = reference::parse_digest_from_line("XXH64 (stdin) = e4c191d091bd8853");
+    assert_eq!(
+        digest.as_deref(),
+        Some("e4c191d091bd8853"),
+        "Should extract digest from BSD tagged format"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_bsd_xxh32() {
+    // BSD tagged format for XXH32: "XXH32 (stdin) = 946b5bf9"
+    let digest = reference::parse_digest_from_line("XXH32 (stdin) = 946b5bf9");
+    assert_eq!(
+        digest.as_deref(),
+        Some("946b5bf9"),
+        "Should extract XXH32 digest from BSD tagged format"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_bsd_xxh128() {
+    // BSD tagged format for XXH128: "XXH128 (stdin) = 6bba86c7e069f56d5a10b435f1c8e49c"
+    let digest =
+        reference::parse_digest_from_line("XXH128 (stdin) = 6bba86c7e069f56d5a10b435f1c8e49c");
+    assert_eq!(
+        digest.as_deref(),
+        Some("6bba86c7e069f56d5a10b435f1c8e49c"),
+        "Should extract XXH128 digest from BSD tagged format"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_bsd_xxh3() {
+    // BSD tagged format for XXH3: "XXH3 (stdin) = 99fc819aaba2462a"
+    let digest = reference::parse_digest_from_line("XXH3 (stdin) = 99fc819aaba2462a");
+    assert_eq!(
+        digest.as_deref(),
+        Some("99fc819aaba2462a"),
+        "Should extract XXH3 digest from BSD tagged format"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_bsd_le() {
+    // BSD tagged LE format: "XXH64_LE (stdin) = 5388bd91d091c1e4"
+    let digest = reference::parse_digest_from_line("XXH64_LE (stdin) = 5388bd91d091c1e4");
+    assert_eq!(
+        digest.as_deref(),
+        Some("5388bd91d091c1e4"),
+        "Should extract LE digest from BSD tagged format"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_escaped_gnu() {
+    // Escaped GNU format: "\e4c191d091bd8853  back\\slash.txt"
+    let digest = reference::parse_digest_from_line("\\e4c191d091bd8853  back\\\\slash.txt");
+    assert_eq!(
+        digest.as_deref(),
+        Some("e4c191d091bd8853"),
+        "Should handle escaped GNU format"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_escaped_bsd() {
+    // Escaped BSD format: "\XXH64 (back\\slash.txt) = e4c191d091bd8853"
+    let digest =
+        reference::parse_digest_from_line("\\XXH64 (back\\\\slash.txt) = e4c191d091bd8853");
+    assert_eq!(
+        digest.as_deref(),
+        Some("e4c191d091bd8853"),
+        "Should handle escaped BSD tagged format"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_reference_integration() {
+    // Integration test: invoke the reference binary in tagged mode and verify
+    // the parser extracts the correct digest.
+    let result_gnu = reference::hash_stdin(b"hello\n", "-H1", &[])
+        .expect("Reference GNU invocation failed");
+    let result_tag = reference::hash_stdin(b"hello\n", "-H1", &["--tag"])
+        .expect("Reference tagged invocation failed");
+
+    let digest_gnu = result_gnu.digest.expect("GNU digest should be parsed");
+    let digest_tag = result_tag.digest.expect("Tagged digest should be parsed");
+
+    assert_eq!(
+        digest_gnu, digest_tag,
+        "GNU and tagged formats should yield the same parsed digest"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_reference_all_algos() {
+    // Verify the parser works for all algorithms in tagged mode via reference.
+    for algo in [
+        Algorithm::XXH32,
+        Algorithm::XXH64,
+        Algorithm::XXH3_64,
+        Algorithm::XXH3_128,
+    ] {
+        let result_gnu = reference::hash_stdin(b"test\n", algo.reference_flag(), &[])
+            .unwrap_or_else(|e| panic!("{}: GNU invocation failed: {e}", algo.name()));
+        let result_tag = reference::hash_stdin(b"test\n", algo.reference_flag(), &["--tag"])
+            .unwrap_or_else(|e| panic!("{}: tagged invocation failed: {e}", algo.name()));
+
+        let digest_gnu = result_gnu
+            .digest
+            .unwrap_or_else(|| panic!("{}: GNU digest should be parsed", algo.name()));
+        let digest_tag = result_tag
+            .digest
+            .unwrap_or_else(|| panic!("{}: tagged digest should be parsed", algo.name()));
+
+        assert_eq!(
+            digest_gnu, digest_tag,
+            "{}: GNU and tagged digests should match",
+            algo.name()
+        );
+    }
+}
+
+// ============================================================================
 // Parity harness smoke test
 // ============================================================================
 

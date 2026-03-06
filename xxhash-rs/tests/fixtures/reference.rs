@@ -178,18 +178,11 @@ fn parse_output(output: Output) -> Result<ReferenceResult, String> {
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();
     let exit_code = output.status.code();
 
-    // Parse the digest from the first field of stdout.
-    // Reference output format: "<hex_digest>  <filename>\n"
-    // or for XXH3: "XXH3_<hex_digest>  <filename>\n"
+    // Parse the digest from stdout, handling both GNU and tagged formats.
     let digest = stdout
         .lines()
         .next()
-        .and_then(|line| {
-            let first_field = line.split_whitespace().next()?;
-            // Strip any "XXH3_" prefix if present
-            let hex = first_field.strip_prefix("XXH3_").unwrap_or(first_field);
-            Some(hex.to_lowercase())
-        });
+        .and_then(parse_digest_from_line);
 
     Ok(ReferenceResult {
         stdout,
@@ -197,6 +190,35 @@ fn parse_output(output: Output) -> Result<ReferenceResult, String> {
         exit_code,
         digest,
     })
+}
+
+/// Extract the hex digest from a single output line.
+///
+/// Handles both output formats:
+/// - GNU: `<hex_digest>  <filename>` or `\<hex_digest>  <escaped_filename>`
+///   or `XXH3_<hex_digest>  <filename>`
+/// - Tagged: `<ALGO> (<filename>) = <hex_digest>`
+///   or `\<ALGO> (<escaped_filename>) = <hex_digest>`
+///
+/// The escaped-filename prefix `\` at the start of a line is stripped before parsing.
+pub fn parse_digest_from_line(line: &str) -> Option<String> {
+    // Strip the leading `\` escape indicator if present.
+    let line = line.strip_prefix('\\').unwrap_or(line);
+
+    // Detect tagged format: contains ` = ` with parenthesized filename.
+    if let Some(eq_pos) = line.rfind(" = ") {
+        // Tagged format: everything after " = " is the hex digest.
+        let hex = line[eq_pos + 3..].trim();
+        if !hex.is_empty() {
+            return Some(hex.to_lowercase());
+        }
+    }
+
+    // GNU format: first whitespace-delimited token is the digest.
+    let first_field = line.split_whitespace().next()?;
+    // Strip "XXH3_" prefix if present (used for XXH3_64 GNU output).
+    let hex = first_field.strip_prefix("XXH3_").unwrap_or(first_field);
+    Some(hex.to_lowercase())
 }
 
 /// Fixture metadata about the reference binary for reproducibility.
