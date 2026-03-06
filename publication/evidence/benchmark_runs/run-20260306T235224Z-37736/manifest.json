@@ -1,0 +1,111 @@
+{
+  "run_id": "run-20260306T235224Z-37736",
+  "run_type": "smoke",
+  "timestamp_utc": "2026-03-06T23:52:24.972702+00:00",
+  "status": "complete",
+  "claim_ready": true,
+  "manifest_hashes": {
+    "scenarios": "9e18d9ad105b9805aa90cc8166062fa5543d4e7b02bf86aa9f53024c690663e3",
+    "comparators": "6d4104442642fc33ccfe27aac7f96b1ba4c42788bc8aaa61a2be6e9aac2220d6",
+    "policy": "19e93029184aeaa616fc5e232ce6cb2e246a06619922c401c4aa49706451944c"
+  },
+  "policy_version": "1.0.0",
+  "policy_hash": "19e93029184aeaa616fc5e232ce6cb2e246a06619922c401c4aa49706451944c",
+  "environment": {
+    "hostname": "Sagars-MacBook-Pro.local",
+    "platform": "macOS-26.3.1-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "python_version": "3.14.2",
+    "timestamp_utc": "2026-03-06T23:52:24.620219+00:00",
+    "repo_revision": "df03fbc75ad22dd34b8f479a624c934dbc6e1590",
+    "repo_dirty": true
+  },
+  "resolved_comparators": {
+    "c_xxhsum": {
+      "id": "c_xxhsum",
+      "version": "xxhsum 0.8.3 by Yann Collet ",
+      "role": "reference",
+      "parity_oracle": true,
+      "binary_path": "/Users/ragas/code/missions/xxhash-reference/xxhsum"
+    },
+    "rust_xxhash_rs": {
+      "id": "rust_xxhash_rs",
+      "version": "xxhash-rs 0.1.0",
+      "role": "subject",
+      "parity_oracle": true,
+      "binary_path": "/Users/ragas/code/missions/xxhash-rs/target/release/xxhash-rs"
+    },
+    "b3sum": {
+      "id": "b3sum",
+      "version": "b3sum 1.8.3",
+      "role": "contrast",
+      "parity_oracle": false,
+      "binary_path": "/opt/homebrew/bin/b3sum"
+    },
+    "md5": {
+      "id": "md5",
+      "version": "path:/sbin/md5",
+      "role": "contrast",
+      "parity_oracle": false,
+      "binary_path": "/sbin/md5"
+    }
+  },
+  "correctness_gate": {
+    "all_passed": true,
+    "results": [
+      {
+        "scenario_id": "xxh64-4k",
+        "passed": true,
+        "reason": "All oracles agree and contrast comparators succeeded",
+        "oracle_digests": {
+          "c_xxhsum": "0f6e64be186af6a4",
+          "rust_xxhash_rs": "0f6e64be186af6a4"
+        }
+      },
+      {
+        "scenario_id": "xxh64-1m",
+        "passed": true,
+        "reason": "All oracles agree and contrast comparators succeeded",
+        "oracle_digests": {
+          "c_xxhsum": "44ec7540579dd3f0",
+          "rust_xxhash_rs": "44ec7540579dd3f0"
+        }
+      },
+      {
+        "scenario_id": "xxh64-16m",
+        "passed": true,
+        "reason": "All oracles agree and contrast comparators succeeded",
+        "oracle_digests": {
+          "c_xxhsum": "aacc10d892ee9f91",
+          "rust_xxhash_rs": "aacc10d892ee9f91"
+        }
+      },
+      {
+        "scenario_id": "xxh3-128-1m",
+        "passed": true,
+        "reason": "All oracles agree and contrast comparators succeeded",
+        "oracle_digests": {
+          "c_xxhsum": "1b208d2839093774d36c0e13a3df139e",
+          "rust_xxhash_rs": "1b208d2839093774d36c0e13a3df139e"
+        }
+      }
+    ]
+  },
+  "completeness": {
+    "complete": true,
+    "missing_entries": []
+  },
+  "statistical_method": {
+    "description": "Median of measured samples after warmup",
+    "warmup_policy": "discard",
+    "summary_statistic": "median",
+    "retain_raw_samples": true
+  },
+  "scenario_count": 4,
+  "comparator_ids": [
+    "c_xxhsum",
+    "rust_xxhash_rs",
+    "b3sum",
+    "md5"
+  ]
+}

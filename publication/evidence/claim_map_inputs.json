@@ -1,0 +1,105 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Claim-to-evidence mapping inputs for publication traceability",
+  "measured_revision": "df03fbc75ad22dd34b8f479a624c934dbc6e1590",
+  "generated_utc": "2026-03-06T23:52:25.346045+00:00",
+  "claims": [
+    {
+      "claim_id": "parity-all-variants",
+      "claim": "Rust implementation produces bit-exact output for XXH32, XXH64, XXH3_64, and XXH3_128 across all tested input lengths and seeds",
+      "evidence_type": "parity_test",
+      "evidence_path": "publication/evidence/parity_summary.json",
+      "pinned_revision": "df03fbc75ad22dd34b8f479a624c934dbc6e1590"
+    },
+    {
+      "claim_id": "simd-parity",
+      "claim": "NEON-optimized XXH3 long-input paths produce bit-exact output matching the scalar reference on Apple Silicon",
+      "evidence_type": "parity_test",
+      "evidence_path": "publication/evidence/parity_summary.json",
+      "pinned_revision": "df03fbc75ad22dd34b8f479a624c934dbc6e1590"
+    },
+    {
+      "claim_id": "cli-behavioral-parity",
+      "claim": "CLI achieves behavioral parity with the reference xxhsum for the validated output formats, check modes, and input flows",
+      "evidence_type": "parity_test",
+      "evidence_path": "publication/evidence/parity_summary.json",
+      "pinned_revision": "df03fbc75ad22dd34b8f479a624c934dbc6e1590"
+    },
+    {
+      "claim_id": "benchmark-correctness-gate",
+      "claim": "C and Rust xxHash binaries agree on digest output for all benchmarked scenarios",
+      "evidence_type": "benchmark_correctness_gate",
+      "evidence_path": "publication/evidence/benchmark_summary.json",
+      "pinned_run_ids": [
+        "run-20260306T235225Z-37931",
+        "run-20260306T235224Z-37732",
+        "run-20260306T235224Z-37736"
+      ],
+      "pinned_revision": "df03fbc75ad22dd34b8f479a624c934dbc6e1590"
+    },
+    {
+      "claim_id": "benchmark-xxh3-128-1m",
+      "claim": "Benchmark throughput data available for scenario xxh3-128-1m",
+      "evidence_type": "benchmark_samples",
+      "evidence_paths": [
+        "publication/evidence/benchmark_runs/run-20260306T235225Z-37931/samples/xxh3-128-1m.json",
+        "publication/evidence/benchmark_runs/run-20260306T235224Z-37732/samples/xxh3-128-1m.json",
+        "publication/evidence/benchmark_runs/run-20260306T235224Z-37736/samples/xxh3-128-1m.json"
+      ],
+      "pinned_run_ids": [
+        "run-20260306T235225Z-37931",
+        "run-20260306T235224Z-37732",
+        "run-20260306T235224Z-37736"
+      ],
+      "pinned_revision": "df03fbc75ad22dd34b8f479a624c934dbc6e1590"
+    },
+    {
+      "claim_id": "benchmark-xxh64-16m",
+      "claim": "Benchmark throughput data available for scenario xxh64-16m",
+      "evidence_type": "benchmark_samples",
+      "evidence_paths": [
+        "publication/evidence/benchmark_runs/run-20260306T235225Z-37931/samples/xxh64-16m.json",
+        "publication/evidence/benchmark_runs/run-20260306T235224Z-37732/samples/xxh64-16m.json",
+        "publication/evidence/benchmark_runs/run-20260306T235224Z-37736/samples/xxh64-16m.json"
+      ],
+      "pinned_run_ids": [
+        "run-20260306T235225Z-37931",
+        "run-20260306T235224Z-37732",
+        "run-20260306T235224Z-37736"
+      ],
+      "pinned_revision": "df03fbc75ad22dd34b8f479a624c934dbc6e1590"
+    },
+    {
+      "claim_id": "benchmark-xxh64-1m",
+      "claim": "Benchmark throughput data available for scenario xxh64-1m",
+      "evidence_type": "benchmark_samples",
+      "evidence_paths": [
+        "publication/evidence/benchmark_runs/run-20260306T235225Z-37931/samples/xxh64-1m.json",
+        "publication/evidence/benchmark_runs/run-20260306T235224Z-37732/samples/xxh64-1m.json",
+        "publication/evidence/benchmark_runs/run-20260306T235224Z-37736/samples/xxh64-1m.json"
+      ],
+      "pinned_run_ids": [
+        "run-20260306T235225Z-37931",
+        "run-20260306T235224Z-37732",
+        "run-20260306T235224Z-37736"
+      ],
+      "pinned_revision": "df03fbc75ad22dd34b8f479a624c934dbc6e1590"
+    },
+    {
+      "claim_id": "benchmark-xxh64-4k",
+      "claim": "Benchmark throughput data available for scenario xxh64-4k",
+      "evidence_type": "benchmark_samples",
+      "evidence_paths": [
+        "publication/evidence/benchmark_runs/run-20260306T235225Z-37931/samples/xxh64-4k.json",
+        "publication/evidence/benchmark_runs/run-20260306T235224Z-37732/samples/xxh64-4k.json",
+        "publication/evidence/benchmark_runs/run-20260306T235224Z-37736/samples/xxh64-4k.json"
+      ],
+      "pinned_run_ids": [
+        "run-20260306T235225Z-37931",
+        "run-20260306T235224Z-37732",
+        "run-20260306T235224Z-37736"
+      ],
+      "pinned_revision": "df03fbc75ad22dd34b8f479a624c934dbc6e1590"
+    }
+  ]
+}

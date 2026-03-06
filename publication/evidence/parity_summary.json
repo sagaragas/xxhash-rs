@@ -1,0 +1,1282 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Machine-readable parity test results for xxhash-rs",
+  "measured_revision": "df03fbc75ad22dd34b8f479a624c934dbc6e1590",
+  "generated_utc": "2026-03-06T23:52:25.340189+00:00",
+  "total_passed": 508,
+  "total_failed": 0,
+  "all_passed": true,
+  "exit_code": 0,
+  "categories": {
+    "cli_algorithm_selection": {
+      "description": "CLI algorithm selection parity",
+      "passed": 31,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "cli_algorithm_selection_default_is_xxh64",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_h0_and_h32_agree",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_default_matches_reference_default",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_h128_is_xxh3_128",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_h1_is_xxh64",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_h0_is_xxh32",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_all_algorithms_produce_distinct_digests",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_h3_has_xxh3_prefix",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_h32_is_xxh32",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_h2_is_xxh3_128",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_h3_is_xxh3_64",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_h64_is_xxh64",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_all_algorithms_exit_0",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_nonzero_seed_xxh32",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_nonzero_seed_xxh3_128",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_nonzero_seed_xxh3_64",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_nonzero_seed_xxh64",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_seed_0_matches_default",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_seed_0_matches_reference_default",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_xxh32_seed_boundary_4294967290_rejected",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_xxh32_seed_boundary_4294967289_accepted",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_xxh32_seed_large_overflow_rejected",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_xxh32_seed_boundary_4294967295_rejected",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_xxh32_seed_overflow_parity_with_reference",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_xxh32_seed_overflow_rejected",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_xxh32_boundary_seeds_match_reference",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_xxh32_seed_u32_max_rejected_for_parity",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_xxh64_large_seed_still_accepted",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_seed_0_all_algorithms_match_reference",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_xxh32_seed_accepted_range_parity",
+          "status": "ok"
+        },
+        {
+          "name": "cli_algorithm_selection_xxh32_seed_overflow_range_parity",
+          "status": "ok"
+        }
+      ]
+    },
+    "cli_check_escaped": {
+      "description": "CLI check-mode escaped/little-endian parity",
+      "passed": 23,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "cli_check_escaped_and_little_endian_bsd_le_xxh128_no_flag",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_bsd_backslash",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_bsd_le_explicit_flag",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_bsd_cr",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_bsd_le_multi_algo",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_bsd_le_xxh32_no_flag",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_bsd_le_xxh64_no_flag",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_bsd_newline",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_bsd_le_xxh3_64_no_flag",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh128",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh64",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh3",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_gnu_backslash",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh32",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_gnu_le_xxh128",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_gnu_cr",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_gnu_le_without_flag_fails",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_gnu_le_xxh32",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_gnu_le_xxh3_64",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_gnu_newline",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_gnu_le_xxh64",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_mixed_escaped_gnu",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_escaped_and_little_endian_mixed_bsd_le_and_non_le_under_flag",
+          "status": "ok"
+        }
+      ]
+    },
+    "cli_check_malformed": {
+      "description": "CLI check-mode malformed line handling",
+      "passed": 11,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "cli_check_malformed_lines_default_all_invalid",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_malformed_lines_empty_file",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_malformed_lines_default_single_malformed",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_malformed_lines_default_mixed",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_malformed_lines_status_mixed_malformed",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_malformed_lines_strict_all_invalid",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_malformed_lines_warn_all_invalid",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_malformed_lines_strict_mixed",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_malformed_lines_strict_no_malformed_succeeds",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_malformed_lines_warn_mixed",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_malformed_lines_warn_strict_combined",
+          "status": "ok"
+        }
+      ]
+    },
+    "cli_check_status": {
+      "description": "CLI check-mode --status/--quiet parity",
+      "passed": 11,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "cli_check_status_and_ignore_missing_status_all_malformed",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_status_and_ignore_missing_ignore_missing_all_missing",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_status_and_ignore_missing_ignore_missing_mixed",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_status_and_ignore_missing_ignore_missing_with_mismatch",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_status_and_ignore_missing_combined_all_missing_emits_diagnostic",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_status_and_ignore_missing_status_mismatch",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_status_and_ignore_missing_status_mixed_malformed",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_status_and_ignore_missing_status_success",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_status_and_ignore_missing_status_mixed_missing",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_status_and_ignore_missing_status_with_ignore_missing_success",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_status_and_ignore_missing_status_zero_verified",
+          "status": "ok"
+        }
+      ]
+    },
+    "cli_check_success": {
+      "description": "CLI check-mode success parity",
+      "passed": 26,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "cli_check_success_and_failures_all_binary_data",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_basic_success",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_binary_stdin_stream",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_binary_after_valid_lines",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_binary_before_valid_lines",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_mismatch_preserves_ok",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_comment_lines_ignored",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_missing_file",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_mixed_mismatch_and_missing",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_multiple_mismatches",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_nonexistent_checksum_file",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_multiple_unreadable",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_parity_with_reference",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_quiet_mismatch",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_quiet_missing_and_mismatch",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_quiet_success",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_single_mismatch",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_stdin_default_empty",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_stdin_default_garbage",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_stdin_default_valid",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_tagged_format",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_tagged_xxh128",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_tagged_xxh32",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_tagged_xxh3",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_unreadable_checksum_file",
+          "status": "ok"
+        },
+        {
+          "name": "cli_check_success_and_failures_unreadable_file",
+          "status": "ok"
+        }
+      ]
+    },
+    "cli_filelist_parity": {
+      "description": "CLI file-list parity vs reference",
+      "passed": 11,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "cli_filelist_parity_empty_lines_skipped",
+          "status": "ok"
+        },
+        {
+          "name": "cli_filelist_parity_comments_ignored",
+          "status": "ok"
+        },
+        {
+          "name": "cli_filelist_parity_escaped_entries",
+          "status": "ok"
+        },
+        {
+          "name": "cli_filelist_parity_filelist_alias",
+          "status": "ok"
+        },
+        {
+          "name": "cli_filelist_parity_filelist_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_filelist_parity_files_from_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_filelist_parity_files_from_basic_order",
+          "status": "ok"
+        },
+        {
+          "name": "cli_filelist_parity_stdin_with_comments",
+          "status": "ok"
+        },
+        {
+          "name": "cli_filelist_parity_ordering_preserved",
+          "status": "ok"
+        },
+        {
+          "name": "cli_filelist_parity_with_tag_output",
+          "status": "ok"
+        },
+        {
+          "name": "cli_filelist_parity_all_algorithms",
+          "status": "ok"
+        }
+      ]
+    },
+    "cli_input_flow_parity": {
+      "description": "CLI input flow parity vs reference",
+      "passed": 16,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "cli_input_flow_parity_dash_shows_stdin_as_name",
+          "status": "ok"
+        },
+        {
+          "name": "cli_input_flow_parity_all_bad_files",
+          "status": "ok"
+        },
+        {
+          "name": "cli_input_flow_parity_empty_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_input_flow_parity_explicit_dash_reads_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_input_flow_parity_file_hash_with_seed",
+          "status": "ok"
+        },
+        {
+          "name": "cli_input_flow_parity_file_order_preserved",
+          "status": "ok"
+        },
+        {
+          "name": "cli_input_flow_parity_good_then_bad_then_good",
+          "status": "ok"
+        },
+        {
+          "name": "cli_input_flow_parity_multiple_files_xxh32",
+          "status": "ok"
+        },
+        {
+          "name": "cli_input_flow_parity_no_files_reads_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_input_flow_parity_no_trailing_newline",
+          "status": "ok"
+        },
+        {
+          "name": "cli_input_flow_parity_file_hash_all_algorithms",
+          "status": "ok"
+        },
+        {
+          "name": "cli_input_flow_parity_single_file_matches_reference",
+          "status": "ok"
+        },
+        {
+          "name": "cli_input_flow_parity_single_bad_file",
+          "status": "ok"
+        },
+        {
+          "name": "cli_input_flow_parity_stdin_xxh3_128_seeded",
+          "status": "ok"
+        },
+        {
+          "name": "cli_input_flow_parity_stdin_xxh3_64",
+          "status": "ok"
+        },
+        {
+          "name": "cli_input_flow_parity_large_file",
+          "status": "ok"
+        }
+      ]
+    },
+    "cli_output_format_parity": {
+      "description": "CLI output format parity vs reference",
+      "passed": 40,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "cli_output_format_parity_escaped_backslash_tag_le",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_escaped_backslash_le",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_escaped_backslash_gnu",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_escaped_backslash_tag",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_escaped_cr_gnu",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_escaped_newline_gnu",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_escaped_cr_tag",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_escaped_newline_tag",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_filename_with_equals_gnu",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_filename_with_equals_tag",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_filename_with_paren_eq_gnu",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_filename_with_paren_eq_nonhex",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_filename_with_paren_eq_tag",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_gnu_default_xxh64_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_gnu_file",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_gnu_xxh32_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_gnu_xxh3_128_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_gnu_xxh3_64_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_le_file",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_le_xxh32_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_filename_with_equals_all_algos",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_le_xxh3_128_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_le_xxh3_64_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_filename_with_paren_eq_all_algos",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_le_xxh64_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_normal_filename_no_escape_prefix",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_seeded_le",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_seeded_tag",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_seeded_tag_le",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_tag_file",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_tag_le_xxh32_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_tag_le_file",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_tag_le_xxh3_128_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_tag_le_xxh3_64_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_tag_le_xxh64_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_tag_xxh32_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_tag_xxh3_128_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_tag_xxh3_64_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_tag_xxh64_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_all_formats_all_algos_file",
+          "status": "ok"
+        }
+      ]
+    },
+    "xxh32_vectors": {
+      "description": "XXH32 known-vector validation",
+      "passed": 16,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "fixtures::vectors::tests::xxh32_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh32_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh32_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh32_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh32_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh32_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh32_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "xxh32_vectors_all_seed0",
+          "status": "ok"
+        },
+        {
+          "name": "xxh32_vectors_empty_input",
+          "status": "ok"
+        },
+        {
+          "name": "xxh32_vectors_all_seeded",
+          "status": "ok"
+        },
+        {
+          "name": "xxh32_vectors_val_hash_001_lengths_covered",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh32_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh32_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh32_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh32_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh32_vectors_non_empty",
+          "status": "ok"
+        }
+      ]
+    },
+    "xxh3_64_vectors": {
+      "description": "XXH3_64 known-vector validation",
+      "passed": 16,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "fixtures::vectors::tests::xxh3_64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_64_vectors_all_seed0",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_64_vectors_all_seeded",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_64_vectors_empty_input",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_64_vectors_val_hash_001_lengths_covered",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_64_vectors_non_empty",
+          "status": "ok"
+        }
+      ]
+    },
+    "xxh3_128_vectors": {
+      "description": "XXH3_128 known-vector validation",
+      "passed": 16,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "fixtures::vectors::tests::xxh3_128_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_128_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_128_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_128_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_128_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_128_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_128_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_128_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_128_vectors_empty_input",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_128_vectors_val_hash_001_lengths_covered",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_128_vectors_all_seeded",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_128_vectors_all_seed0",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_128_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_128_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_128_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh3_128_vectors_non_empty",
+          "status": "ok"
+        }
+      ]
+    },
+    "xxh64_vectors": {
+      "description": "XXH64 known-vector validation",
+      "passed": 16,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "fixtures::vectors::tests::xxh64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "fixtures::vectors::tests::xxh64_vectors_non_empty",
+          "status": "ok"
+        },
+        {
+          "name": "xxh64_vectors_all_seed0",
+          "status": "ok"
+        },
+        {
+          "name": "xxh64_vectors_empty_input",
+          "status": "ok"
+        },
+        {
+          "name": "xxh64_vectors_all_seeded",
+          "status": "ok"
+        },
+        {
+          "name": "xxh64_vectors_val_hash_001_lengths_covered",
+          "status": "ok"
+        }
+      ]
+    },
+    "hash_vectors_boundary": {
+      "description": "Boundary-length vector conformance",
+      "passed": 3,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "hash_vectors_boundary_matrix_coverage",
+          "status": "ok"
+        },
+        {
+          "name": "hash_vectors_boundary_matrix",
+          "status": "ok"
+        },
+        {
+          "name": "hash_vectors_boundary_matrix_full_vectors",
+          "status": "ok"
+        }
+      ]
+    },
+    "oneshot_reference_parity": {
+      "description": "Hash one-shot parity vs C reference binary",
+      "passed": 4,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "oneshot_reference_parity_boundary_coverage",
+          "status": "ok"
+        },
+        {
+          "name": "oneshot_reference_parity",
+          "status": "ok"
+        },
+        {
+          "name": "oneshot_reference_parity_seeded",
+          "status": "ok"
+        },
+        {
+          "name": "oneshot_reference_parity_vs_reference_binary",
+          "status": "ok"
+        }
+      ]
+    },
+    "streaming_chunk_parity": {
+      "description": "Streaming hash parity across chunking patterns",
+      "passed": 8,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "streaming_chunk_parity_xxh32_seed0",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_chunk_parity_xxh32_seeded",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_chunk_parity_xxh3_128_seed0",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_chunk_parity_xxh3_128_seeded",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_chunk_parity_xxh64_seed0",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_chunk_parity_xxh3_64_seed0",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_chunk_parity_xxh3_64_seeded",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_chunk_parity_xxh64_seeded",
+          "status": "ok"
+        }
+      ]
+    },
+    "streaming_digest_state": {
+      "description": "Streaming digest state stability",
+      "passed": 18,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "streaming_digest_state_fresh_digest",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_empty_updates",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_xxh32_reset_with_seed",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_xxh32_reset",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_xxh32_repeated_digest",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_xxh32_update_after_digest",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_xxh3_128_reset",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_xxh3_128_repeated_digest",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_xxh3_128_reset_with_seed",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_xxh3_64_reset_with_seed",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_xxh3_64_reset",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_xxh3_64_repeated_digest",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_xxh64_reset",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_xxh3_128_update_after_digest",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_xxh64_repeated_digest",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_xxh64_reset_with_seed",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_xxh3_64_update_after_digest",
+          "status": "ok"
+        },
+        {
+          "name": "streaming_digest_state_xxh64_update_after_digest",
+          "status": "ok"
+        }
+      ]
+    },
+    "xxh3_optimized_path": {
+      "description": "Optimized path detection and parity",
+      "passed": 8,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "xxh3_optimized_path_detection_is_simd_on_x86_64",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_optimized_path_detection_is_neon_on_aarch64",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_optimized_path_detection_known_vectors_large_inputs",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_optimized_path_detection_reports_valid_path",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_optimized_path_detection_not_scalar_on_supported_arch",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_optimized_path_detection_seeded_large_inputs",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_optimized_path_detection_diagnostic_transcript",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_optimized_path_detection_reference_parity_large",
+          "status": "ok"
+        }
+      ]
+    },
+    "xxh3_simd_scalar_parity": {
+      "description": "SIMD vs scalar parity (Apple Silicon NEON)",
+      "passed": 12,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "xxh3_simd_scalar_parity_accumulate_stripe_all_offsets",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_simd_scalar_parity_accumulate_stripe_last_stripe_offset",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_simd_scalar_parity_accumulate_stripe_basic",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_simd_scalar_parity_scramble_after_accumulate",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_simd_scalar_parity_scramble_basic",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_simd_scalar_parity_multi_block_accumulator_chain",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_simd_scalar_parity_streaming_various_chunk_sizes",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_simd_scalar_parity_derived_secret_large",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_simd_scalar_parity_xxh3_128_large_inputs_seeded",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_simd_scalar_parity_xxh3_128_large_inputs_seed0",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_simd_scalar_parity_xxh3_64_large_inputs_seed0",
+          "status": "ok"
+        },
+        {
+          "name": "xxh3_simd_scalar_parity_xxh3_64_large_inputs_seeded",
+          "status": "ok"
+        }
+      ]
+    }
+  }
+}

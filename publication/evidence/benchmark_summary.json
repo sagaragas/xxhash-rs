@@ -1,0 +1,110 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Benchmark evidence with pinned run IDs for xxhash-rs rewrite study",
+  "generated_utc": "2026-03-06T23:52:25.341537+00:00",
+  "measured_revision": "df03fbc75ad22dd34b8f479a624c934dbc6e1590",
+  "claim_ready_run_count": 43,
+  "pinned_run_ids": [
+    "run-20260306T235225Z-37931",
+    "run-20260306T235224Z-37732",
+    "run-20260306T235224Z-37736"
+  ],
+  "scenario_ids": [
+    "xxh3-128-1m",
+    "xxh64-16m",
+    "xxh64-1m",
+    "xxh64-4k"
+  ],
+  "manifest_hashes": {
+    "scenarios": "9e18d9ad105b9805aa90cc8166062fa5543d4e7b02bf86aa9f53024c690663e3",
+    "comparators": "6d4104442642fc33ccfe27aac7f96b1ba4c42788bc8aaa61a2be6e9aac2220d6",
+    "policy": "19e93029184aeaa616fc5e232ce6cb2e246a06619922c401c4aa49706451944c"
+  },
+  "policy_version": "1.0.0",
+  "policy_hash": "19e93029184aeaa616fc5e232ce6cb2e246a06619922c401c4aa49706451944c",
+  "correctness_gate": {
+    "all_passed": true,
+    "results": [
+      {
+        "scenario_id": "xxh64-4k",
+        "passed": true,
+        "reason": "All oracles agree and contrast comparators succeeded",
+        "oracle_digests": {
+          "c_xxhsum": "0f6e64be186af6a4",
+          "rust_xxhash_rs": "0f6e64be186af6a4"
+        }
+      },
+      {
+        "scenario_id": "xxh64-1m",
+        "passed": true,
+        "reason": "All oracles agree and contrast comparators succeeded",
+        "oracle_digests": {
+          "c_xxhsum": "44ec7540579dd3f0",
+          "rust_xxhash_rs": "44ec7540579dd3f0"
+        }
+      },
+      {
+        "scenario_id": "xxh64-16m",
+        "passed": true,
+        "reason": "All oracles agree and contrast comparators succeeded",
+        "oracle_digests": {
+          "c_xxhsum": "aacc10d892ee9f91",
+          "rust_xxhash_rs": "aacc10d892ee9f91"
+        }
+      },
+      {
+        "scenario_id": "xxh3-128-1m",
+        "passed": true,
+        "reason": "All oracles agree and contrast comparators succeeded",
+        "oracle_digests": {
+          "c_xxhsum": "1b208d2839093774d36c0e13a3df139e",
+          "rust_xxhash_rs": "1b208d2839093774d36c0e13a3df139e"
+        }
+      }
+    ]
+  },
+  "resolved_comparators": {
+    "c_xxhsum": {
+      "id": "c_xxhsum",
+      "version": "xxhsum 0.8.3 by Yann Collet ",
+      "role": "reference",
+      "parity_oracle": true
+    },
+    "rust_xxhash_rs": {
+      "id": "rust_xxhash_rs",
+      "version": "xxhash-rs 0.1.0",
+      "role": "subject",
+      "parity_oracle": true
+    },
+    "b3sum": {
+      "id": "b3sum",
+      "version": "b3sum 1.8.3",
+      "role": "contrast",
+      "parity_oracle": false
+    },
+    "md5": {
+      "id": "md5",
+      "version": "path:/sbin/md5",
+      "role": "contrast",
+      "parity_oracle": false
+    }
+  },
+  "statistical_method": {
+    "description": "Median of measured samples after warmup",
+    "warmup_policy": "discard",
+    "summary_statistic": "median",
+    "retain_raw_samples": true
+  },
+  "environment": {
+    "hostname": "Sagars-MacBook-Pro.local",
+    "platform": "macOS-26.3.1-arm64-arm-64bit-Mach-O",
+    "machine": "arm64"
+  },
+  "artifact_checksums": {
+    "manifest.json": "6ec768a9c51be7d635ed7a55ea0f402f6f6a7f48b7b3ba5f8b95f74972a06fef",
+    "samples/xxh3-128-1m.json": "e3e2894b6a5d9425826d7e0a4df686bc7069f8189ddef11a70a88a659f56fe34",
+    "samples/xxh64-16m.json": "dc6b792e478521f25a4e164f422c75ea66c9a79fc26223cb94e756e6aa218687",
+    "samples/xxh64-1m.json": "c0d9838a4b3490e1d72981c8d19e91f434fa0b848556925abc33c1e5dd33721a",
+    "samples/xxh64-4k.json": "ed6010316c707d01b4e168fec7e418b23ebc297814904ce8aa74c5214dc50345"
+  }
+}

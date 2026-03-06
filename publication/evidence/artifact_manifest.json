@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Publication evidence pack artifact manifest for xxhash-rs rewrite study",
+  "measured_revision": "df03fbc75ad22dd34b8f479a624c934dbc6e1590",
+  "generated_utc": "2026-03-06T23:52:25.346343+00:00",
+  "artifacts": {
+    "parity": {
+      "summary": "publication/evidence/parity_summary.json",
+      "description": "Machine-readable parity test results across all hash variants and CLI surface",
+      "all_passed": true
+    },
+    "benchmark": {
+      "summary": "publication/evidence/benchmark_summary.json",
+      "description": "Benchmark evidence with pinned run IDs and correctness gate results",
+      "pinned_run_ids": [
+        "run-20260306T235225Z-37931",
+        "run-20260306T235224Z-37732",
+        "run-20260306T235224Z-37736"
+      ],
+      "run_snapshot_paths": [
+        "publication/evidence/benchmark_runs/run-20260306T235225Z-37931",
+        "publication/evidence/benchmark_runs/run-20260306T235224Z-37732",
+        "publication/evidence/benchmark_runs/run-20260306T235224Z-37736"
+      ],
+      "scenarios_manifest": "benchmarks/scenarios.json",
+      "comparators_manifest": "benchmarks/comparators.json",
+      "policy": "benchmarks/policy.json"
+    },
+    "traceability": {
+      "claim_map_inputs": "publication/evidence/claim_map_inputs.json",
+      "description": "Claim-to-evidence mapping inputs for publication traceability"
+    }
+  },
+  "manifest_file_checksums": {
+    "benchmarks/scenarios.json": "9e18d9ad105b9805aa90cc8166062fa5543d4e7b02bf86aa9f53024c690663e3",
+    "benchmarks/comparators.json": "6d4104442642fc33ccfe27aac7f96b1ba4c42788bc8aaa61a2be6e9aac2220d6",
+    "benchmarks/policy.json": "19e93029184aeaa616fc5e232ce6cb2e246a06619922c401c4aa49706451944c"
+  }
+}
