@@ -3,10 +3,26 @@
 //! Verifies VAL-BENCH-001: Benchmark runs record canonical comparators and
 //! scenario provenance. Also validates manifest schema integrity and the
 //! canonical comparator inventory.
+//!
+//! ## Release-binary race hardening
+//!
+//! Several tests invoke the Python benchmark harness which resolves the
+//! `rust_xxhash_rs` comparator.  Without hardening, each harness
+//! invocation can trigger its own `cargo build --release -p xxhash-cli`,
+//! and when `cargo test` runs with `--test-threads=N` (N > 1) multiple
+//! builds race on the same `target/release` directory.  This can cause
+//! transient provenance failures (binary not found, version probe
+//! hitting a partially-linked executable, etc.).
+//!
+//! The fix: a process-wide `std::sync::Once` prebuild step builds the
+//! release binary exactly once and exports `XXHASH_RS_BINARY` so the
+//! harness skips its own `cargo build --release` entirely.  All tests
+//! that call `run_smoke_and_load_manifest()` go through this path.
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::OnceLock;
 
 /// The canonical comparator IDs that every scenario must declare.
 const CANONICAL_COMPARATORS: &[&str] = &["c_xxhsum", "rust_xxhash_rs", "b3sum", "md5"];
@@ -26,6 +42,52 @@ fn load_benchmark_json(filename: &str) -> serde_json::Value {
         .unwrap_or_else(|e| panic!("Failed to read {}: {e}", path.display()));
     serde_json::from_str(&content)
         .unwrap_or_else(|e| panic!("Failed to parse {}: {e}", path.display()))
+}
+
+// ---------------------------------------------------------------------------
+// Release-binary prebuild (race hardening)
+// ---------------------------------------------------------------------------
+
+/// Process-wide cell that holds the release binary directory once built.
+///
+/// `OnceLock` is initialised at most once regardless of how many test
+/// threads race to call [`ensure_release_binary`].
+static RELEASE_BINARY_DIR: OnceLock<PathBuf> = OnceLock::new();
+
+/// Build the release binary once per test process and return the
+/// directory that contains the `xxhash-rs` executable.
+///
+/// Concurrent test threads will block on the `OnceLock` until the
+/// first caller finishes the build, then all callers receive the same
+/// directory path.  The harness is then invoked with `XXHASH_RS_BINARY`
+/// pointing at this directory so it never triggers its own
+/// `cargo build --release`.
+fn ensure_release_binary() -> &'static PathBuf {
+    RELEASE_BINARY_DIR.get_or_init(|| {
+        let root = workspace_root();
+        let output = Command::new("cargo")
+            .args(["build", "--release", "-p", "xxhash-cli"])
+            .current_dir(&root)
+            .output()
+            .expect("Failed to launch cargo build --release");
+
+        assert!(
+            output.status.success(),
+            "Release binary prebuild failed.\nstdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
+        );
+
+        let binary_dir = root.join("target").join("release");
+        let binary_path = binary_dir.join("xxhash-rs");
+        assert!(
+            binary_path.exists(),
+            "Release binary not found after build: {}",
+            binary_path.display(),
+        );
+
+        binary_dir
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -317,13 +379,19 @@ fn benchmark_manifest_matrix_manifest_hashes_are_stable() {
 // ---------------------------------------------------------------------------
 
 /// Run the harness smoke and return the latest run manifest as JSON.
+///
+/// The release binary is prebuilt once via [`ensure_release_binary`] and
+/// passed to the harness through `XXHASH_RS_BINARY` so that concurrent
+/// test threads never trigger overlapping `cargo build --release` runs.
 fn run_smoke_and_load_manifest() -> serde_json::Value {
+    let binary_dir = ensure_release_binary();
     let root = workspace_root();
     let harness = root.join("benchmarks").join("harness.py");
 
     let output = Command::new("python3")
         .args([harness.to_str().unwrap(), "smoke", "--run-set", "local"])
         .current_dir(&root)
+        .env("XXHASH_RS_BINARY", binary_dir.to_str().unwrap())
         .output()
         .expect("Failed to run benchmark harness");
 
@@ -484,13 +552,15 @@ fn benchmark_manifest_matrix_run_index_concurrency_regression() {
 
 #[test]
 fn benchmark_manifest_matrix_harness_smoke_produces_complete_run() {
+    let binary_dir = ensure_release_binary();
     let root = workspace_root();
     let harness = root.join("benchmarks").join("harness.py");
 
-    // Run the smoke benchmark
+    // Run the smoke benchmark with the prebuilt release binary.
     let output = Command::new("python3")
         .args([harness.to_str().unwrap(), "smoke", "--run-set", "local"])
         .current_dir(&root)
+        .env("XXHASH_RS_BINARY", binary_dir.to_str().unwrap())
         .output()
         .expect("Failed to run benchmark harness");
 
@@ -528,5 +598,116 @@ fn benchmark_manifest_matrix_harness_smoke_produces_complete_run() {
     assert!(
         stdout.contains("Claim ready: True"),
         "Should report claim ready"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Release-binary race-hardening regression test
+// ---------------------------------------------------------------------------
+
+/// Regression test: multiple concurrent harness smoke runs with the
+/// prebuilt release binary must all produce deterministic provenance.
+///
+/// This test spawns several smoke invocations in parallel — the same
+/// scenario that previously caused transient provenance failures when
+/// each invocation independently ran `cargo build --release`.  With
+/// the prebuild strategy the binary is already present, so all
+/// invocations resolve cleanly and concurrently.
+#[test]
+fn benchmark_manifest_matrix_concurrent_smoke_provenance_is_stable() {
+    let binary_dir = ensure_release_binary();
+    let root = workspace_root();
+    let harness = root.join("benchmarks").join("harness.py");
+    let concurrent_runs = 3;
+
+    // Spawn concurrent smoke runs.
+    let children: Vec<_> = (0..concurrent_runs)
+        .map(|_| {
+            Command::new("python3")
+                .args([harness.to_str().unwrap(), "smoke", "--run-set", "local"])
+                .current_dir(&root)
+                .env("XXHASH_RS_BINARY", binary_dir.to_str().unwrap())
+                .output()
+        })
+        .collect();
+
+    let mut rust_versions = Vec::new();
+    let mut md5_versions = Vec::new();
+
+    for (i, child_result) in children.into_iter().enumerate() {
+        let output = child_result
+            .unwrap_or_else(|e| panic!("Concurrent smoke run {i} failed to launch: {e}"));
+
+        assert!(
+            output.status.success(),
+            "Concurrent smoke run {i} should exit 0.\nstdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
+        );
+
+        // Parse the run manifest to inspect provenance.
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let run_dir_line = stdout
+            .lines()
+            .find(|l| l.starts_with("Run dir:"))
+            .unwrap_or_else(|| {
+                panic!("Concurrent run {i}: missing 'Run dir:' in output")
+            });
+        let run_dir = run_dir_line.trim_start_matches("Run dir:").trim();
+        let manifest_path = PathBuf::from(run_dir).join("manifest.json");
+        let content = std::fs::read_to_string(&manifest_path)
+            .unwrap_or_else(|e| panic!("Concurrent run {i}: read manifest: {e}"));
+        let manifest: serde_json::Value = serde_json::from_str(&content)
+            .unwrap_or_else(|e| panic!("Concurrent run {i}: parse manifest: {e}"));
+
+        let resolved = manifest["resolved_comparators"]
+            .as_object()
+            .unwrap_or_else(|| panic!("Concurrent run {i}: missing resolved_comparators"));
+
+        // Every canonical comparator must have a clean version string.
+        for comp_id in CANONICAL_COMPARATORS {
+            let comp = resolved.get(*comp_id).unwrap_or_else(|| {
+                panic!("Concurrent run {i}: missing comparator {comp_id}")
+            });
+            let version = comp["version"].as_str().unwrap_or_else(|| {
+                panic!("Concurrent run {i}: {comp_id} version is null")
+            });
+            assert!(
+                !version.is_empty(),
+                "Concurrent run {i}: {comp_id} version is empty"
+            );
+            let lower = version.to_lowercase();
+            assert!(
+                !lower.contains("error"),
+                "Concurrent run {i}: {comp_id} version contains error text: {version}"
+            );
+        }
+
+        // Collect rust_xxhash_rs and md5 versions to verify determinism.
+        let rust_v = resolved["rust_xxhash_rs"]["version"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        let md5_v = resolved["md5"]["version"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        rust_versions.push(rust_v);
+        md5_versions.push(md5_v);
+    }
+
+    // All runs must report the same version strings (deterministic).
+    let unique_rust: HashSet<&str> = rust_versions.iter().map(|s| s.as_str()).collect();
+    assert_eq!(
+        unique_rust.len(),
+        1,
+        "rust_xxhash_rs versions should be identical across concurrent runs: {rust_versions:?}"
+    );
+
+    let unique_md5: HashSet<&str> = md5_versions.iter().map(|s| s.as_str()).collect();
+    assert_eq!(
+        unique_md5.len(),
+        1,
+        "md5 versions should be identical across concurrent runs: {md5_versions:?}"
     );
 }
