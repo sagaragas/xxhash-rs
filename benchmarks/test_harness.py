@@ -190,5 +190,64 @@ class TestExtractDigest(unittest.TestCase):
         self.assertEqual(result, "abcdef0123456789")
 
 
+class TestProbeBinaryProvenance(unittest.TestCase):
+    """_probe_binary must never store null or error text as version."""
+
+    def test_null_version_flag_produces_path_provenance(self):
+        """When version_flag is null, version should be a path-based string."""
+        comp_def = {
+            "id": "test_comp",
+            "role": "contrast",
+            "parity_oracle": False,
+        }
+        resolve = {"version_flag": None}
+        result = harness._probe_binary(
+            Path("/sbin/md5"), resolve, comp_def
+        )
+        self.assertIsNotNone(result["version"])
+        self.assertTrue(result["version"].startswith("path:"))
+        self.assertIn("/sbin/md5", result["version"])
+
+    def test_failed_version_command_uses_path_fallback(self):
+        """When the version command exits non-zero, version should not
+        contain the captured error text."""
+        comp_def = {
+            "id": "test_comp",
+            "role": "contrast",
+            "parity_oracle": False,
+        }
+        # Use a flag that will definitely fail for /usr/bin/true
+        resolve = {"version_flag": "--nonexistent-flag"}
+        result = harness._probe_binary(
+            Path("/usr/bin/false"), resolve, comp_def
+        )
+        self.assertIsNotNone(result["version"])
+        # Should be a path fallback, not error text
+        self.assertTrue(
+            result["version"].startswith("path:"),
+            f"Expected path fallback, got: {result['version']}"
+        )
+
+    def test_successful_version_command_returns_clean_output(self):
+        """When the version command succeeds, version should be the
+        first line of stdout."""
+        comp_def = {
+            "id": "test_comp",
+            "role": "contrast",
+            "parity_oracle": False,
+        }
+        resolve = {"version_flag": "--version"}
+        import shutil
+        b3sum_path = shutil.which("b3sum")
+        if not b3sum_path:
+            self.skipTest("b3sum not available")
+        result = harness._probe_binary(
+            Path(b3sum_path), resolve, comp_def
+        )
+        self.assertIsNotNone(result["version"])
+        self.assertIn("b3sum", result["version"])
+        self.assertNotIn("error", result["version"].lower())
+
+
 if __name__ == "__main__":
     unittest.main()

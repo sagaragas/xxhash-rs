@@ -110,8 +110,18 @@ def resolve_comparator(comp_def: dict) -> dict | None:
 
 
 def _probe_binary(binary_path: Path, resolve: dict, comp_def: dict) -> dict:
-    """Probe a binary for version info."""
-    version = None
+    """Probe a binary for version info.
+
+    Provenance hardening rules:
+    - If version_flag is set and the command succeeds (exit 0), use
+      the first non-empty line of stdout (preferred) or stderr.
+    - If the version command fails (non-zero exit) or times out, fall
+      back to a deterministic path-based provenance string rather than
+      storing captured error text.
+    - If version_flag is null (e.g. macOS ``md5``), synthesise a
+      deterministic provenance string from the resolved binary path
+      so the manifest never contains a null version field.
+    """
     version_flag = resolve.get("version_flag")
     if version_flag:
         try:
@@ -121,9 +131,22 @@ def _probe_binary(binary_path: Path, resolve: dict, comp_def: dict) -> dict:
                 text=True,
                 timeout=10,
             )
-            version = (result.stdout.strip() or result.stderr.strip())[:200]
+            if result.returncode == 0:
+                raw = (result.stdout.strip() or result.stderr.strip())
+                version = raw.split("\n")[0][:200] if raw else None
+            else:
+                # Command failed — do not capture error text as version.
+                version = None
         except (subprocess.TimeoutExpired, OSError):
-            version = "unknown"
+            version = None
+    else:
+        version = None
+
+    # Deterministic fallback: use "path:<binary_path>" so the manifest
+    # always carries a non-null, non-error provenance string.
+    if not version:
+        version = f"path:{binary_path}"
+
     return {
         "id": comp_def["id"],
         "binary_path": str(binary_path),

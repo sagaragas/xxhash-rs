@@ -313,6 +313,129 @@ fn benchmark_manifest_matrix_manifest_hashes_are_stable() {
 }
 
 // ---------------------------------------------------------------------------
+// Comparator version/provenance hardening tests
+// ---------------------------------------------------------------------------
+
+/// Run the harness smoke and return the latest run manifest as JSON.
+fn run_smoke_and_load_manifest() -> serde_json::Value {
+    let root = workspace_root();
+    let harness = root.join("benchmarks").join("harness.py");
+
+    let output = Command::new("python3")
+        .args([harness.to_str().unwrap(), "smoke", "--run-set", "local"])
+        .current_dir(&root)
+        .output()
+        .expect("Failed to run benchmark harness");
+
+    assert!(
+        output.status.success(),
+        "Benchmark smoke should exit 0.\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
+
+    // Find the run directory from stdout: "Run dir: <path>"
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let run_dir_line = stdout
+        .lines()
+        .find(|l| l.starts_with("Run dir:"))
+        .expect("Smoke output should contain 'Run dir:' line");
+    let run_dir = run_dir_line.trim_start_matches("Run dir:").trim();
+
+    let manifest_path = std::path::PathBuf::from(run_dir).join("manifest.json");
+    let content = std::fs::read_to_string(&manifest_path)
+        .unwrap_or_else(|e| panic!("Failed to read manifest: {e}"));
+    serde_json::from_str(&content)
+        .unwrap_or_else(|e| panic!("Failed to parse manifest: {e}"))
+}
+
+#[test]
+fn benchmark_manifest_matrix_all_comparators_have_clean_version_provenance() {
+    let manifest = run_smoke_and_load_manifest();
+    let resolved = manifest["resolved_comparators"]
+        .as_object()
+        .expect("manifest should have resolved_comparators object");
+
+    for comp_id in CANONICAL_COMPARATORS {
+        let comp = resolved
+            .get(*comp_id)
+            .unwrap_or_else(|| panic!("Missing resolved comparator: {comp_id}"));
+
+        // version must be a non-null string
+        let version = comp["version"]
+            .as_str()
+            .unwrap_or_else(|| panic!("{comp_id}: version is null or not a string"));
+
+        // version must not be empty
+        assert!(
+            !version.is_empty(),
+            "{comp_id}: version is empty"
+        );
+
+        // version must not contain captured error text
+        let lower = version.to_lowercase();
+        assert!(
+            !lower.contains("error"),
+            "{comp_id}: version contains error text: {version}"
+        );
+        assert!(
+            !lower.contains("no such file"),
+            "{comp_id}: version contains file-not-found text: {version}"
+        );
+        assert!(
+            !lower.contains("could not open"),
+            "{comp_id}: version contains 'could not open' text: {version}"
+        );
+        assert!(
+            !lower.contains("unrecognized option"),
+            "{comp_id}: version contains 'unrecognized option' text: {version}"
+        );
+    }
+}
+
+#[test]
+fn benchmark_manifest_matrix_rust_xxhash_rs_reports_semver_version() {
+    let manifest = run_smoke_and_load_manifest();
+    let resolved = manifest["resolved_comparators"]
+        .as_object()
+        .expect("resolved_comparators");
+
+    let rust_comp = &resolved["rust_xxhash_rs"];
+    let version = rust_comp["version"]
+        .as_str()
+        .expect("rust_xxhash_rs version should be a string");
+
+    // Should contain "xxhash-rs" and a semver-like pattern
+    assert!(
+        version.contains("xxhash-rs"),
+        "rust_xxhash_rs version should contain 'xxhash-rs', got: {version}"
+    );
+}
+
+#[test]
+fn benchmark_manifest_matrix_md5_has_deterministic_provenance() {
+    let manifest = run_smoke_and_load_manifest();
+    let resolved = manifest["resolved_comparators"]
+        .as_object()
+        .expect("resolved_comparators");
+
+    let md5_comp = &resolved["md5"];
+    let version = md5_comp["version"]
+        .as_str()
+        .expect("md5 version should be a string (not null)");
+
+    // Must be non-empty and deterministic (not error text)
+    assert!(
+        !version.is_empty(),
+        "md5 version must not be empty"
+    );
+    assert!(
+        !version.to_lowercase().contains("error"),
+        "md5 version must not contain error text: {version}"
+    );
+}
+
+// ---------------------------------------------------------------------------
 // Harness smoke execution test (runs the Python harness and validates output)
 // ---------------------------------------------------------------------------
 

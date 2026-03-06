@@ -917,6 +917,12 @@ fn run_check_stdin(
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
 
+    // Handle --version / -V before other argument parsing.
+    if args.iter().any(|a| a == "--version" || a == "-V") {
+        println!("xxhash-rs {}", env!("CARGO_PKG_VERSION"));
+        return;
+    }
+
     let cli = match parse_args(&args) {
         Ok(cli) => cli,
         Err(e) => {
