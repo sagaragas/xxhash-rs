@@ -608,11 +608,15 @@ fn benchmark_manifest_matrix_harness_smoke_produces_complete_run() {
 /// Regression test: multiple concurrent harness smoke runs with the
 /// prebuilt release binary must all produce deterministic provenance.
 ///
-/// This test spawns several smoke invocations in parallel — the same
-/// scenario that previously caused transient provenance failures when
-/// each invocation independently ran `cargo build --release`.  With
-/// the prebuild strategy the binary is already present, so all
-/// invocations resolve cleanly and concurrently.
+/// This test uses true overlapping subprocess execution: all child
+/// processes are **spawned first** (via `Command::spawn()`), then
+/// their outputs are **collected afterwards** (via
+/// `wait_with_output()`).  This guarantees that the smoke processes
+/// overlap in time — the same scenario that previously caused
+/// transient provenance failures when each invocation independently
+/// ran `cargo build --release`.  With the prebuild strategy the binary
+/// is already present, so all invocations resolve cleanly even under
+/// genuine concurrent execution.
 #[test]
 fn benchmark_manifest_matrix_concurrent_smoke_provenance_is_stable() {
     let binary_dir = ensure_release_binary();
@@ -620,24 +624,35 @@ fn benchmark_manifest_matrix_concurrent_smoke_provenance_is_stable() {
     let harness = root.join("benchmarks").join("harness.py");
     let concurrent_runs = 3;
 
-    // Spawn concurrent smoke runs.
-    let children: Vec<_> = (0..concurrent_runs)
-        .map(|_| {
+    // Phase 1: Spawn all children first so they overlap in time.
+    let mut children: Vec<std::process::Child> = (0..concurrent_runs)
+        .map(|i| {
             Command::new("python3")
                 .args([harness.to_str().unwrap(), "smoke", "--run-set", "local"])
                 .current_dir(&root)
                 .env("XXHASH_RS_BINARY", binary_dir.to_str().unwrap())
-                .output()
+                .stdout(std::process::Stdio::piped())
+                .stderr(std::process::Stdio::piped())
+                .spawn()
+                .unwrap_or_else(|e| panic!("Failed to spawn concurrent smoke run {i}: {e}"))
+        })
+        .collect();
+
+    // Phase 2: Wait/join on all children and collect their output.
+    let outputs: Vec<std::process::Output> = children
+        .drain(..)
+        .enumerate()
+        .map(|(i, child)| {
+            child
+                .wait_with_output()
+                .unwrap_or_else(|e| panic!("Concurrent smoke run {i} failed to complete: {e}"))
         })
         .collect();
 
     let mut rust_versions = Vec::new();
     let mut md5_versions = Vec::new();
 
-    for (i, child_result) in children.into_iter().enumerate() {
-        let output = child_result
-            .unwrap_or_else(|e| panic!("Concurrent smoke run {i} failed to launch: {e}"));
-
+    for (i, output) in outputs.iter().enumerate() {
         assert!(
             output.status.success(),
             "Concurrent smoke run {i} should exit 0.\nstdout: {}\nstderr: {}",
