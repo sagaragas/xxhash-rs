@@ -79,12 +79,27 @@ def check_correctness_gate(manifest: dict) -> tuple[bool, list[str]]:
                 )
         return False, issues
 
-    # Verify per-scenario oracle digest agreement
+    # Verify per-scenario oracle digest agreement AND non-emptiness
     results = gate.get("results", [])
     for r in results:
         digests = r.get("oracle_digests", {})
         c_digest = digests.get("c_xxhsum", "")
         rust_digest = digests.get("rust_xxhash_rs", "")
+
+        # Both oracle digests must be present and non-empty
+        if not c_digest:
+            issues.append(
+                f"  Scenario {r.get('scenario_id', '?')}: "
+                f"c_xxhsum digest is missing or empty"
+            )
+            return False, issues
+        if not rust_digest:
+            issues.append(
+                f"  Scenario {r.get('scenario_id', '?')}: "
+                f"rust_xxhash_rs digest is missing or empty"
+            )
+            return False, issues
+
         if c_digest != rust_digest:
             issues.append(
                 f"  Scenario {r.get('scenario_id', '?')}: "

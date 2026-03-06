@@ -296,6 +296,138 @@ fn benchmark_correctness_gate_claim_ready_requires_all_gates_passed() {
 }
 
 // ---------------------------------------------------------------------------
+// Oracle-digest hardening: both digests required (regression coverage)
+// ---------------------------------------------------------------------------
+
+/// Verify that the harness correctness gate rejects a synthetic scenario
+/// where one oracle digest is missing.  We call the harness module's
+/// `check_correctness_gate` indirectly through a small inline Python script.
+fn run_python_gate_check(c_digest: &str, rust_digest: &str) -> (bool, String) {
+    let script = format!(
+        r#"
+import sys, json
+sys.path.insert(0, "{harness_dir}")
+import harness
+
+sr = {{
+    "scenario_id": "synth",
+    "comparator_results": {{
+        "c_xxhsum": {{
+            "status": "success",
+            "measured_samples": [{{
+                "stdout_first_line": "{c_digest}  payload.bin" if "{c_digest}" else "",
+                "success": True,
+            }}],
+        }},
+        "rust_xxhash_rs": {{
+            "status": "success",
+            "measured_samples": [{{
+                "stdout_first_line": "{rust_digest}  payload.bin" if "{rust_digest}" else "",
+                "success": True,
+            }}],
+        }},
+        "b3sum": {{
+            "status": "success",
+            "measured_samples": [{{"stdout_first_line": "aabbccdd  p", "success": True}}],
+        }},
+        "md5": {{
+            "status": "success",
+            "measured_samples": [{{"stdout_first_line": "aabbccdd  p", "success": True}}],
+        }},
+    }},
+}}
+policy = {{
+    "correctness_gate": {{
+        "oracle_comparators": ["c_xxhsum", "rust_xxhash_rs"],
+        "contrast_comparators": ["b3sum", "md5"],
+        "oracle_must_agree": True,
+        "contrast_must_execute": True,
+    }}
+}}
+result = harness.check_correctness_gate(sr, policy)
+print(json.dumps(result))
+"#,
+        harness_dir = workspace_root()
+            .join("benchmarks")
+            .to_str()
+            .unwrap()
+            .replace('\\', "\\\\"),
+        c_digest = c_digest,
+        rust_digest = rust_digest,
+    );
+
+    let output = Command::new("python3")
+        .args(["-c", &script])
+        .current_dir(workspace_root())
+        .output()
+        .expect("Failed to run python3 gate check");
+
+    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+    assert!(
+        output.status.success(),
+        "Python gate-check script failed.\nstdout: {stdout}\nstderr: {stderr}"
+    );
+
+    let parsed: serde_json::Value =
+        serde_json::from_str(&stdout).expect("Should parse gate JSON");
+    let passed = parsed["passed"].as_bool().unwrap();
+    let reason = parsed["reason"].as_str().unwrap_or("").to_string();
+    (passed, reason)
+}
+
+#[test]
+fn benchmark_correctness_gate_rejects_missing_c_xxhsum_digest() {
+    let (passed, reason) = run_python_gate_check("", "abcd1234");
+    assert!(
+        !passed,
+        "Gate must fail when c_xxhsum digest is empty. Reason: {reason}"
+    );
+    assert!(
+        reason.contains("c_xxhsum"),
+        "Reason should mention c_xxhsum: {reason}"
+    );
+}
+
+#[test]
+fn benchmark_correctness_gate_rejects_missing_rust_digest() {
+    let (passed, reason) = run_python_gate_check("abcd1234", "");
+    assert!(
+        !passed,
+        "Gate must fail when rust_xxhash_rs digest is empty. Reason: {reason}"
+    );
+    assert!(
+        reason.contains("rust_xxhash_rs"),
+        "Reason should mention rust_xxhash_rs: {reason}"
+    );
+}
+
+#[test]
+fn benchmark_correctness_gate_rejects_both_empty_digests() {
+    let (passed, _reason) = run_python_gate_check("", "");
+    assert!(!passed, "Gate must fail when both oracle digests are empty");
+}
+
+#[test]
+fn benchmark_correctness_gate_accepts_both_matching_digests() {
+    let (passed, reason) = run_python_gate_check("abcdef0123456789", "abcdef0123456789");
+    assert!(
+        passed,
+        "Gate should pass when both oracle digests match. Reason: {reason}"
+    );
+}
+
+#[test]
+fn benchmark_correctness_gate_rejects_disagreeing_digests() {
+    let (passed, reason) = run_python_gate_check("aaaa1111", "bbbb2222");
+    assert!(!passed, "Gate must fail when oracle digests disagree");
+    assert!(
+        reason.contains("disagree"),
+        "Reason should mention disagreement: {reason}"
+    );
+}
+
+// ---------------------------------------------------------------------------
 // Correctness gate enforcement via claim_gate.py
 // ---------------------------------------------------------------------------
 

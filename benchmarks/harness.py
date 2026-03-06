@@ -356,7 +356,12 @@ def extract_digest(stdout_line: str, comp_id: str) -> str | None:
 
 
 def check_correctness_gate(scenario_result: dict, policy: dict) -> dict:
-    """Check that oracle comparators agree on digest."""
+    """Check that oracle comparators agree on digest.
+
+    Both oracle digests must be present and non-empty.  A missing or
+    empty digest is a hard failure — the gate never silently filters
+    absent values away.
+    """
     gate = policy["correctness_gate"]
     oracle_ids = gate["oracle_comparators"]
     contrast_ids = gate["contrast_comparators"]
@@ -381,8 +386,19 @@ def check_correctness_gate(scenario_result: dict, policy: dict) -> dict:
         digest = extract_digest(samples[0].get("stdout_first_line", ""), oid)
         oracle_digests[oid] = digest
 
-    # Check oracle agreement
-    unique_digests = set(v for v in oracle_digests.values() if v)
+    # --- Hard requirement: every oracle digest must be present and non-empty ---
+    for oid in oracle_ids:
+        if not oracle_digests.get(oid):
+            return {
+                "passed": False,
+                "reason": (
+                    f"Oracle comparator {oid} produced a missing or empty digest"
+                ),
+                "oracle_digests": oracle_digests,
+            }
+
+    # Check oracle agreement (all digests are guaranteed non-empty here)
+    unique_digests = set(oracle_digests.values())
     if len(unique_digests) != 1:
         return {
             "passed": False,
