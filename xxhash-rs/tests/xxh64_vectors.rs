@@ -51,16 +51,20 @@ fn xxh64_vectors_val_hash_001_lengths_covered() {
     let buf = generate_test_buffer(max_len);
 
     for &len in required {
-        if let Some(v) = vectors.iter().find(|v| v.len == len && v.seed == 0) {
-            let input = &buf[..v.len];
-            let result = xxh64(input, 0);
-            let result_hex = format!("{result:016x}");
-            assert_eq!(
-                result_hex, v.expected_hex,
-                "XXH64 VAL-HASH-001 mismatch at len={len}: got {result_hex}, expected {}",
-                v.expected_hex
-            );
-        }
+        let v = vectors
+            .iter()
+            .find(|v| v.len == len && v.seed == 0)
+            .unwrap_or_else(|| {
+                panic!("XXH64 VAL-HASH-001: missing required seed=0 vector for len={len}")
+            });
+        let input = &buf[..v.len];
+        let result = xxh64(input, 0);
+        let result_hex = format!("{result:016x}");
+        assert_eq!(
+            result_hex, v.expected_hex,
+            "XXH64 VAL-HASH-001 mismatch at len={len}: got {result_hex}, expected {}",
+            v.expected_hex
+        );
     }
 }
 
