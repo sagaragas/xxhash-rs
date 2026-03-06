@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Canonical comparator inventory for xxhash-rs benchmark harness",
+  "canonical_comparators": [
+    {
+      "id": "c_xxhsum",
+      "description": "C reference xxhsum binary from the upstream xxHash project",
+      "role": "reference",
+      "parity_oracle": true,
+      "resolve": {
+        "binary_path_env": "XXHASH_REFERENCE_ROOT",
+        "binary_name": "xxhsum",
+        "default_path": "/Users/ragas/code/missions/xxhash-reference/xxhsum",
+        "version_flag": "--version"
+      },
+      "invocation_template": {
+        "XXH32": ["{binary}", "-H0"],
+        "XXH64": ["{binary}", "-H1"],
+        "XXH3_64": ["{binary}", "-H3"],
+        "XXH3_128": ["{binary}", "-H2"]
+      }
+    },
+    {
+      "id": "rust_xxhash_rs",
+      "description": "Rust xxhash-rs CLI (this project's rewrite)",
+      "role": "subject",
+      "parity_oracle": true,
+      "resolve": {
+        "binary_path_env": "XXHASH_RS_BINARY",
+        "binary_name": "xxhash-rs",
+        "default_path": null,
+        "version_flag": "--version",
+        "build_command": "cargo build --release -p xxhash-cli"
+      },
+      "invocation_template": {
+        "XXH32": ["{binary}", "-H0"],
+        "XXH64": ["{binary}", "-H1"],
+        "XXH3_64": ["{binary}", "-H3"],
+        "XXH3_128": ["{binary}", "-H2"]
+      }
+    },
+    {
+      "id": "b3sum",
+      "description": "BLAKE3 reference hasher (contrast comparator)",
+      "role": "contrast",
+      "parity_oracle": false,
+      "resolve": {
+        "binary_path_env": null,
+        "binary_name": "b3sum",
+        "default_path": null,
+        "version_flag": "--version"
+      },
+      "invocation_template": {
+        "XXH32": ["{binary}"],
+        "XXH64": ["{binary}"],
+        "XXH3_64": ["{binary}"],
+        "XXH3_128": ["{binary}"]
+      }
+    },
+    {
+      "id": "md5",
+      "description": "System MD5 hasher (contrast comparator)",
+      "role": "contrast",
+      "parity_oracle": false,
+      "resolve": {
+        "binary_path_env": null,
+        "binary_name": "md5",
+        "default_path": "/sbin/md5",
+        "version_flag": null
+      },
+      "invocation_template": {
+        "XXH32": ["{binary}", "-r"],
+        "XXH64": ["{binary}", "-r"],
+        "XXH3_64": ["{binary}", "-r"],
+        "XXH3_128": ["{binary}", "-r"]
+      }
+    }
+  ]
+}

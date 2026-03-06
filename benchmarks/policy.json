@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Benchmark policy governing run completeness, gates, and claim readiness",
+  "policy_version": "1.0.0",
+  "correctness_gate": {
+    "description": "c_xxhsum and rust_xxhash_rs must agree on digest for measured xxHash scenarios",
+    "oracle_comparators": ["c_xxhsum", "rust_xxhash_rs"],
+    "contrast_comparators": ["b3sum", "md5"],
+    "oracle_must_agree": true,
+    "contrast_must_execute": true
+  },
+  "completeness": {
+    "description": "All canonical comparators must execute for every declared scenario",
+    "require_full_matrix": true,
+    "allow_partial_runs": false
+  },
+  "statistical_method": {
+    "description": "Median of measured samples after warmup",
+    "warmup_policy": "discard",
+    "summary_statistic": "median",
+    "retain_raw_samples": true
+  },
+  "claim_readiness": {
+    "description": "A run is claim-ready only if all gates pass and the matrix is complete",
+    "require_correctness_gate": true,
+    "require_full_matrix": true,
+    "require_artifact_checksums": true
+  },
+  "latest_resolution": {
+    "description": "latest resolves only to the most recent complete, claim-ready run",
+    "require_complete": true,
+    "require_claim_ready": true,
+    "exclude_partial": true
+  }
+}

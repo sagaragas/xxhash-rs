@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Benchmark scenario manifest for xxhash-rs rewrite study",
+  "scenarios": [
+    {
+      "id": "xxh64-4k",
+      "description": "XXH64 hashing of a 4 KiB payload",
+      "algorithm": "XXH64",
+      "payload_bytes": 4096,
+      "warmup_iterations": 3,
+      "measured_iterations": 10,
+      "comparators": ["c_xxhsum", "rust_xxhash_rs", "b3sum", "md5"]
+    },
+    {
+      "id": "xxh64-1m",
+      "description": "XXH64 hashing of a 1 MiB payload",
+      "algorithm": "XXH64",
+      "payload_bytes": 1048576,
+      "warmup_iterations": 3,
+      "measured_iterations": 10,
+      "comparators": ["c_xxhsum", "rust_xxhash_rs", "b3sum", "md5"]
+    },
+    {
+      "id": "xxh64-16m",
+      "description": "XXH64 hashing of a 16 MiB payload",
+      "algorithm": "XXH64",
+      "payload_bytes": 16777216,
+      "warmup_iterations": 3,
+      "measured_iterations": 10,
+      "comparators": ["c_xxhsum", "rust_xxhash_rs", "b3sum", "md5"]
+    },
+    {
+      "id": "xxh3-64-4k",
+      "description": "XXH3_64 hashing of a 4 KiB payload",
+      "algorithm": "XXH3_64",
+      "payload_bytes": 4096,
+      "warmup_iterations": 3,
+      "measured_iterations": 10,
+      "comparators": ["c_xxhsum", "rust_xxhash_rs", "b3sum", "md5"]
+    },
+    {
+      "id": "xxh3-64-1m",
+      "description": "XXH3_64 hashing of a 1 MiB payload",
+      "algorithm": "XXH3_64",
+      "payload_bytes": 1048576,
+      "warmup_iterations": 3,
+      "measured_iterations": 10,
+      "comparators": ["c_xxhsum", "rust_xxhash_rs", "b3sum", "md5"]
+    },
+    {
+      "id": "xxh3-64-16m",
+      "description": "XXH3_64 hashing of a 16 MiB payload",
+      "algorithm": "XXH3_64",
+      "payload_bytes": 16777216,
+      "warmup_iterations": 3,
+      "measured_iterations": 10,
+      "comparators": ["c_xxhsum", "rust_xxhash_rs", "b3sum", "md5"]
+    },
+    {
+      "id": "xxh32-4k",
+      "description": "XXH32 hashing of a 4 KiB payload",
+      "algorithm": "XXH32",
+      "payload_bytes": 4096,
+      "warmup_iterations": 3,
+      "measured_iterations": 10,
+      "comparators": ["c_xxhsum", "rust_xxhash_rs", "b3sum", "md5"]
+    },
+    {
+      "id": "xxh3-128-1m",
+      "description": "XXH3_128 hashing of a 1 MiB payload",
+      "algorithm": "XXH3_128",
+      "payload_bytes": 1048576,
+      "warmup_iterations": 3,
+      "measured_iterations": 10,
+      "comparators": ["c_xxhsum", "rust_xxhash_rs", "b3sum", "md5"]
+    }
+  ]
+}
