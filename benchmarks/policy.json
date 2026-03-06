@@ -21,10 +21,13 @@
     "retain_raw_samples": true
   },
   "claim_readiness": {
-    "description": "A run is claim-ready only if all gates pass and the matrix is complete",
+    "description": "A run is claim-ready only if all gates pass, the matrix is complete, and the run set matches revision/manifests",
     "require_correctness_gate": true,
     "require_full_matrix": true,
-    "require_artifact_checksums": true
+    "require_artifact_checksums": true,
+    "require_matching_revision": true,
+    "require_matching_manifests": true,
+    "minimum_runs": 1
   },
   "latest_resolution": {
     "description": "latest resolves only to the most recent complete, claim-ready run",
