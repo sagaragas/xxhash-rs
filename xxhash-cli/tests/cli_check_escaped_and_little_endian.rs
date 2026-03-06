@@ -545,3 +545,132 @@ fn cli_check_escaped_and_little_endian_bsd_le_multi_algo() {
     assert_eq!(rust_out, ref_out, "stdout should match reference");
     assert_eq!(rust_err, ref_err, "stderr should match reference");
 }
+
+// =========================================================================
+// BSD non-_LE lines under --check --little-endian: tag is authoritative
+// =========================================================================
+
+#[test]
+fn cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh64() {
+    // BSD tagged non-_LE checksum should NOT be reinterpreted by --little-endian.
+    // The tag is authoritative for endianness; --little-endian only affects GNU lines.
+    let dir = test_dir("bsd_non_le_under_flag_xxh64");
+    let file = dir.join("test.txt");
+    fs::write(&file, b"hello world\n").unwrap();
+    let path = file.to_str().unwrap();
+
+    // Generate a non-_LE BSD checksum (standard big-endian)
+    let checksums = generate_checksums_ref(&["--tag", path]);
+    let checksum_file = dir.join("sums.xxh");
+    fs::write(&checksum_file, &checksums).unwrap();
+    let cf = checksum_file.to_str().unwrap();
+
+    let (rust_out, rust_err, rust_code) = run_rust(&["--check", "--little-endian", cf]);
+    let (ref_out, ref_err, ref_code) = run_ref(&["--check", "--little-endian", cf]);
+
+    assert_eq!(
+        rust_code, 0,
+        "BSD non-_LE should verify under --little-endian (tag is authoritative)"
+    );
+    assert_eq!(rust_code, ref_code, "exit codes should match");
+    assert_eq!(rust_out, ref_out, "stdout should match reference");
+    assert_eq!(rust_err, ref_err, "stderr should match reference");
+}
+
+#[test]
+fn cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh32() {
+    let dir = test_dir("bsd_non_le_under_flag_xxh32");
+    let file = dir.join("test.txt");
+    fs::write(&file, b"hello world\n").unwrap();
+    let path = file.to_str().unwrap();
+
+    let checksums = generate_checksums_ref(&["--tag", "-H0", path]);
+    let checksum_file = dir.join("sums.xxh");
+    fs::write(&checksum_file, &checksums).unwrap();
+    let cf = checksum_file.to_str().unwrap();
+
+    let (rust_out, rust_err, rust_code) = run_rust(&["--check", "--little-endian", cf]);
+    let (ref_out, ref_err, ref_code) = run_ref(&["--check", "--little-endian", cf]);
+
+    assert_eq!(rust_code, 0, "BSD non-_LE XXH32 should verify under --little-endian");
+    assert_eq!(rust_code, ref_code);
+    assert_eq!(rust_out, ref_out, "stdout should match reference");
+    assert_eq!(rust_err, ref_err, "stderr should match reference");
+}
+
+#[test]
+fn cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh3() {
+    let dir = test_dir("bsd_non_le_under_flag_xxh3");
+    let file = dir.join("test.txt");
+    fs::write(&file, b"hello world\n").unwrap();
+    let path = file.to_str().unwrap();
+
+    let checksums = generate_checksums_ref(&["--tag", "-H3", path]);
+    let checksum_file = dir.join("sums.xxh");
+    fs::write(&checksum_file, &checksums).unwrap();
+    let cf = checksum_file.to_str().unwrap();
+
+    let (rust_out, rust_err, rust_code) = run_rust(&["--check", "--little-endian", cf]);
+    let (ref_out, ref_err, ref_code) = run_ref(&["--check", "--little-endian", cf]);
+
+    assert_eq!(rust_code, 0, "BSD non-_LE XXH3 should verify under --little-endian");
+    assert_eq!(rust_code, ref_code);
+    assert_eq!(rust_out, ref_out, "stdout should match reference");
+    assert_eq!(rust_err, ref_err, "stderr should match reference");
+}
+
+#[test]
+fn cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh128() {
+    let dir = test_dir("bsd_non_le_under_flag_xxh128");
+    let file = dir.join("test.txt");
+    fs::write(&file, b"hello world\n").unwrap();
+    let path = file.to_str().unwrap();
+
+    let checksums = generate_checksums_ref(&["--tag", "-H2", path]);
+    let checksum_file = dir.join("sums.xxh");
+    fs::write(&checksum_file, &checksums).unwrap();
+    let cf = checksum_file.to_str().unwrap();
+
+    let (rust_out, rust_err, rust_code) = run_rust(&["--check", "--little-endian", cf]);
+    let (ref_out, ref_err, ref_code) = run_ref(&["--check", "--little-endian", cf]);
+
+    assert_eq!(rust_code, 0, "BSD non-_LE XXH128 should verify under --little-endian");
+    assert_eq!(rust_code, ref_code);
+    assert_eq!(rust_out, ref_out, "stdout should match reference");
+    assert_eq!(rust_err, ref_err, "stderr should match reference");
+}
+
+// =========================================================================
+// Mixed BSD _LE and non-_LE lines under --check --little-endian
+// =========================================================================
+
+#[test]
+fn cli_check_escaped_and_little_endian_mixed_bsd_le_and_non_le_under_flag() {
+    // A checksum file with both BSD _LE and non-_LE entries should verify
+    // correctly under --check --little-endian: _LE uses LE, non-_LE uses BE.
+    let dir = test_dir("mixed_bsd_le_non_le");
+    let file = dir.join("test.txt");
+    fs::write(&file, b"mixed test\n").unwrap();
+    let path = file.to_str().unwrap();
+
+    // Non-_LE BSD line (big-endian)
+    let line_be = generate_checksums_ref(&["--tag", path]);
+    // _LE BSD line (little-endian)
+    let line_le = generate_checksums_ref(&["--tag", "--little-endian", path]);
+
+    let content = format!("{}{}", line_be, line_le);
+    let checksum_file = dir.join("sums.xxh");
+    fs::write(&checksum_file, &content).unwrap();
+    let cf = checksum_file.to_str().unwrap();
+
+    let (rust_out, rust_err, rust_code) = run_rust(&["--check", "--little-endian", cf]);
+    let (ref_out, ref_err, ref_code) = run_ref(&["--check", "--little-endian", cf]);
+
+    assert_eq!(
+        rust_code, 0,
+        "Mixed BSD LE/non-LE should verify under --little-endian"
+    );
+    assert_eq!(rust_code, ref_code, "exit codes should match");
+    assert_eq!(rust_out, ref_out, "stdout should match reference");
+    assert_eq!(rust_err, ref_err, "stderr should match reference");
+}

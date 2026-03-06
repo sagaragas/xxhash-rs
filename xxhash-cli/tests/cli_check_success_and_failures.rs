@@ -645,3 +645,125 @@ fn cli_check_success_and_failures_quiet_missing_and_mismatch() {
     assert_eq!(rust_out, ref_out, "stdout should match reference");
     assert_eq!(rust_err, ref_err, "stderr should match reference");
 }
+
+// =========================================================================
+// Stdin-default: --check with no FILE reads stdin
+// =========================================================================
+
+fn run_rust_stdin(args: &[&str], stdin_data: &[u8]) -> (String, String, i32) {
+    run_cli(&rust_binary(), args, Some(stdin_data))
+}
+
+fn run_ref_stdin(args: &[&str], stdin_data: &[u8]) -> (String, String, i32) {
+    run_cli(
+        &reference_binary().expect("reference binary not found"),
+        args,
+        Some(stdin_data),
+    )
+}
+
+#[test]
+fn cli_check_success_and_failures_stdin_default_empty() {
+    // --check with no FILE and empty stdin → "stdin: no properly formatted..."
+    let (rust_out, rust_err, rust_code) = run_rust_stdin(&["--check"], b"");
+    let (ref_out, ref_err, ref_code) = run_ref_stdin(&["--check"], b"");
+
+    assert_eq!(rust_code, 1, "empty stdin check should exit 1");
+    assert_eq!(rust_code, ref_code, "exit codes should match");
+    assert_eq!(rust_out, ref_out, "stdout should match reference");
+    assert_eq!(rust_err, ref_err, "stderr should match reference");
+    assert!(
+        rust_err.contains("stdin: no properly formatted xxHash checksum lines found"),
+        "stderr should contain stdin diagnostic: got stderr='{}'",
+        rust_err
+    );
+}
+
+#[test]
+fn cli_check_success_and_failures_stdin_default_garbage() {
+    // --check with no FILE and garbage stdin → "stdin: no properly formatted..."
+    let (rust_out, rust_err, rust_code) = run_rust_stdin(&["--check"], b"garbage line\n");
+    let (ref_out, ref_err, ref_code) = run_ref_stdin(&["--check"], b"garbage line\n");
+
+    assert_eq!(rust_code, 1, "garbage stdin check should exit 1");
+    assert_eq!(rust_code, ref_code, "exit codes should match");
+    assert_eq!(rust_out, ref_out, "stdout should match reference");
+    assert_eq!(rust_err, ref_err, "stderr should match reference");
+}
+
+#[test]
+fn cli_check_success_and_failures_stdin_default_valid() {
+    // --check with no FILE and valid checksum on stdin → verifies successfully
+    let dir = test_dir("stdin_valid");
+    let file = dir.join("test.txt");
+    fs::write(&file, b"stdin check test\n").unwrap();
+    let path = file.to_str().unwrap();
+
+    let checksums = generate_checksums_ref(&[path]);
+    let checksum_bytes = checksums.as_bytes();
+
+    let (rust_out, rust_err, rust_code) = run_rust_stdin(&["--check"], checksum_bytes);
+    let (ref_out, ref_err, ref_code) = run_ref_stdin(&["--check"], checksum_bytes);
+
+    assert_eq!(rust_code, 0, "valid stdin check should succeed");
+    assert_eq!(rust_code, ref_code, "exit codes should match");
+    assert_eq!(rust_out, ref_out, "stdout should match reference");
+    assert_eq!(rust_err, ref_err, "stderr should match reference");
+    assert!(
+        rust_out.contains(": OK"),
+        "should show OK for verified file"
+    );
+}
+
+// =========================================================================
+// Checksum-file read failure diagnostics
+// =========================================================================
+
+#[test]
+fn cli_check_success_and_failures_nonexistent_checksum_file() {
+    // --check on a non-existent file surfaces an explicit diagnostic
+    let path = "/tmp/xxhash_nonexistent_checksum_file_ZZZZ.xxh";
+    // Make sure it doesn't exist
+    let _ = fs::remove_file(path);
+
+    let (rust_out, rust_err, rust_code) = run_rust(&["--check", path]);
+    let (ref_out, ref_err, ref_code) = run_ref(&["--check", path]);
+
+    assert_eq!(rust_code, 1, "non-existent checksum file should exit 1");
+    assert_eq!(rust_code, ref_code, "exit codes should match");
+    assert_eq!(rust_out, ref_out, "stdout should match reference");
+    assert_eq!(rust_err, ref_err, "stderr should match reference");
+    assert!(
+        rust_err.contains("Could not open"),
+        "stderr should contain open-error diagnostic"
+    );
+    assert!(
+        rust_err.contains("No such file or directory"),
+        "stderr should contain OS error description"
+    );
+}
+
+#[test]
+fn cli_check_success_and_failures_unreadable_checksum_file() {
+    // --check on an unreadable checksum file surfaces a permission diagnostic
+    let dir = test_dir("unreadable_checksum");
+    let checksum_file = dir.join("sums.xxh");
+    fs::write(&checksum_file, "some content\n").unwrap();
+    fs::set_permissions(&checksum_file, fs::Permissions::from_mode(0o000)).unwrap();
+    let cf = checksum_file.to_str().unwrap();
+
+    let (rust_out, rust_err, rust_code) = run_rust(&["--check", cf]);
+    let (ref_out, ref_err, ref_code) = run_ref(&["--check", cf]);
+
+    // Restore permissions for cleanup
+    fs::set_permissions(&checksum_file, fs::Permissions::from_mode(0o644)).unwrap();
+
+    assert_eq!(rust_code, 1, "unreadable checksum file should exit 1");
+    assert_eq!(rust_code, ref_code, "exit codes should match");
+    assert_eq!(rust_out, ref_out, "stdout should match reference");
+    assert_eq!(rust_err, ref_err, "stderr should match reference");
+    assert!(
+        rust_err.contains("Permission denied"),
+        "stderr should contain permission error"
+    );
+}

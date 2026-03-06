@@ -391,3 +391,48 @@ fn cli_check_status_and_ignore_missing_status_zero_verified() {
     assert_eq!(rust_out, ref_out);
     assert_eq!(rust_err, ref_err);
 }
+
+// =========================================================================
+// Combined --status --ignore-missing all-missing → zero-verified diagnostic
+// =========================================================================
+
+#[test]
+fn cli_check_status_and_ignore_missing_combined_all_missing_emits_diagnostic() {
+    // --check --status --ignore-missing with all referenced files missing
+    // must still emit the "no file was verified" diagnostic to stdout,
+    // matching the reference CLI behavior for the zero-verified edge case.
+    let dir = test_dir("combined_status_ignore_all_missing");
+    let file_a = dir.join("a.txt");
+    let file_b = dir.join("b.txt");
+    fs::write(&file_a, b"content_a\n").unwrap();
+    fs::write(&file_b, b"content_b\n").unwrap();
+
+    let a = file_a.to_str().unwrap();
+    let b = file_b.to_str().unwrap();
+
+    let checksums = generate_checksums_ref(&[a, b]);
+    let checksum_file = dir.join("sums.xxh");
+    fs::write(&checksum_file, &checksums).unwrap();
+    let cf = checksum_file.to_str().unwrap();
+
+    // Remove all referenced files
+    fs::remove_file(&file_a).unwrap();
+    fs::remove_file(&file_b).unwrap();
+
+    let (rust_out, rust_err, rust_code) =
+        run_rust(&["--check", "--status", "--ignore-missing", cf]);
+    let (ref_out, ref_err, ref_code) =
+        run_ref(&["--check", "--status", "--ignore-missing", cf]);
+
+    assert_eq!(rust_code, 1, "all-missing should exit 1");
+    assert_eq!(rust_code, ref_code, "exit codes should match");
+    assert_eq!(rust_out, ref_out, "stdout should match reference");
+    assert_eq!(rust_err, ref_err, "stderr should match reference");
+
+    // The zero-verified diagnostic MUST appear even with --status
+    assert!(
+        rust_out.contains("no file was verified"),
+        "should emit 'no file was verified' even with --status: got stdout='{}'",
+        rust_out
+    );
+}

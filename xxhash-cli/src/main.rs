@@ -463,6 +463,9 @@ struct ChecksumEntry {
     little_endian: bool,
     /// Whether the filename in the original line was escaped (line started with `\`).
     escaped: bool,
+    /// Whether this entry was parsed from BSD-tagged format (algorithm tag is authoritative
+    /// for endianness, so `--little-endian` CLI flag should not override it).
+    is_bsd: bool,
 }
 
 /// Try to parse a GNU-style checksum line: `hash  filename`
@@ -501,6 +504,7 @@ fn parse_gnu_line(line: &str) -> Option<ChecksumEntry> {
                 algorithm: Algorithm::XXH3_64,
                 little_endian: false,
                 escaped,
+                is_bsd: false,
             });
         }
         return None;
@@ -531,6 +535,7 @@ fn parse_gnu_line(line: &str) -> Option<ChecksumEntry> {
         algorithm,
         little_endian,
         escaped,
+        is_bsd: false,
     })
 }
 
@@ -586,6 +591,7 @@ fn parse_bsd_line(line: &str) -> Option<ChecksumEntry> {
         algorithm,
         little_endian,
         escaped,
+        is_bsd: true,
     })
 }
 
@@ -643,30 +649,21 @@ fn format_check_filename(filename: &str, escaped: bool) -> String {
     }
 }
 
-/// Run checksum verification on a single checksum file.
+/// Run checksum verification on lines read from a `BufRead` source.
+///
+/// `source_label` is the display name used in diagnostics (e.g. the file
+/// path, or `"stdin"`).
 ///
 /// Returns `true` if all checks passed (exit 0), `false` otherwise (exit 1).
-fn run_check_file(
-    checksum_path: &str,
+fn run_check_reader(
+    reader: impl BufRead,
+    source_label: &str,
     verbosity: CheckVerbosity,
     ignore_missing: bool,
     warn: bool,
     strict: bool,
     cli_little_endian: bool,
 ) -> bool {
-    let file = match File::open(checksum_path) {
-        Ok(f) => f,
-        Err(e) => {
-            eprintln!(
-                "Error: Could not open '{}': {}. ",
-                checksum_path,
-                os_error_description(&e)
-            );
-            return false;
-        }
-    };
-
-    let reader = io::BufReader::new(file);
     let stdout_handle = io::stdout();
     let mut out = stdout_handle.lock();
     let stderr_handle = io::stderr();
@@ -700,7 +697,7 @@ fn run_check_file(
                     let _ = writeln!(
                         err,
                         "{}:{}: Error: Improperly formatted checksum line.",
-                        checksum_path,
+                        source_label,
                         line_idx + 1
                     );
                 }
@@ -710,10 +707,16 @@ fn run_check_file(
 
         valid_lines += 1;
 
-        // For GNU-format lines (which don't self-identify as LE),
-        // use the CLI's --little-endian flag. BSD _LE lines already
-        // have little_endian set from parsing.
-        let effective_le = entry.little_endian || cli_little_endian;
+        // BSD-tagged lines are authoritative for endianness: their _LE
+        // suffix (or absence thereof) fully determines the expected byte
+        // order, so the CLI's --little-endian flag must NOT override them.
+        // GNU-format lines have no self-identifying endianness tag, so
+        // the CLI flag applies to those.
+        let effective_le = if entry.is_bsd {
+            entry.little_endian
+        } else {
+            entry.little_endian || cli_little_endian
+        };
 
         // Try to compute the digest for the file
         let computed = match compute_file_digest(
@@ -735,7 +738,7 @@ fn run_check_file(
                     let _ = writeln!(
                         out,
                         "{}:{}: Could not open or read '{}': {}.",
-                        checksum_path,
+                        source_label,
                         line_idx + 1,
                         entry.filename,
                         os_error_description(&e)
@@ -770,16 +773,16 @@ fn run_check_file(
         let _ = writeln!(
             err,
             "{}: no properly formatted xxHash checksum lines found",
-            checksum_path
+            source_label
         );
         return false;
     }
 
-    // Handle --ignore-missing all-missing case
+    // Handle --ignore-missing all-missing case: "no file was verified" is
+    // a critical zero-verified diagnostic that is always emitted, even in
+    // --status mode, matching the reference CLI behavior.
     if ignore_missing && verified_count == 0 && failed_count == 0 {
-        if verbosity != CheckVerbosity::Status {
-            let _ = writeln!(out, "{}: no file was verified", checksum_path);
-        }
+        let _ = writeln!(out, "{}: no file was verified", source_label);
         return false;
     }
 
@@ -825,6 +828,64 @@ fn run_check_file(
     failed_count == 0 && unreadable_count == 0
 }
 
+/// Run checksum verification on a single checksum file.
+///
+/// Returns `true` if all checks passed (exit 0), `false` otherwise (exit 1).
+fn run_check_file(
+    checksum_path: &str,
+    verbosity: CheckVerbosity,
+    ignore_missing: bool,
+    warn: bool,
+    strict: bool,
+    cli_little_endian: bool,
+) -> bool {
+    let file = match File::open(checksum_path) {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!(
+                "Error: Could not open '{}': {}",
+                checksum_path,
+                os_error_description(&e)
+            );
+            return false;
+        }
+    };
+
+    let reader = io::BufReader::new(file);
+    run_check_reader(
+        reader,
+        checksum_path,
+        verbosity,
+        ignore_missing,
+        warn,
+        strict,
+        cli_little_endian,
+    )
+}
+
+/// Run checksum verification reading from stdin.
+///
+/// Returns `true` if all checks passed (exit 0), `false` otherwise (exit 1).
+fn run_check_stdin(
+    verbosity: CheckVerbosity,
+    ignore_missing: bool,
+    warn: bool,
+    strict: bool,
+    cli_little_endian: bool,
+) -> bool {
+    let stdin_handle = io::stdin();
+    let reader = stdin_handle.lock();
+    run_check_reader(
+        reader,
+        "stdin",
+        verbosity,
+        ignore_missing,
+        warn,
+        strict,
+        cli_little_endian,
+    )
+}
+
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
 
@@ -836,12 +897,12 @@ fn main() {
         }
     };
 
-    // Check mode: verify checksums from file(s)
+    // Check mode: verify checksums from file(s) or stdin
     if cli.check {
         let mut all_ok = true;
-        for input in &cli.inputs {
-            let ok = run_check_file(
-                input,
+        if cli.inputs.is_empty() {
+            // No checksum FILE argument: read from stdin (reference-compatible default)
+            let ok = run_check_stdin(
                 cli.check_verbosity,
                 cli.ignore_missing,
                 cli.warn,
@@ -850,6 +911,20 @@ fn main() {
             );
             if !ok {
                 all_ok = false;
+            }
+        } else {
+            for input in &cli.inputs {
+                let ok = run_check_file(
+                    input,
+                    cli.check_verbosity,
+                    cli.ignore_missing,
+                    cli.warn,
+                    cli.strict,
+                    cli.little_endian,
+                );
+                if !ok {
+                    all_ok = false;
+                }
             }
         }
         if !all_ok {
