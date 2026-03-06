@@ -49,7 +49,6 @@ pub fn reference_binary() -> Option<PathBuf> {
 ///
 /// Runs `make xxhsum` in the reference checkout directory.
 /// Returns `Ok(path)` with the binary path on success, or an error message.
-#[allow(dead_code)]
 pub fn ensure_reference_built() -> Result<PathBuf, String> {
     let root = reference_root().ok_or_else(|| {
         format!(
@@ -87,7 +86,6 @@ pub fn ensure_reference_built() -> Result<PathBuf, String> {
 
 /// Result of invoking the reference binary.
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub struct ReferenceResult {
     /// The full stdout output.
     pub stdout: String,
@@ -149,7 +147,6 @@ pub fn hash_stdin(
 /// * `file_path` - Path to the file to hash
 /// * `algo_flag` - Algorithm flag (e.g., "-H0" for XXH32, "-H1" for XXH64)
 /// * `extra_args` - Additional command-line arguments
-#[allow(dead_code)]
 pub fn hash_file(
     file_path: &Path,
     algo_flag: &str,

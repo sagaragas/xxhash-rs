@@ -5,6 +5,7 @@
 //! - Repeated `digest()` calls on unchanged state stay stable.
 //! - `update(A) -> digest() -> update(B)` matches one-shot hashing on `A+B`.
 
+#[allow(dead_code)]
 mod fixtures;
 
 use fixtures::generate_test_buffer;

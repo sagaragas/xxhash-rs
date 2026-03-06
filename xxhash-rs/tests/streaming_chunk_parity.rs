@@ -6,6 +6,7 @@
 //! - Streaming `reset/update/digest` produces the same result as one-shot
 //!   hashing for the same bytes across multiple chunking patterns.
 
+#[allow(dead_code)]
 mod fixtures;
 
 use fixtures::generate_test_buffer;
