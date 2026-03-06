@@ -6,14 +6,17 @@ Proves that:
 1. Empty or corrupt index.json does not crash _update_run_index or
    resolve_latest_run.
 2. Atomic _write_json prevents partial/corrupt reads on concurrent access.
-3. Concurrent _update_run_index calls from multiple threads converge to
-   valid JSON state.
+3. Concurrent _update_run_index calls from multiple threads preserve ALL
+   expected run IDs (lossless, not last-writer-wins).
 4. load_json_safe returns the default on missing, empty, partial, and
    corrupt files.
+5. Concurrent or repeated smoke execution keeps manifest/run-index state
+   valid and lossless.
 """
 
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import threading
@@ -316,8 +319,8 @@ class TestResolveLatestRunCorruptRecovery(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 class TestConcurrentUpdateRunIndex(unittest.TestCase):
-    """Multiple threads calling _update_run_index should not corrupt the
-    index or crash with JSONDecodeError."""
+    """Multiple threads calling _update_run_index must preserve ALL
+    expected run IDs — lossless, not last-writer-wins."""
 
     def setUp(self):
         self._tmpdir = tempfile.mkdtemp(prefix="test_concurrent_index_")
@@ -329,12 +332,13 @@ class TestConcurrentUpdateRunIndex(unittest.TestCase):
         import shutil
         shutil.rmtree(self._tmpdir, ignore_errors=True)
 
-    def test_concurrent_updates_produce_valid_json(self):
-        """Parallel _update_run_index calls must leave index.json as
-        valid JSON.  We accept that some entries may be lost due to
-        last-writer-wins, but the file must never be corrupt."""
+    def test_concurrent_updates_are_lossless(self):
+        """Parallel _update_run_index calls must preserve every single
+        run ID.  The file-lock serialisation guarantees no entries are
+        dropped by a concurrent read-modify-write race."""
         num_threads = 8
         updates_per_thread = 10
+        total_expected = num_threads * updates_per_thread
         errors = []
 
         def updater(thread_id):
@@ -355,7 +359,10 @@ class TestConcurrentUpdateRunIndex(unittest.TestCase):
         for t in threads:
             t.join(timeout=60)
 
-        # The file must be valid JSON after all threads finish
+        # No thread should have crashed
+        self.assertEqual(errors, [], f"Errors during concurrent updates: {errors}")
+
+        # The file must be valid JSON
         index_path = harness.RUNS_DIR / "index.json"
         self.assertTrue(index_path.exists(), "index.json should exist")
 
@@ -364,21 +371,31 @@ class TestConcurrentUpdateRunIndex(unittest.TestCase):
 
         self.assertIn("runs", index)
         self.assertIsInstance(index["runs"], list)
-        # At minimum one entry should be present; under contention some
-        # may be lost, but the file must always be valid JSON.
-        self.assertGreater(len(index["runs"]), 0)
 
-        # No thread should have crashed
-        self.assertEqual(errors, [], f"Errors during concurrent updates: {errors}")
+        # ALL entries must be present — lossless guarantee
+        actual_ids = {r["run_id"] for r in index["runs"]}
+        expected_ids = {
+            f"run-t{tid}-{i:03d}"
+            for tid in range(num_threads)
+            for i in range(updates_per_thread)
+        }
+        self.assertEqual(
+            len(index["runs"]),
+            total_expected,
+            f"Expected {total_expected} entries, got {len(index['runs'])}. "
+            f"Missing: {expected_ids - actual_ids}",
+        )
+        self.assertEqual(actual_ids, expected_ids)
 
     def test_concurrent_update_and_resolve(self):
         """Concurrent _update_run_index + resolve_latest_run must not
-        crash.  resolve_latest_run may return None during contention
-        but must never raise."""
+        crash and must preserve all written entries.  resolve_latest_run
+        may return None during contention but must never raise."""
+        num_updates = 20
         errors = []
 
         def updater():
-            for i in range(20):
+            for i in range(num_updates):
                 run_id = f"run-{i:03d}"
                 try:
                     manifest = _minimal_manifest(run_id)
@@ -403,6 +420,88 @@ class TestConcurrentUpdateRunIndex(unittest.TestCase):
             t.join(timeout=60)
 
         self.assertEqual(errors, [], f"Errors during concurrent ops: {errors}")
+
+        # After all threads complete, all entries must be present
+        index_path = harness.RUNS_DIR / "index.json"
+        with open(index_path) as f:
+            index = json.load(f)
+        actual_ids = {r["run_id"] for r in index["runs"]}
+        expected_ids = {f"run-{i:03d}" for i in range(num_updates)}
+        self.assertEqual(actual_ids, expected_ids)
+
+    def test_concurrent_updates_from_subprocesses_are_lossless(self):
+        """Parallel subprocesses calling _update_run_index must also
+        preserve all entries, proving the file lock works across
+        separate OS processes (not just threads)."""
+        num_procs = 4
+        updates_per_proc = 5
+        total_expected = num_procs * updates_per_proc
+        runs_dir = str(harness.RUNS_DIR)
+
+        # Build a small helper script that each subprocess will execute
+        helper_script = os.path.join(self._tmpdir, "_index_writer.py")
+        with open(helper_script, "w") as f:
+            f.write(
+                "import sys, os\n"
+                "sys.path.insert(0, os.path.dirname(os.path.abspath("
+                "'__file__')))\n"
+                "sys.path.insert(0, %r)\n"
+                "from pathlib import Path\n"
+                "import harness\n"
+                "harness.RUNS_DIR = Path(sys.argv[1])\n"
+                "proc_id = int(sys.argv[2])\n"
+                "n = int(sys.argv[3])\n"
+                "for i in range(n):\n"
+                "    rid = f'run-p{proc_id}-{i:03d}'\n"
+                "    m = {\n"
+                "        'run_id': rid,\n"
+                "        'timestamp_utc': '2026-01-15T12:00:00+00:00',\n"
+                "        'run_type': 'smoke',\n"
+                "        'status': 'complete',\n"
+                "        'claim_ready': True,\n"
+                "        'scenario_count': 4,\n"
+                "        'environment': {'repo_revision': 'abc123'},\n"
+                "        'manifest_hashes': {'scenarios': 's', "
+                "'comparators': 'c', 'policy': 'p'},\n"
+                "    }\n"
+                "    harness._update_run_index(rid, m)\n"
+                % str(Path(__file__).resolve().parent)
+            )
+
+        procs = []
+        for pid in range(num_procs):
+            p = subprocess.Popen(
+                [sys.executable, helper_script, runs_dir,
+                 str(pid), str(updates_per_proc)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            procs.append(p)
+
+        for p in procs:
+            stdout, stderr = p.communicate(timeout=60)
+            self.assertEqual(
+                p.returncode, 0,
+                f"Subprocess failed: {stderr.decode()[:500]}",
+            )
+
+        index_path = harness.RUNS_DIR / "index.json"
+        with open(index_path) as f:
+            index = json.load(f)
+
+        actual_ids = {r["run_id"] for r in index["runs"]}
+        expected_ids = {
+            f"run-p{pid}-{i:03d}"
+            for pid in range(num_procs)
+            for i in range(updates_per_proc)
+        }
+        self.assertEqual(
+            len(index["runs"]),
+            total_expected,
+            f"Expected {total_expected} entries, got {len(index['runs'])}. "
+            f"Missing: {expected_ids - actual_ids}",
+        )
+        self.assertEqual(actual_ids, expected_ids)
 
 
 # ---------------------------------------------------------------------------
@@ -450,6 +549,43 @@ class TestRepeatedIndexUpdatesKeepStateValid(unittest.TestCase):
                 index = json.load(f)
             self.assertIsInstance(index["runs"], list)
             self.assertEqual(len(index["runs"]), i + 1)
+
+
+# ---------------------------------------------------------------------------
+# Lock file cleanup
+# ---------------------------------------------------------------------------
+
+class TestLockFileCleanup(unittest.TestCase):
+    """The lock file should be created alongside index.json but not
+    interfere with normal JSON operations."""
+
+    def setUp(self):
+        self._tmpdir = tempfile.mkdtemp(prefix="test_lockfile_")
+        self._orig_runs_dir = harness.RUNS_DIR
+        harness.RUNS_DIR = Path(self._tmpdir)
+
+    def tearDown(self):
+        harness.RUNS_DIR = self._orig_runs_dir
+        import shutil
+        shutil.rmtree(self._tmpdir, ignore_errors=True)
+
+    def test_lock_file_is_created(self):
+        """_update_run_index should create a .lock file."""
+        manifest = _minimal_manifest()
+        harness._update_run_index("run-001", manifest)
+
+        lock_path = harness.RUNS_DIR / "index.json.lock"
+        self.assertTrue(lock_path.exists(), "Lock file should be created")
+
+    def test_index_valid_despite_lock_file(self):
+        """The presence of the lock file must not break load_json_safe
+        or resolve_latest_run."""
+        manifest = _minimal_manifest()
+        harness._update_run_index("run-001", manifest)
+
+        index_path = harness.RUNS_DIR / "index.json"
+        index = harness.load_json_safe(index_path)
+        self.assertEqual(len(index["runs"]), 1)
 
 
 if __name__ == "__main__":

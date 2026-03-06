@@ -14,6 +14,7 @@ Usage:
 """
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
@@ -640,18 +641,23 @@ def _write_json(path: Path, data: dict):
 # ---------------------------------------------------------------------------
 
 def _update_run_index(run_id: str, manifest: dict):
-    """Append this run to the run index.
+    """Append this run to the run index under an exclusive file lock.
 
-    Uses ``load_json_safe`` so a concurrent/partial write from another
-    process does not crash this one, and ``_write_json`` (atomic via
-    temp-file + ``os.replace``) so readers never see half-written JSON.
+    The read-modify-write cycle is serialised with ``fcntl.flock`` so
+    concurrent writers (parallel smoke runs, tests, subprocesses) never
+    lose each other's entries.  The lock file is a separate ``.lock``
+    file next to ``index.json`` so readers using ``load_json_safe`` or
+    ``_write_json`` (atomic via temp-file + ``os.replace``) are not
+    blocked.
+
+    Tolerates empty/corrupt/missing index files on read via
+    ``load_json_safe``.
     """
     index_path = RUNS_DIR / "index.json"
-    index = load_json_safe(index_path, default={"runs": []})
-    if "runs" not in index or not isinstance(index.get("runs"), list):
-        index = {"runs": []}
+    lock_path = RUNS_DIR / "index.json.lock"
+    index_path.parent.mkdir(parents=True, exist_ok=True)
 
-    index["runs"].append({
+    entry = {
         "run_id": run_id,
         "timestamp_utc": manifest["timestamp_utc"],
         "run_type": manifest["run_type"],
@@ -660,8 +666,23 @@ def _update_run_index(run_id: str, manifest: dict):
         "scenario_count": manifest["scenario_count"],
         "revision": manifest.get("environment", {}).get("repo_revision", ""),
         "manifest_hashes": manifest.get("manifest_hashes", {}),
-    })
-    _write_json(index_path, index)
+    }
+
+    lock_fd = os.open(str(lock_path), os.O_CREAT | os.O_RDWR)
+    try:
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+
+        # --- critical section: read, modify, write ---
+        index = load_json_safe(index_path, default={"runs": []})
+        if "runs" not in index or not isinstance(index.get("runs"), list):
+            index = {"runs": []}
+
+        index["runs"].append(entry)
+        _write_json(index_path, index)
+        # --- end critical section ---
+    finally:
+        fcntl.flock(lock_fd, fcntl.LOCK_UN)
+        os.close(lock_fd)
 
 
 def resolve_latest_run() -> dict | None:
