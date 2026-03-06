@@ -4,7 +4,12 @@
 //! `scramble_accumulators` produce bit-exact results compared to the
 //! scalar reference implementation, and that the full one-shot and
 //! streaming large-input paths produce identical digests under the
-//! optimized path vs the known reference vectors.
+//! optimized path vs an independent scalar-only oracle that bypasses
+//! SIMD dispatch entirely.
+//!
+//! Expectations for end-to-end tests use `xxh3_*_scalar()` (which calls
+//! `accumulate_stripe_scalar` / `scramble_accumulators_scalar` internally),
+//! so a tautological "same path verifies itself" gap is impossible.
 //!
 //! Covers VAL-HASH-007: Platform-optimized XXH3 long-input hashing stays
 //! bit-exact on Apple Silicon.
@@ -17,7 +22,7 @@ use xxhash_rs::xxh3::{
     accumulate_stripe_scalar, scramble_accumulators_scalar, xxh3_128, xxh3_64, Xxh3_128State,
     Xxh3_64State,
 };
-use xxhash_rs::xxh3::tests_public::default_secret;
+use xxhash_rs::xxh3::tests_public::{default_secret, xxh3_64_scalar, xxh3_128_scalar};
 use xxhash_rs::xxh3_simd::{accumulate_stripe_dispatch, scramble_accumulators_dispatch};
 
 /// Initial accumulator values from the XXH3 specification.
@@ -160,23 +165,31 @@ const LARGE_SIZES: &[usize] = &[
 fn xxh3_simd_scalar_parity_xxh3_64_large_inputs_seed0() {
     for &size in LARGE_SIZES {
         let buf = generate_test_buffer(size);
-        let hash = xxh3_64(&buf, 0);
+        let opt_hash = xxh3_64(&buf, 0);
+        let scalar_hash = xxh3_64_scalar(&buf, 0);
 
-        // Verify against known reference vectors where available
+        // Primary: optimized path must match independent scalar oracle.
+        assert_eq!(
+            opt_hash, scalar_hash,
+            "XXH3_64 len={}: optimized diverged from scalar oracle",
+            size
+        );
+
+        // Cross-check against known reference vectors where available.
         match size {
-            241 => assert_eq!(hash, 0xC5A639ECD2030E5E, "XXH3_64 len=241 mismatch"),
-            256 => assert_eq!(hash, 0x55DE574AD89D0AC5, "XXH3_64 len=256 mismatch"),
-            512 => assert_eq!(hash, 0x617E49599013CB6B, "XXH3_64 len=512 mismatch"),
-            _ => {} // other sizes are checked for consistency but have no pre-recorded vector
+            241 => assert_eq!(opt_hash, 0xC5A639ECD2030E5E, "XXH3_64 len=241 mismatch"),
+            256 => assert_eq!(opt_hash, 0x55DE574AD89D0AC5, "XXH3_64 len=256 mismatch"),
+            512 => assert_eq!(opt_hash, 0x617E49599013CB6B, "XXH3_64 len=512 mismatch"),
+            _ => {}
         }
 
-        // Streaming must agree with one-shot
+        // Streaming must also agree with scalar oracle.
         let mut state = Xxh3_64State::new(0);
         state.update(&buf);
         let streaming_hash = state.digest();
         assert_eq!(
-            hash, streaming_hash,
-            "XXH3_64 len={}: one-shot vs streaming mismatch",
+            streaming_hash, scalar_hash,
+            "XXH3_64 len={}: streaming diverged from scalar oracle",
             size
         );
     }
@@ -187,19 +200,28 @@ fn xxh3_simd_scalar_parity_xxh3_64_large_inputs_seeded() {
     let seed = 0x9E3779B185EBCA8D_u64;
     for &size in LARGE_SIZES {
         let buf = generate_test_buffer(size);
-        let hash = xxh3_64(&buf, seed);
+        let opt_hash = xxh3_64(&buf, seed);
+        let scalar_hash = xxh3_64_scalar(&buf, seed);
 
-        // Verify known seeded vectors
+        // Primary: optimized path must match independent scalar oracle.
+        assert_eq!(
+            opt_hash, scalar_hash,
+            "XXH3_64 seeded len={}: optimized diverged from scalar oracle",
+            size
+        );
+
+        // Cross-check against known seeded vector.
         if size == 241 {
-            assert_eq!(hash, 0xDDA9B0A161D4829A, "XXH3_64 seeded len=241 mismatch");
+            assert_eq!(opt_hash, 0xDDA9B0A161D4829A, "XXH3_64 seeded len=241 mismatch");
         }
 
+        // Streaming must also agree with scalar oracle.
         let mut state = Xxh3_64State::new(seed);
         state.update(&buf);
         let streaming_hash = state.digest();
         assert_eq!(
-            hash, streaming_hash,
-            "XXH3_64 seeded len={}: one-shot vs streaming mismatch",
+            streaming_hash, scalar_hash,
+            "XXH3_64 seeded len={}: streaming diverged from scalar oracle",
             size
         );
     }
@@ -213,16 +235,23 @@ fn xxh3_simd_scalar_parity_xxh3_64_large_inputs_seeded() {
 fn xxh3_simd_scalar_parity_xxh3_128_large_inputs_seed0() {
     for &size in LARGE_SIZES {
         let buf = generate_test_buffer(size);
-        let (lo, hi) = xxh3_128(&buf, 0);
+        let opt = xxh3_128(&buf, 0);
+        let scalar = xxh3_128_scalar(&buf, 0);
 
-        // One-shot and streaming must agree
+        // Primary: optimized path must match independent scalar oracle.
+        assert_eq!(
+            opt, scalar,
+            "XXH3_128 len={}: optimized diverged from scalar oracle",
+            size
+        );
+
+        // Streaming must also agree with scalar oracle.
         let mut state = Xxh3_128State::new(0);
         state.update(&buf);
-        let (s_lo, s_hi) = state.digest();
+        let streaming = state.digest();
         assert_eq!(
-            (lo, hi),
-            (s_lo, s_hi),
-            "XXH3_128 len={}: one-shot vs streaming mismatch",
+            streaming, scalar,
+            "XXH3_128 len={}: streaming diverged from scalar oracle",
             size
         );
     }
@@ -233,15 +262,23 @@ fn xxh3_simd_scalar_parity_xxh3_128_large_inputs_seeded() {
     let seed = 0x9E3779B185EBCA8D_u64;
     for &size in LARGE_SIZES {
         let buf = generate_test_buffer(size);
-        let (lo, hi) = xxh3_128(&buf, seed);
+        let opt = xxh3_128(&buf, seed);
+        let scalar = xxh3_128_scalar(&buf, seed);
 
+        // Primary: optimized path must match independent scalar oracle.
+        assert_eq!(
+            opt, scalar,
+            "XXH3_128 seeded len={}: optimized diverged from scalar oracle",
+            size
+        );
+
+        // Streaming must also agree with scalar oracle.
         let mut state = Xxh3_128State::new(seed);
         state.update(&buf);
-        let (s_lo, s_hi) = state.digest();
+        let streaming = state.digest();
         assert_eq!(
-            (lo, hi),
-            (s_lo, s_hi),
-            "XXH3_128 seeded len={}: one-shot vs streaming mismatch",
+            streaming, scalar,
+            "XXH3_128 seeded len={}: streaming diverged from scalar oracle",
             size
         );
     }
@@ -297,28 +334,44 @@ fn xxh3_simd_scalar_parity_multi_block_accumulator_chain() {
 #[test]
 fn xxh3_simd_scalar_parity_derived_secret_large() {
     // When seed != 0, the large path derives a new secret from the seed.
-    // The SIMD path must handle the derived secret identically.
+    // The SIMD path must handle the derived secret identically to the
+    // scalar oracle.
     let seed = 42_u64;
     for &size in &[1024, 2048, 4096, 65536] {
         let buf = generate_test_buffer(size);
-        let hash_64 = xxh3_64(&buf, seed);
-        let (lo_128, hi_128) = xxh3_128(&buf, seed);
+        let opt_64 = xxh3_64(&buf, seed);
+        let opt_128 = xxh3_128(&buf, seed);
+        let scalar_64 = xxh3_64_scalar(&buf, seed);
+        let scalar_128 = xxh3_128_scalar(&buf, seed);
 
+        // Primary: optimized must match scalar oracle.
+        assert_eq!(
+            opt_64, scalar_64,
+            "Derived-secret XXH3_64 len={}: optimized diverged from scalar oracle",
+            size
+        );
+        assert_eq!(
+            opt_128, scalar_128,
+            "Derived-secret XXH3_128 len={}: optimized diverged from scalar oracle",
+            size
+        );
+
+        // Streaming must also agree with scalar oracle.
         let mut state_64 = Xxh3_64State::new(seed);
         state_64.update(&buf);
         assert_eq!(
-            hash_64,
             state_64.digest(),
-            "Derived-secret XXH3_64 mismatch at len={}",
+            scalar_64,
+            "Derived-secret XXH3_64 streaming len={}: diverged from scalar oracle",
             size
         );
 
         let mut state_128 = Xxh3_128State::new(seed);
         state_128.update(&buf);
         assert_eq!(
-            (lo_128, hi_128),
             state_128.digest(),
-            "Derived-secret XXH3_128 mismatch at len={}",
+            scalar_128,
+            "Derived-secret XXH3_128 streaming len={}: diverged from scalar oracle",
             size
         );
     }
@@ -331,8 +384,11 @@ fn xxh3_simd_scalar_parity_derived_secret_large() {
 #[test]
 fn xxh3_simd_scalar_parity_streaming_various_chunk_sizes() {
     let buf = generate_test_buffer(10000);
-    let expected_64 = xxh3_64(&buf, 0);
-    let expected_128 = xxh3_128(&buf, 0);
+
+    // Expectations come from the scalar oracle, not the optimized one-shot
+    // API, so the streaming path is validated against an independent source.
+    let scalar_64 = xxh3_64_scalar(&buf, 0);
+    let scalar_128 = xxh3_128_scalar(&buf, 0);
 
     let chunk_sizes = [1, 7, 13, 63, 64, 65, 127, 128, 129, 255, 256, 1000, 2048];
 
@@ -346,15 +402,15 @@ fn xxh3_simd_scalar_parity_streaming_various_chunk_sizes() {
         }
 
         assert_eq!(
-            expected_64,
             state_64.digest(),
-            "XXH3_64 streaming chunk_size={} mismatch",
+            scalar_64,
+            "XXH3_64 streaming chunk_size={}: diverged from scalar oracle",
             chunk_size
         );
         assert_eq!(
-            expected_128,
             state_128.digest(),
-            "XXH3_128 streaming chunk_size={} mismatch",
+            scalar_128,
+            "XXH3_128 streaming chunk_size={}: diverged from scalar oracle",
             chunk_size
         );
     }

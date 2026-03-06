@@ -1180,14 +1180,105 @@ mod tests {
     }
 }
 
-/// Test-support module: exposes internal constants needed by simd parity tests.
-/// Not part of the public API surface.
+/// Test-support module: exposes internal constants and scalar-only oracles
+/// needed by SIMD parity tests.  Not part of the public API surface.
 #[doc(hidden)]
 pub mod tests_public {
-    use super::DEFAULT_SECRET;
+    use super::{
+        accumulate_stripe_scalar, derive_secret, final_merge, scramble_accumulators_scalar,
+        xxh3_128, xxh3_64, DEFAULT_SECRET, DEFAULT_SECRET_LEN, PRIME32_1, PRIME32_2, PRIME32_3,
+        PRIME64_1, PRIME64_2, PRIME64_3, PRIME64_4, PRIME64_5,
+    };
 
     /// Returns a copy of the default XXH3 secret for use in SIMD parity tests.
     pub fn default_secret() -> [u8; 192] {
         DEFAULT_SECRET
+    }
+
+    /// Scalar-only XXH3-128 large-input computation.
+    ///
+    /// Duplicates the `xxh3_128_large` algorithm but forces the scalar
+    /// `accumulate_stripe` and `scramble_accumulators` functions, giving
+    /// tests an independent oracle that never touches SIMD dispatch.
+    ///
+    /// **Must only be called with `input.len() > 240`.**
+    pub fn xxh3_128_large_scalar(input: &[u8], seed: u64) -> (u64, u64) {
+        let len = input.len();
+        debug_assert!(len > 240);
+
+        let derived;
+        let secret: &[u8] = if seed == 0 {
+            &DEFAULT_SECRET
+        } else {
+            derived = derive_secret(seed);
+            &derived
+        };
+        let secret_len = DEFAULT_SECRET_LEN;
+
+        let mut acc: [u64; 8] = [
+            PRIME32_3, PRIME64_1, PRIME64_2, PRIME64_3, PRIME64_4, PRIME32_2, PRIME64_5, PRIME32_1,
+        ];
+
+        let stripes_per_block = (secret_len - 64) / 8;
+        let block_size = 64 * stripes_per_block;
+
+        let nb_blocks = (len - 1) / block_size;
+        for block_idx in 0..nb_blocks {
+            let block_start = block_idx * block_size;
+            for stripe_idx in 0..stripes_per_block {
+                let stripe_start = block_start + stripe_idx * 64;
+                accumulate_stripe_scalar(&mut acc, &input[stripe_start..], secret, stripe_idx * 8);
+            }
+            scramble_accumulators_scalar(&mut acc, secret, secret_len);
+        }
+
+        let last_block_start = nb_blocks * block_size;
+        let last_block_len = len - last_block_start;
+        let n_full_stripes = (last_block_len - 1) / 64;
+        for stripe_idx in 0..n_full_stripes {
+            let stripe_start = last_block_start + stripe_idx * 64;
+            accumulate_stripe_scalar(&mut acc, &input[stripe_start..], secret, stripe_idx * 8);
+        }
+        accumulate_stripe_scalar(&mut acc, &input[len - 64..], secret, secret_len - 71);
+
+        let lo = final_merge(&acc, (len as u64).wrapping_mul(PRIME64_1), secret, 11);
+        let hi = final_merge(
+            &acc,
+            !((len as u64).wrapping_mul(PRIME64_2)),
+            secret,
+            secret_len - 75,
+        );
+        (lo, hi)
+    }
+
+    /// Scalar-only XXH3-64 large-input computation.
+    ///
+    /// Returns the low 64 bits of `xxh3_128_large_scalar`.
+    /// **Must only be called with `input.len() > 240`.**
+    pub fn xxh3_64_large_scalar(input: &[u8], seed: u64) -> u64 {
+        let (lo, _hi) = xxh3_128_large_scalar(input, seed);
+        lo
+    }
+
+    /// Scalar-only XXH3-64 wrapper that delegates to the large-input scalar
+    /// oracle for inputs > 240 bytes and falls through to the standard
+    /// (non-dispatched) API for shorter inputs.
+    pub fn xxh3_64_scalar(input: &[u8], seed: u64) -> u64 {
+        if input.len() > 240 {
+            xxh3_64_large_scalar(input, seed)
+        } else {
+            xxh3_64(input, seed)
+        }
+    }
+
+    /// Scalar-only XXH3-128 wrapper that delegates to the large-input scalar
+    /// oracle for inputs > 240 bytes and falls through to the standard
+    /// (non-dispatched) API for shorter inputs.
+    pub fn xxh3_128_scalar(input: &[u8], seed: u64) -> (u64, u64) {
+        if input.len() > 240 {
+            xxh3_128_large_scalar(input, seed)
+        } else {
+            xxh3_128(input, seed)
+        }
     }
 }
