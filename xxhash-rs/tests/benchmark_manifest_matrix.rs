@@ -440,6 +440,49 @@ fn benchmark_manifest_matrix_md5_has_deterministic_provenance() {
 // ---------------------------------------------------------------------------
 
 #[test]
+fn benchmark_manifest_matrix_run_index_concurrency_regression() {
+    let root = workspace_root();
+
+    // Run the Python concurrency regression tests that prove:
+    // 1. Empty/corrupt index.json does not crash _update_run_index or resolve_latest_run
+    // 2. Concurrent _update_run_index calls produce valid JSON
+    // 3. Atomic writes prevent partial reads
+    let output = Command::new("python3")
+        .args([
+            "-m",
+            "pytest",
+            "benchmarks/test_run_index_concurrency.py",
+            "-v",
+            "--tb=short",
+        ])
+        .current_dir(&root)
+        .output()
+        .expect("Failed to run concurrency regression tests");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert!(
+        output.status.success(),
+        "Run-index concurrency regression tests should pass.\nstdout: {stdout}\nstderr: {stderr}"
+    );
+
+    // Verify the key test classes executed
+    assert!(
+        stdout.contains("TestLoadJsonSafe"),
+        "Should have run load_json_safe tests"
+    );
+    assert!(
+        stdout.contains("TestConcurrentUpdateRunIndex"),
+        "Should have run concurrent update tests"
+    );
+    assert!(
+        stdout.contains("TestUpdateRunIndexCorruptRecovery"),
+        "Should have run corrupt recovery tests"
+    );
+}
+
+#[test]
 fn benchmark_manifest_matrix_harness_smoke_produces_complete_run() {
     let root = workspace_root();
     let harness = root.join("benchmarks").join("harness.py");

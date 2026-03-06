@@ -50,6 +50,25 @@ def load_json(path: Path) -> dict:
         return json.load(f)
 
 
+def load_json_safe(path: Path, default=None):
+    """Load JSON from *path*, returning *default* on any read/parse failure.
+
+    Tolerates missing files, empty files, partially-written files, and
+    corrupt JSON — all of which can occur when parallel smoke runs or
+    tests race to update the run index.
+    """
+    if default is None:
+        default = {}
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            return default
+        return data
+    except (OSError, json.JSONDecodeError, ValueError):
+        return default
+
+
 def file_sha256(path: Path) -> str:
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -589,9 +608,31 @@ def save_run_bundle(
 
 
 def _write_json(path: Path, data: dict):
-    with open(path, "w") as f:
-        json.dump(data, f, indent=2, default=str)
-        f.write("\n")
+    """Atomically write *data* as JSON to *path*.
+
+    Writes to a temporary file in the same directory and then uses
+    ``os.replace`` (atomic on POSIX) to move it into place.  This
+    prevents partial/corrupt reads when another process opens the file
+    concurrently.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(
+        dir=str(path.parent), suffix=".tmp", prefix=".harness_"
+    )
+    try:
+        with os.fdopen(fd, "w") as f:
+            json.dump(data, f, indent=2, default=str)
+            f.write("\n")
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, str(path))
+    except BaseException:
+        # Best-effort cleanup on failure
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 # ---------------------------------------------------------------------------
@@ -599,11 +640,15 @@ def _write_json(path: Path, data: dict):
 # ---------------------------------------------------------------------------
 
 def _update_run_index(run_id: str, manifest: dict):
-    """Append this run to the run index."""
+    """Append this run to the run index.
+
+    Uses ``load_json_safe`` so a concurrent/partial write from another
+    process does not crash this one, and ``_write_json`` (atomic via
+    temp-file + ``os.replace``) so readers never see half-written JSON.
+    """
     index_path = RUNS_DIR / "index.json"
-    if index_path.exists():
-        index = load_json(index_path)
-    else:
+    index = load_json_safe(index_path, default={"runs": []})
+    if "runs" not in index or not isinstance(index.get("runs"), list):
         index = {"runs": []}
 
     index["runs"].append({
@@ -620,15 +665,24 @@ def _update_run_index(run_id: str, manifest: dict):
 
 
 def resolve_latest_run() -> dict | None:
-    """Resolve 'latest' to the most recent complete, claim-ready run."""
+    """Resolve 'latest' to the most recent complete, claim-ready run.
+
+    Tolerates empty or corrupt ``index.json`` by falling back to an
+    empty run list, so a partial write from a concurrent process does
+    not crash the reader.
+    """
     index_path = RUNS_DIR / "index.json"
     if not index_path.exists():
         return None
 
-    index = load_json(index_path)
+    index = load_json_safe(index_path, default={"runs": []})
+    runs = index.get("runs", [])
+    if not isinstance(runs, list):
+        return None
+
     # Filter to complete, claim-ready runs and sort by timestamp desc
     eligible = [
-        r for r in index.get("runs", [])
+        r for r in runs
         if r.get("status") == "complete" and r.get("claim_ready") is True
     ]
     if not eligible:

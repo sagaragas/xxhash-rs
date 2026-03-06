@@ -41,6 +41,25 @@ def load_json(path: Path) -> dict:
         return json.load(f)
 
 
+def load_json_safe(path: Path, default=None):
+    """Load JSON from *path*, returning *default* on any read/parse failure.
+
+    Tolerates missing files, empty files, partially-written files, and
+    corrupt JSON — all of which can occur when parallel benchmark runs
+    race to update the run index.
+    """
+    if default is None:
+        default = {}
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            return default
+        return data
+    except (OSError, json.JSONDecodeError, ValueError):
+        return default
+
+
 def file_sha256(path: Path) -> str:
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -50,7 +69,11 @@ def file_sha256(path: Path) -> str:
 
 
 def resolve_run_id(run_arg: str) -> str | None:
-    """Resolve 'latest' to the most recent claim-ready run ID."""
+    """Resolve 'latest' to the most recent claim-ready run ID.
+
+    Uses ``load_json_safe`` so a corrupt or empty index written by a
+    concurrent process does not crash resolution.
+    """
     if run_arg != "latest":
         return run_arg
 
@@ -58,9 +81,13 @@ def resolve_run_id(run_arg: str) -> str | None:
     if not index_path.exists():
         return None
 
-    index = load_json(index_path)
+    index = load_json_safe(index_path, default={"runs": []})
+    runs = index.get("runs", [])
+    if not isinstance(runs, list):
+        return None
+
     eligible = [
-        r for r in index.get("runs", [])
+        r for r in runs
         if r.get("status") == "complete" and r.get("claim_ready") is True
     ]
     if not eligible:
@@ -172,7 +199,7 @@ def get_compatible_run_set(manifest: dict) -> list[dict]:
     if not index_path.exists():
         return []
 
-    index = load_json(index_path)
+    index = load_json_safe(index_path, default={"runs": []})
 
     target_revision = manifest.get("environment", {}).get("repo_revision")
     target_hashes = manifest.get("manifest_hashes", {})
