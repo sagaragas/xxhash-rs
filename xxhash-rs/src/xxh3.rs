@@ -10,6 +10,7 @@
 //! The implementation is scalar and ready for later SIMD work.
 
 use crate::helpers::{read_le_u32, read_le_u64};
+use crate::xxh3_simd::{accumulate_stripe_dispatch, scramble_accumulators_dispatch};
 
 // ============================================================================
 // Prime constants from the published specification.
@@ -508,8 +509,16 @@ fn xxh3_128_129to240(input: &[u8], seed: u64) -> (u64, u64) {
 // ============================================================================
 
 /// Accumulate one stripe of 64 bytes against 64 bytes of secret.
+///
+/// Scalar reference implementation of accumulate_stripe, kept as the
+/// authoritative correctness oracle for parity tests in integration tests.
 #[inline]
-fn accumulate_stripe(acc: &mut [u64; 8], stripe: &[u8], secret: &[u8], secret_offset: usize) {
+pub fn accumulate_stripe_scalar(
+    acc: &mut [u64; 8],
+    stripe: &[u8],
+    secret: &[u8],
+    secret_offset: usize,
+) {
     for i in 0..8 {
         let data_val = read_le_u64(stripe, i * 8);
         let secret_val = read_le_u64(secret, secret_offset + i * 8);
@@ -519,10 +528,19 @@ fn accumulate_stripe(acc: &mut [u64; 8], stripe: &[u8], secret: &[u8], secret_of
     }
 }
 
+/// Accumulate one stripe — dispatches to the best SIMD path available.
+#[inline]
+fn accumulate_stripe(acc: &mut [u64; 8], stripe: &[u8], secret: &[u8], secret_offset: usize) {
+    accumulate_stripe_dispatch(acc, stripe, secret, secret_offset);
+}
+
 /// Scramble the accumulators using the last 64 bytes of the secret.
+///
+/// Scalar reference implementation of scramble_accumulators, kept as the
+/// authoritative correctness oracle for parity tests in integration tests.
 #[inline]
 #[allow(clippy::needless_range_loop)]
-fn scramble_accumulators(acc: &mut [u64; 8], secret: &[u8], secret_len: usize) {
+pub fn scramble_accumulators_scalar(acc: &mut [u64; 8], secret: &[u8], secret_len: usize) {
     let offset = secret_len - 64;
     for i in 0..8 {
         let secret_val = read_le_u64(secret, offset + i * 8);
@@ -530,6 +548,12 @@ fn scramble_accumulators(acc: &mut [u64; 8], secret: &[u8], secret_len: usize) {
         acc[i] ^= secret_val;
         acc[i] = acc[i].wrapping_mul(PRIME32_1);
     }
+}
+
+/// Scramble accumulators — dispatches to the best SIMD path available.
+#[inline]
+fn scramble_accumulators(acc: &mut [u64; 8], secret: &[u8], secret_len: usize) {
+    scramble_accumulators_dispatch(acc, secret, secret_len);
 }
 
 /// Final merge: combine all 8 accumulators into a single u64.
@@ -1153,5 +1177,17 @@ mod tests {
     fn xxh3_64_seeded_large() {
         let buf = test_buffer(241);
         assert_eq!(xxh3_64(&buf, 0x9E3779B185EBCA8D), 0xDDA9B0A161D4829A);
+    }
+}
+
+/// Test-support module: exposes internal constants needed by simd parity tests.
+/// Not part of the public API surface.
+#[doc(hidden)]
+pub mod tests_public {
+    use super::DEFAULT_SECRET;
+
+    /// Returns a copy of the default XXH3 secret for use in SIMD parity tests.
+    pub fn default_secret() -> [u8; 192] {
+        DEFAULT_SECRET
     }
 }

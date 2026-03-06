@@ -23,3 +23,6 @@ pub mod xxh64;
 
 /// XXH3 algorithm family (64-bit and 128-bit variants).
 pub mod xxh3;
+
+/// Platform-optimized SIMD implementations for XXH3 hot paths.
+pub mod xxh3_simd;
