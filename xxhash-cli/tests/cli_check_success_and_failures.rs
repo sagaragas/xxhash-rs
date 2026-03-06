@@ -6,6 +6,7 @@
 
 use std::env;
 use std::fs;
+use std::fs::File;
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
@@ -765,5 +766,134 @@ fn cli_check_success_and_failures_unreadable_checksum_file() {
     assert!(
         rust_err.contains("Permission denied"),
         "stderr should contain permission error"
+    );
+}
+
+// =========================================================================
+// Checksum-stream read error hardening: non-UTF-8 bytes in checksum files
+// must be treated as malformed lines (matching the reference CLI) rather
+// than silently discarding all previously-read valid lines.
+// =========================================================================
+
+#[test]
+fn cli_check_success_and_failures_binary_after_valid_lines() {
+    // A checksum file containing valid entries followed by a line with
+    // non-UTF-8 bytes should still verify the valid entries and treat the
+    // binary line as malformed, matching the reference CLI.
+    let dir = test_dir("binary_after_valid");
+    let file = dir.join("target.txt");
+    fs::write(&file, b"binary stream test\n").unwrap();
+    let path = file.to_str().unwrap();
+
+    // Generate a valid checksum line using the reference CLI
+    let valid_line = generate_checksums_ref(&[path]);
+
+    // Build checksum file: valid line + non-UTF-8 binary line
+    let checksum_file = dir.join("sums.xxh");
+    {
+        let mut f = File::create(&checksum_file).unwrap();
+        f.write_all(valid_line.as_bytes()).unwrap();
+        f.write_all(b"\xff\xfe\xfd\n").unwrap();
+    }
+    let cf = checksum_file.to_str().unwrap();
+
+    let (rust_out, rust_err, rust_code) = run_rust(&["--check", cf]);
+    let (ref_out, ref_err, ref_code) = run_ref(&["--check", cf]);
+
+    assert_eq!(rust_code, ref_code, "exit codes should match reference");
+    assert_eq!(rust_out, ref_out, "stdout should match reference");
+    assert_eq!(rust_err, ref_err, "stderr should match reference");
+
+    // The valid entry should have been verified (not discarded)
+    assert!(
+        rust_out.contains(": OK"),
+        "valid entry should be verified, not discarded by binary data: stdout='{}'",
+        rust_out
+    );
+}
+
+#[test]
+fn cli_check_success_and_failures_binary_before_valid_lines() {
+    // Non-UTF-8 bytes BEFORE valid checksum lines should not prevent the
+    // valid lines from being processed.
+    let dir = test_dir("binary_before_valid");
+    let file = dir.join("target.txt");
+    fs::write(&file, b"binary before test\n").unwrap();
+    let path = file.to_str().unwrap();
+
+    let valid_line = generate_checksums_ref(&[path]);
+
+    let checksum_file = dir.join("sums.xxh");
+    {
+        let mut f = File::create(&checksum_file).unwrap();
+        f.write_all(b"\xff\xfe\xfd\n").unwrap();
+        f.write_all(valid_line.as_bytes()).unwrap();
+    }
+    let cf = checksum_file.to_str().unwrap();
+
+    let (rust_out, rust_err, rust_code) = run_rust(&["--check", cf]);
+    let (ref_out, ref_err, ref_code) = run_ref(&["--check", cf]);
+
+    assert_eq!(rust_code, ref_code, "exit codes should match reference");
+    assert_eq!(rust_out, ref_out, "stdout should match reference");
+    assert_eq!(rust_err, ref_err, "stderr should match reference");
+
+    assert!(
+        rust_out.contains(": OK"),
+        "valid entry after binary line should still be verified: stdout='{}'",
+        rust_out
+    );
+}
+
+#[test]
+fn cli_check_success_and_failures_all_binary_data() {
+    // A checksum file containing only non-UTF-8 binary data should yield
+    // "no properly formatted xxHash checksum lines found", matching the
+    // reference CLI.
+    let dir = test_dir("all_binary");
+    let checksum_file = dir.join("sums.xxh");
+    fs::write(&checksum_file, b"\xff\xfe\xfd\x80\x81\n\xc0\xc1\n").unwrap();
+    let cf = checksum_file.to_str().unwrap();
+
+    let (rust_out, rust_err, rust_code) = run_rust(&["--check", cf]);
+    let (ref_out, ref_err, ref_code) = run_ref(&["--check", cf]);
+
+    assert_eq!(rust_code, ref_code, "exit codes should match reference");
+    assert_eq!(rust_out, ref_out, "stdout should match reference");
+    assert_eq!(rust_err, ref_err, "stderr should match reference");
+
+    assert!(
+        rust_err.contains("no properly formatted xxHash checksum lines found"),
+        "should report no valid lines: stderr='{}'",
+        rust_err
+    );
+}
+
+#[test]
+fn cli_check_success_and_failures_binary_stdin_stream() {
+    // Same test via stdin: piping binary-mixed checksum data should match
+    // the reference behavior.
+    let dir = test_dir("binary_stdin_stream");
+    let file = dir.join("target.txt");
+    fs::write(&file, b"stdin binary test\n").unwrap();
+    let path = file.to_str().unwrap();
+
+    let valid_line = generate_checksums_ref(&[path]);
+
+    // Build stdin data: valid line + binary line
+    let mut stdin_data = valid_line.as_bytes().to_vec();
+    stdin_data.extend_from_slice(b"\xff\xfe\xfd\n");
+
+    let (rust_out, rust_err, rust_code) = run_rust_stdin(&["--check"], &stdin_data);
+    let (ref_out, ref_err, ref_code) = run_ref_stdin(&["--check"], &stdin_data);
+
+    assert_eq!(rust_code, ref_code, "exit codes should match reference");
+    assert_eq!(rust_out, ref_out, "stdout should match reference");
+    assert_eq!(rust_err, ref_err, "stderr should match reference");
+
+    assert!(
+        rust_out.contains(": OK"),
+        "valid entry should be verified via stdin: stdout='{}'",
+        rust_out
     );
 }

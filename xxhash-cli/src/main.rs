@@ -680,10 +680,33 @@ fn run_check_reader(
     let mut unreadable_count = 0usize;
     let mut verified_count = 0usize;
 
-    let lines: Vec<String> = reader
-        .lines()
-        .collect::<io::Result<Vec<_>>>()
-        .unwrap_or_default();
+    // Process lines one-by-one to avoid discarding valid entries when a
+    // later line triggers a read error (e.g. non-UTF-8 bytes).  Lines
+    // that fail with InvalidData (UTF-8 decode errors) are treated as
+    // malformed, matching the reference C CLI which processes raw bytes.
+    // True I/O errors (broken pipe, device errors) surface an explicit
+    // diagnostic and cause the check to fail immediately.
+    let mut lines: Vec<String> = Vec::new();
+    for line_result in reader.lines() {
+        match line_result {
+            Ok(line) => lines.push(line),
+            Err(e) if e.kind() == io::ErrorKind::InvalidData => {
+                // Non-UTF-8 line: treat as malformed (reference CLI
+                // processes raw bytes and would see this as unparseable).
+                lines.push(String::new());
+            }
+            Err(e) => {
+                // True I/O error: surface diagnostic and fail.
+                let _ = writeln!(
+                    err,
+                    "{}: read error: {}",
+                    source_label,
+                    os_error_description(&e)
+                );
+                return false;
+            }
+        }
+    }
 
     for (line_idx, line) in lines.iter().enumerate() {
         // Skip comment lines
