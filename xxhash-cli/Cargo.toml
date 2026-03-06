@@ -1,0 +1,14 @@
+[package]
+name = "xxhash-cli"
+description = "Clean-room Rust CLI for xxHash hashing and checksum verification"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "xxhash-rs"
+path = "src/main.rs"
+
+[dependencies]
+xxhash-rs = { path = "../xxhash-rs" }

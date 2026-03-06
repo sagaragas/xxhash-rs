@@ -1,0 +1,10 @@
+[package]
+name = "xxhash-rs"
+description = "Clean-room Rust implementation of the xxHash family of hash functions (XXH32, XXH64, XXH3)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[features]
+default = []
