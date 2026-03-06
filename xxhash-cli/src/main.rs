@@ -54,6 +54,17 @@ enum OutputMode {
     Tag,
 }
 
+/// Check-mode output verbosity.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CheckVerbosity {
+    /// Default: show OK, FAILED, errors, summaries.
+    Default,
+    /// --quiet: suppress OK lines; still show FAILED, errors, summaries.
+    Quiet,
+    /// --status: suppress all normal stdout; only emit critical stderr diagnostics.
+    Status,
+}
+
 /// Parsed CLI arguments.
 struct CliArgs {
     /// Selected hash algorithm (default: XXH64).
@@ -70,6 +81,16 @@ struct CliArgs {
     /// File-list source: read input file paths from a file or stdin.
     /// `Some("-")` means read the list from stdin.
     filelist_source: Option<String>,
+    /// Check mode: verify checksums from a file.
+    check: bool,
+    /// Check-mode verbosity.
+    check_verbosity: CheckVerbosity,
+    /// Ignore missing files in check mode.
+    ignore_missing: bool,
+    /// Warn about malformed lines in check mode.
+    warn: bool,
+    /// Strict mode: malformed lines are fatal in check mode.
+    strict: bool,
 }
 
 /// Parse command-line arguments into structured CLI args.
@@ -84,6 +105,12 @@ struct CliArgs {
 /// - `--little-endian` → little-endian digest output
 /// - `--files-from <file>` → read input file paths from a file
 /// - `--filelist <file>` → alias for --files-from
+/// - `--check` / `-c` → verify checksums from a file
+/// - `--quiet` → suppress OK lines in check mode
+/// - `--status` → suppress all normal output in check mode
+/// - `--ignore-missing` → ignore missing files in check mode
+/// - `--warn` / `-w` → warn about malformed lines in check mode
+/// - `--strict` → strict mode for malformed lines in check mode
 /// - Positional args → file paths; `-` forces stdin
 fn parse_args(args: &[String]) -> Result<CliArgs, String> {
     let mut algorithm = Algorithm::XXH64; // default
@@ -92,6 +119,12 @@ fn parse_args(args: &[String]) -> Result<CliArgs, String> {
     let mut output_mode = OutputMode::Gnu;
     let mut little_endian = false;
     let mut filelist_source: Option<String> = None;
+    let mut check = false;
+    let mut quiet = false;
+    let mut status = false;
+    let mut ignore_missing = false;
+    let mut warn = false;
+    let mut strict = false;
     let mut i = 0;
 
     while i < args.len() {
@@ -103,6 +136,12 @@ fn parse_args(args: &[String]) -> Result<CliArgs, String> {
             "-H3" => algorithm = Algorithm::XXH3_64,
             "--tag" => output_mode = OutputMode::Tag,
             "--little-endian" => little_endian = true,
+            "--check" | "-c" => check = true,
+            "--quiet" => quiet = true,
+            "--status" => status = true,
+            "--ignore-missing" => ignore_missing = true,
+            "--warn" | "-w" => warn = true,
+            "--strict" => strict = true,
             "--seed" => {
                 i += 1;
                 if i >= args.len() {
@@ -127,6 +166,15 @@ fn parse_args(args: &[String]) -> Result<CliArgs, String> {
         i += 1;
     }
 
+    // Determine check verbosity: --status takes precedence over --quiet
+    let check_verbosity = if status {
+        CheckVerbosity::Status
+    } else if quiet {
+        CheckVerbosity::Quiet
+    } else {
+        CheckVerbosity::Default
+    };
+
     Ok(CliArgs {
         algorithm,
         seed,
@@ -134,6 +182,11 @@ fn parse_args(args: &[String]) -> Result<CliArgs, String> {
         little_endian,
         inputs,
         filelist_source,
+        check,
+        check_verbosity,
+        ignore_missing,
+        warn,
+        strict,
     })
 }
 
@@ -388,6 +441,352 @@ fn load_filelist(source: &str) -> Result<Vec<String>, String> {
     }
 }
 
+// =========================================================================
+// Check mode: checksum verification
+// =========================================================================
+
+/// A parsed checksum line from a checksum file.
+struct ChecksumEntry {
+    /// The expected digest string (lowercase hex, without any prefix like `XXH3_`).
+    expected_digest: String,
+    /// The filename to verify.
+    filename: String,
+    /// The detected algorithm for this entry.
+    algorithm: Algorithm,
+    /// Whether this is a little-endian entry.
+    little_endian: bool,
+    /// Whether the filename in the original line was escaped (line started with `\`).
+    /// Used by escaped-filename round-trip verification in later features.
+    #[allow(dead_code)]
+    escaped: bool,
+}
+
+/// Try to parse a GNU-style checksum line: `hash  filename`
+/// or with escape prefix: `\hash  filename`
+/// Also handles `XXH3_hash  filename` for XXH3_64 entries.
+///
+/// Returns `None` if the line doesn't match the expected format.
+fn parse_gnu_line(line: &str) -> Option<ChecksumEntry> {
+    let (work, escaped) = if let Some(rest) = line.strip_prefix('\\') {
+        (rest, true)
+    } else {
+        (line, false)
+    };
+
+    // Find the two-space separator between hash and filename
+    let sep_pos = work.find("  ")?;
+    let hash_part = &work[..sep_pos];
+    let filename_part = &work[sep_pos + 2..];
+
+    if filename_part.is_empty() {
+        return None;
+    }
+
+    // Determine algorithm from hash format
+    if let Some(hex) = hash_part.strip_prefix("XXH3_") {
+        // XXH3_64 GNU format: XXH3_<16 hex digits>
+        if hex.len() == 16 && hex.chars().all(|c| c.is_ascii_hexdigit()) {
+            let filename = if escaped {
+                unescape_filename(filename_part)
+            } else {
+                filename_part.to_string()
+            };
+            return Some(ChecksumEntry {
+                expected_digest: hex.to_lowercase(),
+                filename,
+                algorithm: Algorithm::XXH3_64,
+                little_endian: false,
+                escaped,
+            });
+        }
+        return None;
+    }
+
+    // Determine algorithm by hex digest length
+    let hex = hash_part;
+    if !hex.chars().all(|c| c.is_ascii_hexdigit()) {
+        return None;
+    }
+
+    let (algorithm, little_endian) = match hex.len() {
+        8 => (Algorithm::XXH32, false),
+        16 => (Algorithm::XXH64, false), // Could be XXH64 or XXH3_64-LE etc.
+        32 => (Algorithm::XXH3_128, false),
+        _ => return None,
+    };
+
+    let filename = if escaped {
+        unescape_filename(filename_part)
+    } else {
+        filename_part.to_string()
+    };
+
+    Some(ChecksumEntry {
+        expected_digest: hex.to_lowercase(),
+        filename,
+        algorithm,
+        little_endian,
+        escaped,
+    })
+}
+
+/// Try to parse a BSD-style tagged checksum line: `ALGO (filename) = hash`
+/// or with escape prefix: `\ALGO (filename) = hash`
+///
+/// Returns `None` if the line doesn't match the expected format.
+fn parse_bsd_line(line: &str) -> Option<ChecksumEntry> {
+    let (work, escaped) = if let Some(rest) = line.strip_prefix('\\') {
+        (rest, true)
+    } else {
+        (line, false)
+    };
+
+    // Find the opening parenthesis after the algorithm label
+    let paren_open = work.find(" (")?;
+    let algo_str = &work[..paren_open];
+
+    // Determine algorithm (and whether it's little-endian) from the label
+    let (algorithm, little_endian) = match algo_str {
+        "XXH32" => (Algorithm::XXH32, false),
+        "XXH64" => (Algorithm::XXH64, false),
+        "XXH3" => (Algorithm::XXH3_64, false),
+        "XXH128" => (Algorithm::XXH3_128, false),
+        "XXH32_LE" => (Algorithm::XXH32, true),
+        "XXH64_LE" => (Algorithm::XXH64, true),
+        "XXH3_LE" => (Algorithm::XXH3_64, true),
+        "XXH128_LE" => (Algorithm::XXH3_128, true),
+        _ => return None,
+    };
+
+    // Find the closing `) = ` pattern
+    let after_paren = &work[paren_open + 2..]; // skip " ("
+    let close_pattern = ") = ";
+    let close_pos = after_paren.find(close_pattern)?;
+    let filename_part = &after_paren[..close_pos];
+    let hash_part = &after_paren[close_pos + close_pattern.len()..];
+
+    // Validate hash is hex
+    if hash_part.is_empty() || !hash_part.chars().all(|c| c.is_ascii_hexdigit()) {
+        return None;
+    }
+
+    let filename = if escaped {
+        unescape_filename(filename_part)
+    } else {
+        filename_part.to_string()
+    };
+
+    Some(ChecksumEntry {
+        expected_digest: hash_part.to_lowercase(),
+        filename,
+        algorithm,
+        little_endian,
+        escaped,
+    })
+}
+
+/// Parse a single checksum line (either GNU or BSD format).
+fn parse_checksum_line(line: &str) -> Option<ChecksumEntry> {
+    // Try BSD format first (more specific), then GNU
+    parse_bsd_line(line).or_else(|| parse_gnu_line(line))
+}
+
+/// Unescape a filename: `\\` → `\`, `\n` → newline, `\r` → carriage return.
+fn unescape_filename(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut chars = s.chars();
+    while let Some(ch) = chars.next() {
+        if ch == '\\' {
+            match chars.next() {
+                Some('\\') => out.push('\\'),
+                Some('n') => out.push('\n'),
+                Some('r') => out.push('\r'),
+                Some(c) => {
+                    out.push('\\');
+                    out.push(c);
+                }
+                None => out.push('\\'),
+            }
+        } else {
+            out.push(ch);
+        }
+    }
+    out
+}
+
+/// Compute the hex digest for a file using the given algorithm with seed 0.
+fn compute_file_digest(
+    path: &str,
+    algorithm: Algorithm,
+    little_endian: bool,
+) -> io::Result<String> {
+    let mut file = File::open(path)?;
+    let raw = hash_reader_raw(&mut file, algorithm, 0)?;
+    // For check mode, we compare the raw hex without the XXH3_ prefix,
+    // so we use Tag mode which doesn't add the prefix.
+    let digest = format_digest(&raw, algorithm, little_endian, OutputMode::Tag);
+    Ok(digest)
+}
+
+/// Run checksum verification on a single checksum file.
+///
+/// Returns `true` if all checks passed (exit 0), `false` otherwise (exit 1).
+fn run_check_file(
+    checksum_path: &str,
+    verbosity: CheckVerbosity,
+    ignore_missing: bool,
+    _warn: bool,
+    _strict: bool,
+) -> bool {
+    let file = match File::open(checksum_path) {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!(
+                "Error: Could not open '{}': {}. ",
+                checksum_path,
+                os_error_description(&e)
+            );
+            return false;
+        }
+    };
+
+    let reader = io::BufReader::new(file);
+    let stdout_handle = io::stdout();
+    let mut out = stdout_handle.lock();
+    let stderr_handle = io::stderr();
+    let mut err = stderr_handle.lock();
+
+    let mut valid_lines = 0usize;
+    let mut malformed_lines = 0usize;
+    let mut failed_count = 0usize;
+    let mut unreadable_count = 0usize;
+    let mut verified_count = 0usize;
+
+    let lines: Vec<String> = reader
+        .lines()
+        .collect::<io::Result<Vec<_>>>()
+        .unwrap_or_default();
+
+    for (line_idx, line) in lines.iter().enumerate() {
+        // Skip comment lines
+        if line.starts_with('#') {
+            continue;
+        }
+
+        // Try to parse as a checksum line
+        let entry = match parse_checksum_line(line) {
+            Some(e) => e,
+            None => {
+                // Empty lines and unparseable lines are malformed
+                malformed_lines += 1;
+                continue;
+            }
+        };
+
+        valid_lines += 1;
+
+        // Try to compute the digest for the file
+        let computed = match compute_file_digest(
+            &entry.filename,
+            entry.algorithm,
+            entry.little_endian,
+        ) {
+            Ok(d) => d,
+            Err(e) => {
+                // File could not be read
+                if ignore_missing && e.kind() == io::ErrorKind::NotFound {
+                    // Skip this entry silently in ignore-missing mode
+                    continue;
+                }
+
+                unreadable_count += 1;
+
+                if verbosity != CheckVerbosity::Status {
+                    let _ = writeln!(
+                        out,
+                        "{}:{}: Could not open or read '{}': {}.",
+                        checksum_path,
+                        line_idx + 1,
+                        entry.filename,
+                        os_error_description(&e)
+                    );
+                }
+                continue;
+            }
+        };
+
+        // Compare digests (case-insensitive)
+        let matches = computed.to_lowercase() == entry.expected_digest;
+
+        if matches {
+            verified_count += 1;
+            if verbosity == CheckVerbosity::Default {
+                let _ = writeln!(out, "{}: OK", entry.filename);
+            }
+        } else {
+            failed_count += 1;
+            if verbosity != CheckVerbosity::Status {
+                let _ = writeln!(out, "{}: FAILED", entry.filename);
+            }
+        }
+    }
+
+    // Handle the "no properly formatted checksum lines" case
+    if valid_lines == 0 {
+        // This goes to stderr
+        let _ = writeln!(
+            err,
+            "{}: no properly formatted xxHash checksum lines found",
+            checksum_path
+        );
+        return false;
+    }
+
+    // Handle --ignore-missing all-missing case
+    if ignore_missing && verified_count == 0 && failed_count == 0 {
+        if verbosity != CheckVerbosity::Status {
+            let _ = writeln!(out, "{}: no file was verified", checksum_path);
+        }
+        return false;
+    }
+
+    // Print summaries to stdout (not in --status mode)
+    if verbosity != CheckVerbosity::Status {
+        if unreadable_count > 0 {
+            if unreadable_count == 1 {
+                let _ = writeln!(out, "{} listed file could not be read", unreadable_count);
+            } else {
+                let _ = writeln!(out, "{} listed files could not be read", unreadable_count);
+            }
+        }
+        if malformed_lines > 0 && verbosity != CheckVerbosity::Status {
+            if malformed_lines == 1 {
+                let _ = writeln!(out, "{} line is improperly formatted", malformed_lines);
+            } else {
+                let _ = writeln!(out, "{} lines are improperly formatted", malformed_lines);
+            }
+        }
+        if failed_count > 0 {
+            if failed_count == 1 {
+                let _ = writeln!(
+                    out,
+                    "{} computed checksum did NOT match",
+                    failed_count
+                );
+            } else {
+                let _ = writeln!(
+                    out,
+                    "{} computed checksums did NOT match",
+                    failed_count
+                );
+            }
+        }
+    }
+
+    // Return success only if no failures and no unreadable files
+    failed_count == 0 && unreadable_count == 0
+}
+
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
 
@@ -398,6 +797,27 @@ fn main() {
             process::exit(1);
         }
     };
+
+    // Check mode: verify checksums from file(s)
+    if cli.check {
+        let mut all_ok = true;
+        for input in &cli.inputs {
+            let ok = run_check_file(
+                input,
+                cli.check_verbosity,
+                cli.ignore_missing,
+                cli.warn,
+                cli.strict,
+            );
+            if !ok {
+                all_ok = false;
+            }
+        }
+        if !all_ok {
+            process::exit(1);
+        }
+        return;
+    }
 
     let mut had_error = false;
 

@@ -107,7 +107,7 @@ fn unique_temp_dir() -> PathBuf {
 }
 
 /// Create a file inside a directory.
-fn create_file(dir: &PathBuf, name: &str, content: &[u8]) -> PathBuf {
+fn create_file(dir: &std::path::Path, name: &str, content: &[u8]) -> PathBuf {
     let path = dir.join(name);
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).ok();
@@ -117,7 +117,7 @@ fn create_file(dir: &PathBuf, name: &str, content: &[u8]) -> PathBuf {
 }
 
 /// Create a filelist file inside a directory.
-fn create_filelist(dir: &PathBuf, name: &str, content: &str) -> PathBuf {
+fn create_filelist(dir: &std::path::Path, name: &str, content: &str) -> PathBuf {
     let path = dir.join(name);
     fs::write(&path, content).expect("failed to write filelist");
     path
