@@ -7,3 +7,4 @@ Cargo.lock
 
 # Benchmark run artifacts (generated, not committed)
 benchmarks/runs/
+benchmarks/__pycache__/

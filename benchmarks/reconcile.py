@@ -21,6 +21,12 @@ RUNS_DIR = HARNESS_DIR / "runs"
 POLICY_PATH = HARNESS_DIR / "policy.json"
 
 
+def set_runs_dir(path: Path) -> None:
+    """Override the runs directory (used for isolated testing)."""
+    global RUNS_DIR
+    RUNS_DIR = path
+
+
 def load_json(path: Path) -> dict:
     with open(path) as f:
         return json.load(f)
@@ -191,7 +197,16 @@ def main():
         required=True,
         help="Run ID or 'latest' to reconcile the most recent claim-ready run",
     )
+    parser.add_argument(
+        "--run-dir",
+        default=None,
+        help="Override runs directory (for isolated/deterministic testing)",
+    )
     args = parser.parse_args()
+
+    if args.run_dir:
+        set_runs_dir(Path(args.run_dir))
+
     return reconcile_run(args.run)
 
 

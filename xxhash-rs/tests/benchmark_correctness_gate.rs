@@ -431,14 +431,53 @@ fn benchmark_correctness_gate_rejects_disagreeing_digests() {
 // Correctness gate enforcement via claim_gate.py
 // ---------------------------------------------------------------------------
 
+/// Seed an isolated deterministic run set into the given directory and return
+/// (runs_dir, policy_path) so tests can use --run-dir / --policy flags.
+fn seed_isolated_run_set(base_dir: &Path, num_runs: u32) -> (PathBuf, PathBuf) {
+    let root = workspace_root();
+    let seeder = root.join("benchmarks").join("seed_run_set.py");
+    let runs_output = base_dir.join("runs");
+    let output = Command::new("python3")
+        .args([
+            seeder.to_str().unwrap(),
+            "--output",
+            runs_output.to_str().unwrap(),
+            "--num-runs",
+            &num_runs.to_string(),
+            "--with-policy",
+        ])
+        .current_dir(&root)
+        .output()
+        .expect("Failed to run seed_run_set.py");
+    assert!(
+        output.status.success(),
+        "seed_run_set.py failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let policy_path = runs_output.join("policy.json");
+    (runs_output, policy_path)
+}
+
 #[test]
 fn benchmark_correctness_gate_claim_gate_script_validates_correctness() {
-    ensure_smoke_run_exists();
+    // Use an isolated deterministic run set so this test does not depend on
+    // whatever happens to be in benchmarks/runs/ (ambient mutable state).
+    let tmp = tempfile::tempdir().expect("create temp dir");
+    let (runs_dir, policy_path) = seed_isolated_run_set(tmp.path(), 3);
+
     let root = workspace_root();
     let claim_gate = root.join("benchmarks").join("claim_gate.py");
 
     let output = Command::new("python3")
-        .args([claim_gate.to_str().unwrap(), "--run", "latest"])
+        .args([
+            claim_gate.to_str().unwrap(),
+            "--run",
+            "latest",
+            "--run-dir",
+            runs_dir.to_str().unwrap(),
+            "--policy",
+            policy_path.to_str().unwrap(),
+        ])
         .current_dir(&root)
         .output()
         .expect("Failed to run claim_gate.py");
@@ -448,7 +487,7 @@ fn benchmark_correctness_gate_claim_gate_script_validates_correctness() {
 
     assert!(
         output.status.success(),
-        "claim_gate.py --run latest should succeed for a claim-ready run.\nstdout: {stdout}\nstderr: {stderr}"
+        "claim_gate.py --run latest should succeed for isolated claim-ready runs.\nstdout: {stdout}\nstderr: {stderr}"
     );
 
     // Verify the output includes correctness gate status

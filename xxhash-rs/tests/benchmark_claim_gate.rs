@@ -10,6 +10,10 @@
 //! set whose members share the same measured revision and scenario/manifests, and every required
 //! run passes correctness, reproducibility, and claim-gate thresholds rather than relying on a
 //! single favorable run.
+//!
+//! NOTE: Tests that exercise claim-gate and reconcile validation use isolated
+//! deterministic run sets seeded via `seed_run_set.py` and the `--run-dir` /
+//! `--policy` flags, so they never depend on mutable ambient benchmarks/runs/ state.
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -31,7 +35,7 @@ fn load_json(path: &Path) -> serde_json::Value {
         .unwrap_or_else(|e| panic!("Failed to parse {}: {e}", path.display()))
 }
 
-/// Helper: find the most recent claim-ready run directory.
+/// Helper: find the most recent claim-ready run directory from the ambient runs.
 fn find_latest_claim_ready_run() -> Option<PathBuf> {
     let runs_dir = workspace_root().join("benchmarks").join("runs");
     let index_path = runs_dir.join("index.json");
@@ -61,7 +65,7 @@ fn find_latest_claim_ready_run() -> Option<PathBuf> {
     }
 }
 
-/// Ensure at least one smoke run exists.
+/// Ensure at least one smoke run exists in ambient state.
 fn ensure_smoke_run_exists() {
     let root = workspace_root();
     let runs_dir = root.join("benchmarks").join("runs");
@@ -88,6 +92,34 @@ fn ensure_smoke_run_exists() {
         "Smoke run failed: {}",
         String::from_utf8_lossy(&output.stderr)
     );
+}
+
+/// Seed an isolated deterministic run set into the given directory and return
+/// (runs_dir, policy_path) so tests can use --run-dir / --policy flags.
+fn seed_isolated_run_set(base_dir: &Path, num_runs: u32) -> (PathBuf, PathBuf) {
+    let root = workspace_root();
+    let seeder = root.join("benchmarks").join("seed_run_set.py");
+    let runs_output = base_dir.join("runs");
+    let output = Command::new("python3")
+        .args([
+            seeder.to_str().unwrap(),
+            "--output",
+            runs_output.to_str().unwrap(),
+            "--num-runs",
+            &num_runs.to_string(),
+            "--with-policy",
+        ])
+        .current_dir(&root)
+        .output()
+        .expect("Failed to run seed_run_set.py");
+    assert!(
+        output.status.success(),
+        "seed_run_set.py failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    // seed_run_set.py --with-policy writes policy.json in the --output dir
+    let policy_path = runs_output.join("policy.json");
+    (runs_output, policy_path)
 }
 
 // ---------------------------------------------------------------------------
@@ -149,9 +181,11 @@ fn benchmark_claim_gate_policy_requires_minimum_run_set() {
 
 #[test]
 fn benchmark_claim_gate_claim_ready_runs_share_revision() {
-    ensure_smoke_run_exists();
+    // Use an isolated deterministic run set so this test does not depend on
+    // whatever happens to be in benchmarks/runs/ (ambient mutable state).
+    let tmp = tempfile::tempdir().expect("create temp dir");
+    let (runs_dir, policy_path) = seed_isolated_run_set(tmp.path(), 3);
 
-    let runs_dir = workspace_root().join("benchmarks").join("runs");
     let index_path = runs_dir.join("index.json");
     let index = load_json(&index_path);
     let runs = index["runs"].as_array().unwrap();
@@ -161,10 +195,10 @@ fn benchmark_claim_gate_claim_ready_runs_share_revision() {
         .filter(|r| r["claim_ready"].as_bool() == Some(true))
         .collect();
 
-    if claim_ready_runs.len() < 2 {
-        // With only one claim-ready run, skip this consistency check
-        return;
-    }
+    assert!(
+        claim_ready_runs.len() >= 2,
+        "Seeded run set should have at least 2 claim-ready runs"
+    );
 
     // All claim-ready runs should share the same manifest hashes and revision
     let mut revisions = HashSet::new();
@@ -189,20 +223,40 @@ fn benchmark_claim_gate_claim_ready_runs_share_revision() {
         manifest_hash_sets.insert(hash_key);
     }
 
-    // For a proper run set, the latest claim_gate.py invocation should
-    // verify revision and manifest consistency.
-    // We check the claim_gate.py output for this.
+    // Singleton revision and hash sets prove the compatible run set is consistent
+    assert_eq!(
+        revisions.len(),
+        1,
+        "All seeded claim-ready runs must share one revision, got: {revisions:?}"
+    );
+    assert_eq!(
+        manifest_hash_sets.len(),
+        1,
+        "All seeded claim-ready runs must share one manifest hash set"
+    );
+
+    // Verify claim_gate.py passes against the isolated run set
     let root = workspace_root();
     let claim_gate = root.join("benchmarks").join("claim_gate.py");
     let output = Command::new("python3")
-        .args([claim_gate.to_str().unwrap(), "--run", "latest"])
+        .args([
+            claim_gate.to_str().unwrap(),
+            "--run",
+            "latest",
+            "--run-dir",
+            runs_dir.to_str().unwrap(),
+            "--policy",
+            policy_path.to_str().unwrap(),
+        ])
         .current_dir(&root)
         .output()
         .expect("Failed to run claim_gate.py");
 
     assert!(
         output.status.success(),
-        "claim_gate.py should pass for claim-ready runs"
+        "claim_gate.py should pass for isolated claim-ready runs.\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
     );
 }
 
@@ -465,12 +519,24 @@ fn benchmark_claim_gate_latest_resolves_most_recent_complete() {
 
 #[test]
 fn benchmark_claim_gate_script_checks_run_set_integrity() {
-    ensure_smoke_run_exists();
+    // Use an isolated deterministic run set so this test does not depend on
+    // whatever happens to be in benchmarks/runs/ (ambient mutable state).
+    let tmp = tempfile::tempdir().expect("create temp dir");
+    let (runs_dir, policy_path) = seed_isolated_run_set(tmp.path(), 3);
+
     let root = workspace_root();
     let claim_gate = root.join("benchmarks").join("claim_gate.py");
 
     let output = Command::new("python3")
-        .args([claim_gate.to_str().unwrap(), "--run", "latest"])
+        .args([
+            claim_gate.to_str().unwrap(),
+            "--run",
+            "latest",
+            "--run-dir",
+            runs_dir.to_str().unwrap(),
+            "--policy",
+            policy_path.to_str().unwrap(),
+        ])
         .current_dir(&root)
         .output()
         .expect("Failed to run claim_gate.py");

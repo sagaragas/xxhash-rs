@@ -30,6 +30,12 @@ POLICY_PATH = HARNESS_DIR / "policy.json"
 CANONICAL_COMPARATOR_IDS = ["c_xxhsum", "rust_xxhash_rs", "b3sum", "md5"]
 
 
+def set_runs_dir(path: Path) -> None:
+    """Override the runs directory (used for isolated testing)."""
+    global RUNS_DIR
+    RUNS_DIR = path
+
+
 def load_json(path: Path) -> dict:
     with open(path) as f:
         return json.load(f)
@@ -385,7 +391,24 @@ def main():
         required=True,
         help="Run ID or 'latest' to check the most recent claim-ready run",
     )
+    parser.add_argument(
+        "--run-dir",
+        default=None,
+        help="Override runs directory (for isolated/deterministic testing)",
+    )
+    parser.add_argument(
+        "--policy",
+        default=None,
+        help="Override policy.json path (for isolated/deterministic testing)",
+    )
     args = parser.parse_args()
+
+    if args.run_dir:
+        set_runs_dir(Path(args.run_dir))
+    if args.policy:
+        global POLICY_PATH
+        POLICY_PATH = Path(args.policy)
+
     return run_claim_gate(args.run)
 
 
