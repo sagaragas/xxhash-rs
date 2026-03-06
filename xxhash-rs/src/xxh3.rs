@@ -1,12 +1,13 @@
-//! Scalar XXH3 one-shot hashing (64-bit and 128-bit variants).
+//! Scalar XXH3 one-shot and streaming hashing (64-bit and 128-bit variants).
 //!
 //! Implements the XXH3 algorithm family as described in the published xxHash
 //! specification (v0.2.0) and BSD-licensed reference material. This module
-//! provides one-shot `xxh3_64()` and `xxh3_128()` functions suitable for
-//! hashing a complete input in a single call.
+//! provides:
+//! - One-shot `xxh3_64()` and `xxh3_128()` functions for complete inputs.
+//! - Streaming `Xxh3_64State` and `Xxh3_128State` structs with `reset()`,
+//!   `update()`, and `digest()` methods for incremental hashing.
 //!
-//! The implementation is scalar and ready for later streaming and SIMD work.
-//! The streaming API is left for a later feature.
+//! The implementation is scalar and ready for later SIMD work.
 
 use crate::helpers::{read_le_u32, read_le_u64};
 
@@ -608,6 +609,422 @@ fn xxh3_128_large(input: &[u8], seed: u64) -> (u64, u64) {
         secret_len - 75,
     );
     (lo, hi)
+}
+
+// ============================================================================
+// XXH3 streaming state machine (shared core for 64-bit and 128-bit)
+// ============================================================================
+
+/// The number of stripes in one block for the default 192-byte secret.
+const STRIPES_PER_BLOCK: usize = (DEFAULT_SECRET_LEN - 64) / 8; // 16
+
+/// The stripe length in bytes.
+const STRIPE_LEN: usize = 64;
+
+/// Internal buffer size for streaming XXH3.
+/// Must hold at least 241 bytes (to cover the mid-size one-shot paths)
+/// plus one extra stripe for the last-stripe overlap logic.
+/// The reference uses 256 bytes.
+const INTERNAL_BUFFER_SIZE: usize = 256;
+
+/// Shared streaming state for XXH3 (used by both 64-bit and 128-bit variants).
+///
+/// The streaming XXH3 algorithm works as follows:
+/// - For inputs ≤240 bytes, all data is buffered and the one-shot paths are
+///   used at digest time.
+/// - For inputs >240 bytes, the 8-lane accumulator is maintained incrementally
+///   as full 64-byte stripes arrive, with scramble operations at block
+///   boundaries.
+struct Xxh3StreamState {
+    /// The 8-lane accumulator.
+    acc: [u64; 8],
+    /// Internal buffer for partial stripes / small-input accumulation.
+    buf: [u8; INTERNAL_BUFFER_SIZE],
+    /// Number of valid bytes in `buf`.
+    buf_len: usize,
+    /// Total length of all data consumed.
+    total_len: u64,
+    /// Number of stripes processed so far in the current block.
+    stripes_so_far: usize,
+    /// The seed value.
+    seed: u64,
+    /// The secret to use (derived from seed if seed != 0).
+    secret: [u8; 192],
+}
+
+impl Xxh3StreamState {
+    fn new(seed: u64) -> Self {
+        let secret = if seed == 0 {
+            DEFAULT_SECRET
+        } else {
+            derive_secret(seed)
+        };
+        Xxh3StreamState {
+            acc: [
+                PRIME32_3, PRIME64_1, PRIME64_2, PRIME64_3, PRIME64_4, PRIME32_2, PRIME64_5,
+                PRIME32_1,
+            ],
+            buf: [0u8; INTERNAL_BUFFER_SIZE],
+            buf_len: 0,
+            total_len: 0,
+            stripes_so_far: 0,
+            seed,
+            secret,
+        }
+    }
+
+    fn reset(&mut self) {
+        self.acc = [
+            PRIME32_3, PRIME64_1, PRIME64_2, PRIME64_3, PRIME64_4, PRIME32_2, PRIME64_5,
+            PRIME32_1,
+        ];
+        self.buf_len = 0;
+        self.total_len = 0;
+        self.stripes_so_far = 0;
+        self.secret = if self.seed == 0 {
+            DEFAULT_SECRET
+        } else {
+            derive_secret(self.seed)
+        };
+    }
+
+    fn reset_with_seed(&mut self, seed: u64) {
+        self.seed = seed;
+        self.reset();
+    }
+
+    fn update(&mut self, input: &[u8]) {
+        let len = input.len();
+        self.total_len += len as u64;
+
+        if len == 0 {
+            return;
+        }
+
+        let mut offset = 0;
+
+        // If we have buffered bytes, try to fill the buffer
+        if self.buf_len > 0 {
+            let fill = (INTERNAL_BUFFER_SIZE - self.buf_len).min(len);
+            self.buf[self.buf_len..self.buf_len + fill].copy_from_slice(&input[..fill]);
+            self.buf_len += fill;
+            offset += fill;
+
+            if self.buf_len == INTERNAL_BUFFER_SIZE {
+                // Buffer is full, consume all stripes from it.
+                // We have 256 bytes = 4 stripes of 64 bytes.
+                let n_stripes = (INTERNAL_BUFFER_SIZE - STRIPE_LEN) / STRIPE_LEN; // 3 stripes
+                // Process stripes, but the last 64 bytes are kept as overlap.
+                self.consume_stripes(
+                    &self.buf.clone(),
+                    0,
+                    n_stripes,
+                );
+                // Move the last stripe (64 bytes) to the beginning of the buffer
+                self.buf.copy_within(INTERNAL_BUFFER_SIZE - STRIPE_LEN.., 0);
+                self.buf_len = STRIPE_LEN;
+            }
+        }
+
+        // Process full blocks directly from input
+        let remaining = len - offset;
+        if remaining > 0 {
+            if self.buf_len == 0 && remaining > INTERNAL_BUFFER_SIZE {
+                // Process directly from input without buffering
+                let mut pos = offset;
+                let end = offset + remaining;
+
+                while end - pos > INTERNAL_BUFFER_SIZE {
+                    let n_stripes = (INTERNAL_BUFFER_SIZE - STRIPE_LEN) / STRIPE_LEN;
+                    self.consume_stripes(input, pos, n_stripes);
+                    pos += n_stripes * STRIPE_LEN;
+                }
+
+                // Buffer the remainder
+                let leftover = end - pos;
+                self.buf[..leftover].copy_from_slice(&input[pos..end]);
+                self.buf_len = leftover;
+            } else {
+                // Copy remaining into buffer
+                let leftover = remaining;
+                if self.buf_len + leftover <= INTERNAL_BUFFER_SIZE {
+                    self.buf[self.buf_len..self.buf_len + leftover]
+                        .copy_from_slice(&input[offset..offset + leftover]);
+                    self.buf_len += leftover;
+                } else {
+                    // Need to consume some stripes first
+                    // Fill buffer, consume, repeat
+                    let mut pos = offset;
+                    let end = offset + leftover;
+                    while end - pos + self.buf_len > INTERNAL_BUFFER_SIZE {
+                        let fill = (INTERNAL_BUFFER_SIZE - self.buf_len).min(end - pos);
+                        self.buf[self.buf_len..self.buf_len + fill]
+                            .copy_from_slice(&input[pos..pos + fill]);
+                        self.buf_len += fill;
+                        pos += fill;
+
+                        if self.buf_len == INTERNAL_BUFFER_SIZE {
+                            let n_stripes = (INTERNAL_BUFFER_SIZE - STRIPE_LEN) / STRIPE_LEN;
+                            self.consume_stripes(&self.buf.clone(), 0, n_stripes);
+                            self.buf.copy_within(INTERNAL_BUFFER_SIZE - STRIPE_LEN.., 0);
+                            self.buf_len = STRIPE_LEN;
+                        }
+                    }
+                    let final_leftover = end - pos;
+                    if final_leftover > 0 {
+                        self.buf[self.buf_len..self.buf_len + final_leftover]
+                            .copy_from_slice(&input[pos..end]);
+                        self.buf_len += final_leftover;
+                    }
+                }
+            }
+        }
+    }
+
+    /// Process `n_stripes` stripes from `data` starting at `data_offset`.
+    fn consume_stripes(&mut self, data: &[u8], data_offset: usize, n_stripes: usize) {
+        for i in 0..n_stripes {
+            let stripe_start = data_offset + i * STRIPE_LEN;
+            let secret_offset = self.stripes_so_far * 8;
+            accumulate_stripe(
+                &mut self.acc,
+                &data[stripe_start..],
+                &self.secret,
+                secret_offset,
+            );
+            self.stripes_so_far += 1;
+            if self.stripes_so_far == STRIPES_PER_BLOCK {
+                scramble_accumulators(&mut self.acc, &self.secret, DEFAULT_SECRET_LEN);
+                self.stripes_so_far = 0;
+            }
+        }
+    }
+
+    /// Finalize and return the 64-bit digest. Non-destructive.
+    fn digest_64(&self) -> u64 {
+        let total_len = self.total_len as usize;
+
+        // Small inputs: use the one-shot path on buffered data
+        if total_len <= 240 {
+            let data = &self.buf[..self.buf_len];
+            return xxh3_64(data, self.seed);
+        }
+
+        // Large inputs: finalize the accumulator
+        self.digest_large_64()
+    }
+
+    /// Finalize and return the 128-bit digest. Non-destructive.
+    fn digest_128(&self) -> (u64, u64) {
+        let total_len = self.total_len as usize;
+
+        // Small inputs: use the one-shot path on buffered data
+        if total_len <= 240 {
+            let data = &self.buf[..self.buf_len];
+            return xxh3_128(data, self.seed);
+        }
+
+        // Large inputs: finalize the accumulator
+        self.digest_large_128()
+    }
+
+    fn digest_large_64(&self) -> u64 {
+        let total_len = self.total_len as usize;
+
+        // Clone accumulators so we don't mutate self
+        let mut acc = self.acc;
+        let secret = &self.secret;
+        let secret_len = DEFAULT_SECRET_LEN;
+
+        // Process remaining stripes in the buffer
+        let buf = &self.buf[..self.buf_len];
+        let n_remaining_stripes = (self.buf_len - 1) / STRIPE_LEN;
+        let mut stripes_so_far = self.stripes_so_far;
+
+        for i in 0..n_remaining_stripes {
+            let stripe_start = i * STRIPE_LEN;
+            let secret_offset = stripes_so_far * 8;
+            accumulate_stripe(&mut acc, &buf[stripe_start..], secret, secret_offset);
+            stripes_so_far += 1;
+            if stripes_so_far == STRIPES_PER_BLOCK {
+                scramble_accumulators(&mut acc, secret, secret_len);
+                stripes_so_far = 0;
+            }
+        }
+
+        // Last stripe: the last 64 bytes of the buffer
+        let last_stripe_start = self.buf_len - STRIPE_LEN;
+        accumulate_stripe(
+            &mut acc,
+            &buf[last_stripe_start..],
+            secret,
+            secret_len - 71,
+        );
+
+        // Final merge
+        final_merge(
+            &acc,
+            (total_len as u64).wrapping_mul(PRIME64_1),
+            secret,
+            11,
+        )
+    }
+
+    fn digest_large_128(&self) -> (u64, u64) {
+        let total_len = self.total_len as usize;
+
+        // Clone accumulators so we don't mutate self
+        let mut acc = self.acc;
+        let secret = &self.secret;
+        let secret_len = DEFAULT_SECRET_LEN;
+
+        // Process remaining stripes in the buffer
+        let buf = &self.buf[..self.buf_len];
+        let n_remaining_stripes = (self.buf_len - 1) / STRIPE_LEN;
+        let mut stripes_so_far = self.stripes_so_far;
+
+        for i in 0..n_remaining_stripes {
+            let stripe_start = i * STRIPE_LEN;
+            let secret_offset = stripes_so_far * 8;
+            accumulate_stripe(&mut acc, &buf[stripe_start..], secret, secret_offset);
+            stripes_so_far += 1;
+            if stripes_so_far == STRIPES_PER_BLOCK {
+                scramble_accumulators(&mut acc, secret, secret_len);
+                stripes_so_far = 0;
+            }
+        }
+
+        // Last stripe: the last 64 bytes of the buffer
+        let last_stripe_start = self.buf_len - STRIPE_LEN;
+        accumulate_stripe(
+            &mut acc,
+            &buf[last_stripe_start..],
+            secret,
+            secret_len - 71,
+        );
+
+        // Final merge (same as one-shot large)
+        let lo = final_merge(
+            &acc,
+            (total_len as u64).wrapping_mul(PRIME64_1),
+            secret,
+            11,
+        );
+        let hi = final_merge(
+            &acc,
+            !((total_len as u64).wrapping_mul(PRIME64_2)),
+            secret,
+            secret_len - 75,
+        );
+        (lo, hi)
+    }
+}
+
+// ============================================================================
+// Public streaming types: Xxh3_64State and Xxh3_128State
+// ============================================================================
+
+/// Streaming XXH3 64-bit state.
+///
+/// Supports incremental hashing via `update()` and non-destructive `digest()`.
+/// Calling `digest()` does not consume or alter the state; subsequent `update()`
+/// calls continue accumulating data and `digest()` can be called again.
+///
+/// # Examples
+///
+/// ```
+/// use xxhash_rs::xxh3::Xxh3_64State;
+///
+/// let mut state = Xxh3_64State::new(0);
+/// state.update(b"hel");
+/// state.update(b"lo");
+/// let hash = state.digest();
+/// ```
+#[allow(non_camel_case_types)]
+pub struct Xxh3_64State {
+    inner: Xxh3StreamState,
+}
+
+#[allow(non_camel_case_types)]
+impl Xxh3_64State {
+    /// Creates a new streaming XXH3 64-bit state with the given seed.
+    pub fn new(seed: u64) -> Self {
+        Xxh3_64State {
+            inner: Xxh3StreamState::new(seed),
+        }
+    }
+
+    /// Resets the state to its initial condition.
+    pub fn reset(&mut self) {
+        self.inner.reset();
+    }
+
+    /// Resets the state to its initial condition with a new seed.
+    pub fn reset_with_seed(&mut self, seed: u64) {
+        self.inner.reset_with_seed(seed);
+    }
+
+    /// Feeds more data into the hash state.
+    pub fn update(&mut self, input: &[u8]) {
+        self.inner.update(input);
+    }
+
+    /// Computes and returns the current 64-bit hash digest. Non-destructive.
+    pub fn digest(&self) -> u64 {
+        self.inner.digest_64()
+    }
+}
+
+/// Streaming XXH3 128-bit state.
+///
+/// Supports incremental hashing via `update()` and non-destructive `digest()`.
+/// Calling `digest()` does not consume or alter the state; subsequent `update()`
+/// calls continue accumulating data and `digest()` can be called again.
+///
+/// # Examples
+///
+/// ```
+/// use xxhash_rs::xxh3::Xxh3_128State;
+///
+/// let mut state = Xxh3_128State::new(0);
+/// state.update(b"hel");
+/// state.update(b"lo");
+/// let (lo, hi) = state.digest();
+/// ```
+#[allow(non_camel_case_types)]
+pub struct Xxh3_128State {
+    inner: Xxh3StreamState,
+}
+
+#[allow(non_camel_case_types)]
+impl Xxh3_128State {
+    /// Creates a new streaming XXH3 128-bit state with the given seed.
+    pub fn new(seed: u64) -> Self {
+        Xxh3_128State {
+            inner: Xxh3StreamState::new(seed),
+        }
+    }
+
+    /// Resets the state to its initial condition.
+    pub fn reset(&mut self) {
+        self.inner.reset();
+    }
+
+    /// Resets the state to its initial condition with a new seed.
+    pub fn reset_with_seed(&mut self, seed: u64) {
+        self.inner.reset_with_seed(seed);
+    }
+
+    /// Feeds more data into the hash state.
+    pub fn update(&mut self, input: &[u8]) {
+        self.inner.update(input);
+    }
+
+    /// Computes and returns the current 128-bit hash digest as `(low64, high64)`.
+    /// Non-destructive.
+    pub fn digest(&self) -> (u64, u64) {
+        self.inner.digest_128()
+    }
 }
 
 #[cfg(test)]

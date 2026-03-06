@@ -1,11 +1,11 @@
-//! Scalar XXH64 one-shot hashing.
+//! Scalar XXH64 one-shot and streaming hashing.
 //!
 //! Implements the 64-bit xxHash algorithm as described in the published
 //! xxHash specification and BSD-licensed reference material. This module
-//! provides a one-shot `xxh64()` function suitable for hashing a complete
-//! input in a single call.
-//!
-//! The streaming API is left for a later feature.
+//! provides:
+//! - A one-shot `xxh64()` function for hashing a complete input in a single call.
+//! - A streaming `Xxh64State` struct with `reset()`, `update()`, and `digest()`
+//!   methods for incremental hashing.
 
 use crate::helpers::{read_le_u32, read_le_u64, rotl64};
 
@@ -150,6 +150,152 @@ fn avalanche64(mut h: u64) -> u64 {
     h = h.wrapping_mul(PRIME64_3);
     h ^= h >> 32;
     h
+}
+
+// ============================================================================
+// XXH64 streaming state machine
+// ============================================================================
+
+/// Streaming XXH64 state.
+///
+/// Supports incremental hashing via `update()` and non-destructive `digest()`.
+/// Calling `digest()` does not consume or alter the state; subsequent `update()`
+/// calls continue accumulating data and `digest()` can be called again.
+///
+/// # Examples
+///
+/// ```
+/// use xxhash_rs::xxh64::Xxh64State;
+///
+/// let mut state = Xxh64State::new(0);
+/// state.update(b"hel");
+/// state.update(b"lo");
+/// let hash = state.digest();
+/// ```
+pub struct Xxh64State {
+    /// Current total length of data consumed.
+    total_len: u64,
+    /// Whether we have consumed at least 32 bytes (activates large-input path).
+    large: bool,
+    /// The four accumulator lanes, initialized from the seed.
+    v: [u64; 4],
+    /// Internal buffer for partial stripes (up to 32 bytes).
+    buf: [u8; 32],
+    /// Number of valid bytes in `buf`.
+    buf_len: usize,
+    /// The seed, stored for reset.
+    seed: u64,
+}
+
+impl Xxh64State {
+    /// Creates a new streaming XXH64 state with the given seed.
+    pub fn new(seed: u64) -> Self {
+        let mut s = Xxh64State {
+            total_len: 0,
+            large: false,
+            v: [0; 4],
+            buf: [0u8; 32],
+            buf_len: 0,
+            seed,
+        };
+        s.reset_internal();
+        s
+    }
+
+    /// Resets the state to its initial condition (as if freshly created with
+    /// the same seed).
+    pub fn reset(&mut self) {
+        self.reset_internal();
+    }
+
+    /// Resets the state to its initial condition with a new seed.
+    pub fn reset_with_seed(&mut self, seed: u64) {
+        self.seed = seed;
+        self.reset_internal();
+    }
+
+    fn reset_internal(&mut self) {
+        self.total_len = 0;
+        self.large = false;
+        self.v[0] = self.seed.wrapping_add(PRIME64_1).wrapping_add(PRIME64_2);
+        self.v[1] = self.seed.wrapping_add(PRIME64_2);
+        self.v[2] = self.seed;
+        self.v[3] = self.seed.wrapping_sub(PRIME64_1);
+        self.buf_len = 0;
+    }
+
+    /// Feeds more data into the hash state. Can be called any number of times,
+    /// including after `digest()`.
+    pub fn update(&mut self, input: &[u8]) {
+        let len = input.len();
+        self.total_len += len as u64;
+
+        let mut offset = 0;
+
+        // If we have buffered bytes, try to fill the buffer to 32
+        if self.buf_len > 0 {
+            let fill = (32 - self.buf_len).min(len);
+            self.buf[self.buf_len..self.buf_len + fill].copy_from_slice(&input[..fill]);
+            self.buf_len += fill;
+            offset += fill;
+
+            if self.buf_len == 32 {
+                // Process the full 32-byte buffer
+                self.large = true;
+                let buf = self.buf;
+                self.v[0] = round64(self.v[0], read_le_u64(&buf, 0));
+                self.v[1] = round64(self.v[1], read_le_u64(&buf, 8));
+                self.v[2] = round64(self.v[2], read_le_u64(&buf, 16));
+                self.v[3] = round64(self.v[3], read_le_u64(&buf, 24));
+                self.buf_len = 0;
+            }
+        }
+
+        // Process full 32-byte stripes from input
+        let remaining = len - offset;
+        if remaining >= 32 {
+            self.large = true;
+            let limit = offset + remaining - 31;
+            while offset < limit {
+                self.v[0] = round64(self.v[0], read_le_u64(input, offset));
+                self.v[1] = round64(self.v[1], read_le_u64(input, offset + 8));
+                self.v[2] = round64(self.v[2], read_le_u64(input, offset + 16));
+                self.v[3] = round64(self.v[3], read_le_u64(input, offset + 24));
+                offset += 32;
+            }
+        }
+
+        // Buffer any remaining bytes
+        if offset < len {
+            let leftover = len - offset;
+            self.buf[..leftover].copy_from_slice(&input[offset..]);
+            self.buf_len = leftover;
+        }
+    }
+
+    /// Computes and returns the current hash digest. This is **non-destructive**:
+    /// the internal state is not modified, so `digest()` can be called multiple
+    /// times and `update()` can continue afterwards.
+    pub fn digest(&self) -> u64 {
+        let mut h: u64 = if self.large {
+            let h = rotl64(self.v[0], 1)
+                .wrapping_add(rotl64(self.v[1], 7))
+                .wrapping_add(rotl64(self.v[2], 12))
+                .wrapping_add(rotl64(self.v[3], 18));
+
+            let h = merge_round64(h, self.v[0]);
+            let h = merge_round64(h, self.v[1]);
+            let h = merge_round64(h, self.v[2]);
+            merge_round64(h, self.v[3])
+        } else {
+            self.seed.wrapping_add(PRIME64_5)
+        };
+
+        h = h.wrapping_add(self.total_len);
+
+        // Finalize with buffered bytes
+        finalize64(h, &self.buf[..self.buf_len], 0)
+    }
 }
 
 #[cfg(test)]
