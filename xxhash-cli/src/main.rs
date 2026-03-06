@@ -456,8 +456,6 @@ struct ChecksumEntry {
     /// Whether this is a little-endian entry.
     little_endian: bool,
     /// Whether the filename in the original line was escaped (line started with `\`).
-    /// Used by escaped-filename round-trip verification in later features.
-    #[allow(dead_code)]
     escaped: bool,
 }
 
@@ -628,6 +626,17 @@ fn compute_file_digest(
     Ok(digest)
 }
 
+/// Format a filename for check-mode output. If the original checksum line
+/// was escaped (or the filename contains characters that need escaping),
+/// the output line gets a `\` prefix and the filename is escaped.
+fn format_check_filename(filename: &str, escaped: bool) -> String {
+    if escaped || needs_escaping(filename) {
+        format!("\\{}", escape_filename(filename))
+    } else {
+        filename.to_string()
+    }
+}
+
 /// Run checksum verification on a single checksum file.
 ///
 /// Returns `true` if all checks passed (exit 0), `false` otherwise (exit 1).
@@ -635,8 +644,9 @@ fn run_check_file(
     checksum_path: &str,
     verbosity: CheckVerbosity,
     ignore_missing: bool,
-    _warn: bool,
-    _strict: bool,
+    warn: bool,
+    strict: bool,
+    cli_little_endian: bool,
 ) -> bool {
     let file = match File::open(checksum_path) {
         Ok(f) => f,
@@ -679,17 +689,31 @@ fn run_check_file(
             None => {
                 // Empty lines and unparseable lines are malformed
                 malformed_lines += 1;
+                // --warn: emit per-line diagnostic to stderr
+                if warn {
+                    let _ = writeln!(
+                        err,
+                        "{}:{}: Error: Improperly formatted checksum line.",
+                        checksum_path,
+                        line_idx + 1
+                    );
+                }
                 continue;
             }
         };
 
         valid_lines += 1;
 
+        // For GNU-format lines (which don't self-identify as LE),
+        // use the CLI's --little-endian flag. BSD _LE lines already
+        // have little_endian set from parsing.
+        let effective_le = entry.little_endian || cli_little_endian;
+
         // Try to compute the digest for the file
         let computed = match compute_file_digest(
             &entry.filename,
             entry.algorithm,
-            entry.little_endian,
+            effective_le,
         ) {
             Ok(d) => d,
             Err(e) => {
@@ -718,15 +742,18 @@ fn run_check_file(
         // Compare digests (case-insensitive)
         let matches = computed.to_lowercase() == entry.expected_digest;
 
+        // Format the display filename with escaping if needed
+        let display_name = format_check_filename(&entry.filename, entry.escaped);
+
         if matches {
             verified_count += 1;
             if verbosity == CheckVerbosity::Default {
-                let _ = writeln!(out, "{}: OK", entry.filename);
+                let _ = writeln!(out, "{}: OK", display_name);
             }
         } else {
             failed_count += 1;
             if verbosity != CheckVerbosity::Status {
-                let _ = writeln!(out, "{}: FAILED", entry.filename);
+                let _ = writeln!(out, "{}: FAILED", display_name);
             }
         }
     }
@@ -759,7 +786,7 @@ fn run_check_file(
                 let _ = writeln!(out, "{} listed files could not be read", unreadable_count);
             }
         }
-        if malformed_lines > 0 && verbosity != CheckVerbosity::Status {
+        if malformed_lines > 0 {
             if malformed_lines == 1 {
                 let _ = writeln!(out, "{} line is improperly formatted", malformed_lines);
             } else {
@@ -781,6 +808,11 @@ fn run_check_file(
                 );
             }
         }
+    }
+
+    // --strict: malformed lines make the check fail
+    if strict && malformed_lines > 0 {
+        return false;
     }
 
     // Return success only if no failures and no unreadable files
@@ -808,6 +840,7 @@ fn main() {
                 cli.ignore_missing,
                 cli.warn,
                 cli.strict,
+                cli.little_endian,
             );
             if !ok {
                 all_ok = false;
