@@ -598,6 +598,111 @@ fn reference_fixture_loading_parse_tagged_output_xxh3_gnu_hex_suffix_after_equal
 }
 
 // ============================================================================
+// GNU filenames containing `) = ` with hex-like trailing segments
+// ============================================================================
+// Regression: when the trailing filename segment after `) = ` in a
+// GNU-format line is entirely hex-like, the parser must not confuse it
+// with a BSD-tagged line.  Only lines starting with a recognised tagged
+// algorithm prefix (e.g. "XXH64 (") should be treated as tagged format.
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_gnu_paren_eq_hex_suffix() {
+    // GNU XXH64 line whose filename contains `) = <hex>`:
+    // "e4c191d091bd8853  foo) = deadbeef"
+    // Parser must extract "e4c191d091bd8853", NOT "deadbeef".
+    let digest =
+        reference::parse_digest_from_line("e4c191d091bd8853  foo) = deadbeef");
+    assert_eq!(
+        digest.as_deref(),
+        Some("e4c191d091bd8853"),
+        "Should extract digest from GNU line even when filename contains ') = <hex>'"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_gnu_paren_eq_16char_hex() {
+    // GNU XXH64 line whose filename contains `) = <16-char hex>`:
+    // "a1b2c3d4e5f6a7b8  result) = 1111222233334444"
+    // The trailing hex differs from the leading digest to prevent coincidental pass.
+    let digest =
+        reference::parse_digest_from_line("a1b2c3d4e5f6a7b8  result) = 1111222233334444");
+    assert_eq!(
+        digest.as_deref(),
+        Some("a1b2c3d4e5f6a7b8"),
+        "Should extract leading digest from GNU line with ') = <16-char hex>' in filename"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_gnu_paren_eq_8char_hex() {
+    // GNU XXH32 line whose filename contains `) = <8-char hex>`:
+    // "709a6d99  data) = abcd1234"
+    let digest =
+        reference::parse_digest_from_line("709a6d99  data) = abcd1234");
+    assert_eq!(
+        digest.as_deref(),
+        Some("709a6d99"),
+        "Should extract 8-char XXH32 digest from GNU line with ') = <hex>' in filename"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_gnu_paren_eq_32char_hex() {
+    // GNU XXH128 line whose filename contains `) = <32-char hex>`:
+    // "8d7ada9ae0ad378ccb2d0fa0a59fbfe4  data) = 0123456789abcdef0123456789abcdef"
+    let digest = reference::parse_digest_from_line(
+        "8d7ada9ae0ad378ccb2d0fa0a59fbfe4  data) = 0123456789abcdef0123456789abcdef",
+    );
+    assert_eq!(
+        digest.as_deref(),
+        Some("8d7ada9ae0ad378ccb2d0fa0a59fbfe4"),
+        "Should extract 32-char digest from GNU line with ') = <32-char hex>' in filename"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_xxh3_gnu_paren_eq_hex() {
+    // XXH3 GNU format with `) = <hex>` in filename:
+    // "XXH3_74298474e8c89b3a  key) = cafebabe"
+    let digest =
+        reference::parse_digest_from_line("XXH3_74298474e8c89b3a  key) = cafebabe");
+    assert_eq!(
+        digest.as_deref(),
+        Some("74298474e8c89b3a"),
+        "Should extract XXH3 digest from GNU line with ') = <hex>' in filename"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_tagged_with_paren_eq_filename() {
+    // True tagged line where the filename itself contains `) = <hex>`:
+    // "XXH64 (data) = deadbeef) = 8c6c22be5ab13e44"
+    // The parser should use the LAST `) = ` as the structural separator.
+    let digest = reference::parse_digest_from_line(
+        "XXH64 (data) = deadbeef) = 8c6c22be5ab13e44",
+    );
+    assert_eq!(
+        digest.as_deref(),
+        Some("8c6c22be5ab13e44"),
+        "Should extract digest from tagged line when filename contains ') = <hex>'"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_tagged_with_eq_and_paren_eq() {
+    // True tagged line where the filename contains both ` = ` and `) = `:
+    // "XXH32 (key = val) = cafe) = abcd1234"
+    let digest = reference::parse_digest_from_line(
+        "XXH32 (key = val) = cafe) = abcd1234",
+    );
+    assert_eq!(
+        digest.as_deref(),
+        Some("abcd1234"),
+        "Should extract digest from tagged line with complex filename"
+    );
+}
+
+// ============================================================================
 // Parity harness smoke test
 // ============================================================================
 

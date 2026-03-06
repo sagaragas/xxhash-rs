@@ -192,6 +192,17 @@ fn parse_output(output: Output) -> Result<ReferenceResult, String> {
     })
 }
 
+/// Known tagged-output algorithm prefixes.
+///
+/// A line is only treated as BSD tagged format if its prefix (before ` (`)
+/// matches one of these labels exactly.  This prevents GNU-format lines
+/// whose filenames happen to contain `) = <hex>` from being misidentified
+/// as tagged output.
+const TAGGED_ALGO_PREFIXES: &[&str] = &[
+    "XXH32", "XXH64", "XXH3", "XXH128",
+    "XXH32_LE", "XXH64_LE", "XXH3_LE", "XXH128_LE",
+];
+
 /// Extract the hex digest from a single output line.
 ///
 /// Handles both output formats:
@@ -202,23 +213,34 @@ fn parse_output(output: Output) -> Result<ReferenceResult, String> {
 ///
 /// The escaped-filename prefix `\` at the start of a line is stripped before parsing.
 ///
-/// To distinguish tagged from GNU lines when the filename contains ` = `,
-/// we require that the text immediately before ` = <hex>` ends with `)`,
-/// matching the BSD `ALGO (filename) = hex` structure.  This prevents
-/// hex-like trailing filename segments from being mis-identified as digests.
+/// To distinguish tagged from GNU lines when the filename contains `) = `,
+/// we require **both** that:
+/// 1. The last `) = ` is followed by a pure hex suffix, **and**
+/// 2. The text before the matched `) = ` starts with a recognised algorithm
+///    label (e.g. `XXH64`) followed by ` (`.
+///
+/// Condition 2 prevents GNU-format lines whose filenames happen to
+/// contain `) = <hex>` from being mis-identified as tagged output.
 pub fn parse_digest_from_line(line: &str) -> Option<String> {
     // Strip the leading `\` escape indicator if present.
     let line = line.strip_prefix('\\').unwrap_or(line);
 
     // Detect tagged (BSD) format: `ALGO (filename) = hex_digest`.
     // Scan from the right for `) = ` to handle filenames that themselves
-    // contain ` = `.  The closing paren is the structural anchor that
-    // distinguishes a real tagged line from a GNU line whose filename
-    // happens to contain ` = ` followed by hex-like text.
+    // contain ` = ` or `) = `.  After finding a candidate, verify that
+    // the line starts with a known algorithm prefix followed by ` (`.
     if let Some(eq_pos) = line.rfind(") = ") {
         let hex = line[eq_pos + 4..].trim();
         if !hex.is_empty() && hex.chars().all(|c| c.is_ascii_hexdigit()) {
-            return Some(hex.to_lowercase());
+            // Verify that the prefix before `) = ` starts with `ALGO (`.
+            let prefix = &line[..eq_pos + 1]; // includes the closing `)`
+            let is_tagged = TAGGED_ALGO_PREFIXES.iter().any(|algo| {
+                let expected_start = format!("{} (", algo);
+                prefix.starts_with(&expected_start)
+            });
+            if is_tagged {
+                return Some(hex.to_lowercase());
+            }
         }
     }
 
