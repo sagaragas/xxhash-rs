@@ -201,16 +201,22 @@ fn parse_output(output: Output) -> Result<ReferenceResult, String> {
 ///   or `\<ALGO> (<escaped_filename>) = <hex_digest>`
 ///
 /// The escaped-filename prefix `\` at the start of a line is stripped before parsing.
+///
+/// To distinguish tagged from GNU lines when the filename contains ` = `,
+/// we require that the text immediately before ` = <hex>` ends with `)`,
+/// matching the BSD `ALGO (filename) = hex` structure.  This prevents
+/// hex-like trailing filename segments from being mis-identified as digests.
 pub fn parse_digest_from_line(line: &str) -> Option<String> {
     // Strip the leading `\` escape indicator if present.
     let line = line.strip_prefix('\\').unwrap_or(line);
 
-    // Detect tagged format: contains ` = ` with parenthesized filename.
-    // Guard: the token after the last ` = ` must be purely hex digits,
-    // otherwise a GNU line whose filename contains ` = ` would be
-    // mis-identified as tagged output.
-    if let Some(eq_pos) = line.rfind(" = ") {
-        let hex = line[eq_pos + 3..].trim();
+    // Detect tagged (BSD) format: `ALGO (filename) = hex_digest`.
+    // Scan from the right for `) = ` to handle filenames that themselves
+    // contain ` = `.  The closing paren is the structural anchor that
+    // distinguishes a real tagged line from a GNU line whose filename
+    // happens to contain ` = ` followed by hex-like text.
+    if let Some(eq_pos) = line.rfind(") = ") {
+        let hex = line[eq_pos + 4..].trim();
         if !hex.is_empty() && hex.chars().all(|c| c.is_ascii_hexdigit()) {
             return Some(hex.to_lowercase());
         }

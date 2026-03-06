@@ -433,18 +433,20 @@ fn cli_algorithm_selection_seed_0_all_algorithms_match_reference() {
 // =========================================================================
 
 #[test]
-fn cli_algorithm_selection_xxh32_seed_u32_max_succeeds() {
-    // u32::MAX = 4294967295 should be valid for XXH32
+fn cli_algorithm_selection_xxh32_seed_u32_max_rejected_for_parity() {
+    // u32::MAX = 4294967295 is rejected by the reference CLI's conservative
+    // decimal parser (seeds >= 4294967290 are rejected). Our CLI must match.
     let data = b"hello\n";
-    let (rust_out, rust_err, rust_code) = run_rust_cli(&["-H0", "--seed", "4294967295"], data);
+    let (_, rust_err, rust_code) = run_rust_cli(&["-H0", "--seed", "4294967295"], data);
     assert_eq!(
-        rust_code, 0,
-        "XXH32 with seed u32::MAX should succeed, stderr: {}",
+        rust_code, 1,
+        "XXH32 with seed u32::MAX should be rejected for reference parity, stderr: {}",
         rust_err
     );
     assert!(
-        !rust_out.is_empty(),
-        "Should produce output for valid u32 seed"
+        rust_err.contains("numeric value too large"),
+        "Error should contain 'numeric value too large', got: {}",
+        rust_err
     );
 }
 
@@ -544,6 +546,132 @@ fn cli_algorithm_selection_xxh32_boundary_seeds_match_reference() {
             first_line(&rust_out),
             first_line(&ref_out),
             "XXH32 seed {} output should match reference",
+            seed
+        );
+    }
+}
+
+// =========================================================================
+// XXH32 seed overflow boundary — reference-compatible rejection at 4294967290+
+// =========================================================================
+// The reference CLI's conservative decimal parser rejects seeds where the
+// intermediate value exceeds UINT32_MAX / 10 (= 429496729), meaning decimal
+// seeds >= 4294967290 are rejected even though they fit in a u32.  Our CLI
+// must reproduce this exact boundary for parity.
+
+#[test]
+fn cli_algorithm_selection_xxh32_seed_boundary_4294967289_accepted() {
+    // Last accepted seed before the reference overflow boundary.
+    let data = b"hello\n";
+    let (rust_out, rust_err, rust_code) =
+        run_rust_cli(&["-H0", "--seed", "4294967289"], data);
+    let (ref_out, _, ref_code) =
+        run_reference_cli(&["-H0", "--seed", "4294967289"], data);
+    assert_eq!(
+        rust_code, 0,
+        "Seed 4294967289 should succeed, stderr: {}",
+        rust_err
+    );
+    assert_eq!(ref_code, 0, "Reference should also accept 4294967289");
+    assert_eq!(
+        first_line(&rust_out),
+        first_line(&ref_out),
+        "Seed 4294967289 output should match reference"
+    );
+}
+
+#[test]
+fn cli_algorithm_selection_xxh32_seed_boundary_4294967290_rejected() {
+    // First rejected seed — reference overflow boundary.
+    let data = b"hello\n";
+    let (_, rust_err, rust_code) =
+        run_rust_cli(&["-H0", "--seed", "4294967290"], data);
+    let (_, ref_err, ref_code) =
+        run_reference_cli(&["-H0", "--seed", "4294967290"], data);
+    assert_eq!(
+        rust_code, 1,
+        "Seed 4294967290 should be rejected, stderr: {}",
+        rust_err
+    );
+    assert_eq!(ref_code, 1, "Reference should reject 4294967290");
+    assert!(
+        rust_err.contains("numeric value too large"),
+        "Rust error should say 'numeric value too large', got: {}",
+        rust_err
+    );
+    assert!(
+        ref_err.contains("numeric value too large"),
+        "Reference error should say 'numeric value too large', got: {}",
+        ref_err
+    );
+}
+
+#[test]
+fn cli_algorithm_selection_xxh32_seed_boundary_4294967295_rejected() {
+    // u32::MAX itself is rejected by the reference's conservative parser.
+    let data = b"hello\n";
+    let (_, rust_err, rust_code) =
+        run_rust_cli(&["-H0", "--seed", "4294967295"], data);
+    let (_, ref_err, ref_code) =
+        run_reference_cli(&["-H0", "--seed", "4294967295"], data);
+    assert_eq!(
+        rust_code, 1,
+        "Seed u32::MAX should be rejected for parity, stderr: {}",
+        rust_err
+    );
+    assert_eq!(ref_code, 1);
+    assert!(rust_err.contains("numeric value too large"));
+    assert!(ref_err.contains("numeric value too large"));
+}
+
+#[test]
+fn cli_algorithm_selection_xxh32_seed_overflow_range_parity() {
+    // The full rejected range 4294967290..=4294967295 must be rejected.
+    let data = b"hello\n";
+    for seed in 4294967290u64..=4294967295 {
+        let seed_str = seed.to_string();
+        let (_, rust_err, rust_code) =
+            run_rust_cli(&["-H0", "--seed", &seed_str], data);
+        let (_, _, ref_code) =
+            run_reference_cli(&["-H0", "--seed", &seed_str], data);
+        assert_eq!(
+            rust_code, 1,
+            "Seed {} should be rejected",
+            seed
+        );
+        assert_eq!(
+            ref_code, 1,
+            "Reference should reject seed {}",
+            seed
+        );
+        assert!(
+            rust_err.contains("numeric value too large"),
+            "Seed {} error should contain 'numeric value too large', got: {}",
+            seed,
+            rust_err
+        );
+    }
+}
+
+#[test]
+fn cli_algorithm_selection_xxh32_seed_accepted_range_parity() {
+    // Seeds just below the boundary should succeed and match reference.
+    let data = b"hello\n";
+    for seed in &["4294967285", "4294967286", "4294967287", "4294967288", "4294967289"] {
+        let (rust_out, rust_err, rust_code) =
+            run_rust_cli(&["-H0", "--seed", seed], data);
+        let (ref_out, _, ref_code) =
+            run_reference_cli(&["-H0", "--seed", seed], data);
+        assert_eq!(
+            rust_code, 0,
+            "Seed {} should succeed, stderr: {}",
+            seed, rust_err
+        );
+        assert_eq!(ref_code, 0, "Reference should accept seed {}", seed);
+        assert_eq!(
+            first_line(&rust_out),
+            first_line(&ref_out),
+            "Seed {} output should match reference",
             seed
         );
     }

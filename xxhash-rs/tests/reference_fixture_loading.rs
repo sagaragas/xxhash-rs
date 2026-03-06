@@ -509,6 +509,95 @@ fn reference_fixture_loading_parse_tagged_output_reference_all_algos() {
 }
 
 // ============================================================================
+// GNU filenames containing ` = ` with hex-like trailing segments
+// ============================================================================
+// Regression: when the trailing filename segment after the last ` = ` in a
+// GNU-format line is entirely hex-like (e.g. `file = deadbeef`), the parser
+// must still recognise the line as GNU and extract the leading digest token,
+// not the trailing hex-like filename portion.
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_gnu_hex_like_suffix_after_equals() {
+    // GNU XXH64 line whose filename ends with a hex-like segment:
+    // "e4c191d091bd8853  file = deadbeef"
+    // The parser must extract "e4c191d091bd8853", not "deadbeef".
+    let digest =
+        reference::parse_digest_from_line("e4c191d091bd8853  file = deadbeef");
+    assert_eq!(
+        digest.as_deref(),
+        Some("e4c191d091bd8853"),
+        "Should extract digest from GNU line even when trailing filename after ' = ' is hex-like"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_gnu_8char_hex_suffix_after_equals() {
+    // GNU XXH64 line whose filename has an 8-char hex-like suffix (XXH32-length):
+    // "a1b2c3d4e5f6a7b8  config = abcd1234"
+    let digest =
+        reference::parse_digest_from_line("a1b2c3d4e5f6a7b8  config = abcd1234");
+    assert_eq!(
+        digest.as_deref(),
+        Some("a1b2c3d4e5f6a7b8"),
+        "Should extract 16-char digest from GNU line when filename suffix is 8-char hex"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_gnu_16char_hex_suffix_after_equals() {
+    // GNU XXH64 line whose filename has a 16-char hex-like suffix:
+    // "a1b2c3d4e5f6a7b8  result = a1b2c3d4e5f6a7b8"
+    // Both the digest and the trailing text are 16 hex chars — parser must pick the leading one.
+    let digest =
+        reference::parse_digest_from_line("a1b2c3d4e5f6a7b8  result = a1b2c3d4e5f6a7b8");
+    assert_eq!(
+        digest.as_deref(),
+        Some("a1b2c3d4e5f6a7b8"),
+        "Should extract leading digest even when trailing filename is also 16-char hex"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_gnu_32char_hex_suffix_after_equals() {
+    // GNU XXH128 line whose filename has a 32-char hex suffix (mimics another XXH128 digest):
+    // "8d7ada9ae0ad378ccb2d0fa0a59fbfe4  data = 0123456789abcdef0123456789abcdef"
+    let digest = reference::parse_digest_from_line(
+        "8d7ada9ae0ad378ccb2d0fa0a59fbfe4  data = 0123456789abcdef0123456789abcdef",
+    );
+    assert_eq!(
+        digest.as_deref(),
+        Some("8d7ada9ae0ad378ccb2d0fa0a59fbfe4"),
+        "Should extract 32-char digest from GNU line when trailing filename is also 32-char hex"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_xxh32_gnu_hex_suffix_after_equals() {
+    // GNU XXH32 line whose filename has a hex-like suffix:
+    // "709a6d99  hash = beef"
+    let digest =
+        reference::parse_digest_from_line("709a6d99  hash = beef");
+    assert_eq!(
+        digest.as_deref(),
+        Some("709a6d99"),
+        "Should extract 8-char XXH32 digest from GNU line with hex-like suffix"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_xxh3_gnu_hex_suffix_after_equals() {
+    // XXH3 GNU format with hex-like filename suffix:
+    // "XXH3_74298474e8c89b3a  key = cafebabe"
+    let digest =
+        reference::parse_digest_from_line("XXH3_74298474e8c89b3a  key = cafebabe");
+    assert_eq!(
+        digest.as_deref(),
+        Some("74298474e8c89b3a"),
+        "Should extract XXH3 digest from GNU line with hex-like suffix"
+    );
+}
+
+// ============================================================================
 // Parity harness smoke test
 // ============================================================================
 

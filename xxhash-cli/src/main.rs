@@ -166,9 +166,14 @@ fn parse_args(args: &[String]) -> Result<CliArgs, String> {
         i += 1;
     }
 
-    // Validate seed range: XXH32 uses a u32 seed, so reject values
-    // that exceed the 32-bit range with reference-compatible diagnostics.
-    if algorithm == Algorithm::XXH32 && seed > u32::MAX as u64 {
+    // Validate seed range: XXH32 uses a u32 seed.  The reference CLI's
+    // conservative decimal parser rejects seeds where the intermediate
+    // value exceeds `UINT32_MAX / 10` (= 429496729), which means decimal
+    // seeds >= 4294967290 are rejected even though they fit in a u32.
+    // We reproduce this exact boundary for CLI parity.
+    const XXH32_SEED_LIMIT: u64 = (u32::MAX as u64 / 10) * 10 - 1;
+    // XXH32_SEED_LIMIT = 4294967289
+    if algorithm == Algorithm::XXH32 && seed > XXH32_SEED_LIMIT {
         return Err("numeric value too large".to_string());
     }
 
