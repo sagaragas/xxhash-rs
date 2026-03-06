@@ -388,6 +388,79 @@ fn reference_fixture_loading_parse_tagged_output_escaped_bsd() {
     );
 }
 
+// ============================================================================
+// GNU filenames containing ` = ` — parser must not confuse them with tagged format
+// ============================================================================
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_gnu_filename_with_equals() {
+    // GNU format with filename containing " = ":
+    // "26186c7d853ea72d  key = value.txt"
+    // The parser must extract "26186c7d853ea72d", not "value.txt"
+    let digest =
+        reference::parse_digest_from_line("26186c7d853ea72d  key = value.txt");
+    assert_eq!(
+        digest.as_deref(),
+        Some("26186c7d853ea72d"),
+        "Should extract digest from GNU line even when filename contains ' = '"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_gnu_filename_with_multiple_equals() {
+    // GNU format with filename containing multiple " = ":
+    // "709a6d99  a = b = c.txt"
+    let digest =
+        reference::parse_digest_from_line("709a6d99  a = b = c.txt");
+    assert_eq!(
+        digest.as_deref(),
+        Some("709a6d99"),
+        "Should extract 8-char XXH32 digest from GNU line with multiple ' = '"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_gnu_xxh3_filename_with_equals() {
+    // XXH3 GNU format with filename containing " = ":
+    // "XXH3_74298474e8c89b3a  key = value.txt"
+    let digest =
+        reference::parse_digest_from_line("XXH3_74298474e8c89b3a  key = value.txt");
+    assert_eq!(
+        digest.as_deref(),
+        Some("74298474e8c89b3a"),
+        "Should extract XXH3 digest from GNU line with ' = ' in filename"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_tagged_still_works_with_equals_in_filename() {
+    // Tagged format where filename itself contains " = ":
+    // "XXH64 (key = value.txt) = 26186c7d853ea72d"
+    // The parser must extract "26186c7d853ea72d" from after the LAST " = "
+    let digest = reference::parse_digest_from_line(
+        "XXH64 (key = value.txt) = 26186c7d853ea72d",
+    );
+    assert_eq!(
+        digest.as_deref(),
+        Some("26186c7d853ea72d"),
+        "Should extract digest from tagged line even when filename contains ' = '"
+    );
+}
+
+#[test]
+fn reference_fixture_loading_parse_tagged_output_gnu_128bit_filename_with_equals() {
+    // XXH128 GNU format with filename containing " = ":
+    // "8d7ada9ae0ad378ccb2d0fa0a59fbfe4  key = value.txt"
+    let digest = reference::parse_digest_from_line(
+        "8d7ada9ae0ad378ccb2d0fa0a59fbfe4  key = value.txt",
+    );
+    assert_eq!(
+        digest.as_deref(),
+        Some("8d7ada9ae0ad378ccb2d0fa0a59fbfe4"),
+        "Should extract 32-char XXH128 digest from GNU line with ' = ' in filename"
+    );
+}
+
 #[test]
 fn reference_fixture_loading_parse_tagged_output_reference_integration() {
     // Integration test: invoke the reference binary in tagged mode and verify

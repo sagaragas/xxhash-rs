@@ -206,10 +206,12 @@ pub fn parse_digest_from_line(line: &str) -> Option<String> {
     let line = line.strip_prefix('\\').unwrap_or(line);
 
     // Detect tagged format: contains ` = ` with parenthesized filename.
+    // Guard: the token after the last ` = ` must be purely hex digits,
+    // otherwise a GNU line whose filename contains ` = ` would be
+    // mis-identified as tagged output.
     if let Some(eq_pos) = line.rfind(" = ") {
-        // Tagged format: everything after " = " is the hex digest.
         let hex = line[eq_pos + 3..].trim();
-        if !hex.is_empty() {
+        if !hex.is_empty() && hex.chars().all(|c| c.is_ascii_hexdigit()) {
             return Some(hex.to_lowercase());
         }
     }

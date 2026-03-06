@@ -166,6 +166,12 @@ fn parse_args(args: &[String]) -> Result<CliArgs, String> {
         i += 1;
     }
 
+    // Validate seed range: XXH32 uses a u32 seed, so reject values
+    // that exceed the 32-bit range with reference-compatible diagnostics.
+    if algorithm == Algorithm::XXH32 && seed > u32::MAX as u64 {
+        return Err("numeric value too large".to_string());
+    }
+
     // Determine check verbosity: --status takes precedence over --quiet
     let check_verbosity = if status {
         CheckVerbosity::Status

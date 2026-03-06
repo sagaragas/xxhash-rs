@@ -508,3 +508,63 @@ fn cli_output_format_parity_normal_filename_no_escape_prefix() {
         rust_out
     );
 }
+
+// =========================================================================
+// Filenames containing ` = ` — GNU and tagged output must match reference
+// =========================================================================
+
+#[test]
+fn cli_output_format_parity_filename_with_equals_gnu() {
+    let file = create_temp_file("key = value.txt", b"test data\n");
+    let path = file.to_str().unwrap();
+
+    let (rust_out, _, rc) = run_rust(&[path], None);
+    let (ref_out, _, _) = run_ref(&[path], None);
+    assert_eq!(rc, 0);
+    assert_eq!(
+        rust_out, ref_out,
+        "GNU output for filename with ' = ' should match reference"
+    );
+}
+
+#[test]
+fn cli_output_format_parity_filename_with_equals_tag() {
+    let file = create_temp_file("key = value.txt", b"test data\n");
+    let path = file.to_str().unwrap();
+
+    let (rust_out, _, rc) = run_rust(&["--tag", path], None);
+    let (ref_out, _, _) = run_ref(&["--tag", path], None);
+    assert_eq!(rc, 0);
+    assert_eq!(
+        rust_out, ref_out,
+        "Tag output for filename with ' = ' should match reference"
+    );
+}
+
+#[test]
+fn cli_output_format_parity_filename_with_equals_all_algos() {
+    let file = create_temp_file("key = value.txt", b"test data\n");
+    let path = file.to_str().unwrap();
+
+    for algo in &["-H0", "-H1", "-H2", "-H3"] {
+        // GNU format
+        let (rust_out, _, rc) = run_rust(&[algo, path], None);
+        let (ref_out, _, _) = run_ref(&[algo, path], None);
+        assert_eq!(rc, 0);
+        assert_eq!(
+            rust_out, ref_out,
+            "GNU output for {} with ' = ' filename should match reference",
+            algo
+        );
+
+        // Tagged format
+        let (rust_out, _, rc) = run_rust(&["--tag", algo, path], None);
+        let (ref_out, _, _) = run_ref(&["--tag", algo, path], None);
+        assert_eq!(rc, 0);
+        assert_eq!(
+            rust_out, ref_out,
+            "Tag output for {} with ' = ' filename should match reference",
+            algo
+        );
+    }
+}

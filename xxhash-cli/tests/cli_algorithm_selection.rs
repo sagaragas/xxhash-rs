@@ -429,6 +429,127 @@ fn cli_algorithm_selection_seed_0_all_algorithms_match_reference() {
 }
 
 // =========================================================================
+// XXH32 seed overflow behavior
+// =========================================================================
+
+#[test]
+fn cli_algorithm_selection_xxh32_seed_u32_max_succeeds() {
+    // u32::MAX = 4294967295 should be valid for XXH32
+    let data = b"hello\n";
+    let (rust_out, rust_err, rust_code) = run_rust_cli(&["-H0", "--seed", "4294967295"], data);
+    assert_eq!(
+        rust_code, 0,
+        "XXH32 with seed u32::MAX should succeed, stderr: {}",
+        rust_err
+    );
+    assert!(
+        !rust_out.is_empty(),
+        "Should produce output for valid u32 seed"
+    );
+}
+
+#[test]
+fn cli_algorithm_selection_xxh32_seed_overflow_rejected() {
+    // u32::MAX + 1 = 4294967296 should be rejected for XXH32
+    let data = b"hello\n";
+    let (_, rust_err, rust_code) = run_rust_cli(&["-H0", "--seed", "4294967296"], data);
+    assert_eq!(
+        rust_code, 1,
+        "XXH32 with seed u32::MAX+1 should exit 1"
+    );
+    assert!(
+        rust_err.contains("numeric value too large"),
+        "Error should contain 'numeric value too large', got: {}",
+        rust_err
+    );
+}
+
+#[test]
+fn cli_algorithm_selection_xxh32_seed_large_overflow_rejected() {
+    // A very large seed should be rejected for XXH32
+    let data = b"hello\n";
+    let (_, rust_err, rust_code) =
+        run_rust_cli(&["-H0", "--seed", "18446744073709551615"], data);
+    assert_eq!(
+        rust_code, 1,
+        "XXH32 with u64::MAX seed should exit 1"
+    );
+    assert!(
+        rust_err.contains("numeric value too large"),
+        "Error should contain 'numeric value too large', got: {}",
+        rust_err
+    );
+}
+
+#[test]
+fn cli_algorithm_selection_xxh32_seed_overflow_parity_with_reference() {
+    // Both Rust and reference should reject the same out-of-range seed for XXH32
+    let data = b"hello\n";
+
+    let (_, rust_err, rust_code) = run_rust_cli(&["-H0", "--seed", "4294967296"], data);
+    let (_, ref_err, ref_code) = run_reference_cli(&["-H0", "--seed", "4294967296"], data);
+
+    assert_eq!(
+        rust_code, ref_code,
+        "Rust and reference should agree on exit code for overflow seed"
+    );
+    assert_eq!(rust_code, 1, "Both should exit 1");
+    assert!(
+        rust_err.contains("numeric value too large"),
+        "Rust error should match reference pattern, got: {}",
+        rust_err
+    );
+    assert!(
+        ref_err.contains("numeric value too large"),
+        "Reference error should match pattern, got: {}",
+        ref_err
+    );
+}
+
+#[test]
+fn cli_algorithm_selection_xxh64_large_seed_still_accepted() {
+    // XXH64 should accept seeds > u32::MAX since it uses a u64 seed
+    let data = b"hello\n";
+    let (rust_out, _, rust_code) = run_rust_cli(&["-H1", "--seed", "4294967296"], data);
+    let (ref_out, _, ref_code) = run_reference_cli(&["-H1", "--seed", "4294967296"], data);
+    assert_eq!(rust_code, 0, "XXH64 should accept u64 seed");
+    assert_eq!(ref_code, 0, "Reference XXH64 should accept u64 seed");
+    assert_eq!(
+        first_line(&rust_out),
+        first_line(&ref_out),
+        "XXH64 large seed output should match reference"
+    );
+}
+
+#[test]
+fn cli_algorithm_selection_xxh32_boundary_seeds_match_reference() {
+    // Valid boundary seeds for XXH32 should produce matching output
+    let data = b"hello\n";
+
+    for seed in &["0", "1", "2147483647", "2147483648"] {
+        let (rust_out, _, rust_code) = run_rust_cli(&["-H0", "--seed", seed], data);
+        let (ref_out, _, ref_code) = run_reference_cli(&["-H0", "--seed", seed], data);
+
+        assert_eq!(
+            rust_code, 0,
+            "XXH32 with seed {} should succeed",
+            seed
+        );
+        assert_eq!(
+            ref_code, 0,
+            "Reference with seed {} should succeed",
+            seed
+        );
+        assert_eq!(
+            first_line(&rust_out),
+            first_line(&ref_out),
+            "XXH32 seed {} output should match reference",
+            seed
+        );
+    }
+}
+
+// =========================================================================
 // Exit codes
 // =========================================================================
 
