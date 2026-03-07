@@ -133,9 +133,9 @@ ran for all scenarios), the correctness gate passed, raw samples are retained, a
 artifact checksums are recorded. The evidence pack includes three pinned claim-ready
 runs:
 
-- `run-20260307T001529Z-49348`
-- `run-20260307T001529Z-49342`
-- `run-20260307T001529Z-49060`
+- `run-20260307T024049Z-76539`
+- `run-20260307T024049Z-76533`
+- `run-20260307T024049Z-76247`
 
 ([evidence: `publication/evidence/benchmark_summary.json`](publication/evidence/benchmark_summary.json))
 
@@ -153,61 +153,64 @@ measurements that include process startup overhead.
 
 | Comparator       | Median throughput |
 |------------------|-------------------|
-| `c_xxhsum`       | ~3,260 MB/s       |
-| `rust_xxhash_rs` | ~2,723 MB/s       |
-| `b3sum`          | ~1,610 MB/s       |
-| `md5`            | ~560 MB/s         |
+| `c_xxhsum`       | ~3,694 MB/s       |
+| `rust_xxhash_rs` | ~3,972 MB/s       |
+| `b3sum`          | ~3,965 MB/s       |
+| `md5`            | ~532 MB/s         |
 
 At this payload size, process startup is a small fraction of the total time, and the
-numbers primarily reflect hash throughput. The C reference leads the Rust
-implementation by about 17% on XXH64 at 16 MiB. Both xxHash implementations
-are roughly 2x faster than BLAKE3 and 5x faster than MD5 in this scenario.
+numbers primarily reflect hash throughput. The Rust implementation, C reference, and
+BLAKE3 all land in the same range (~3.7–4.0 GB/s), while MD5 trails at ~532 MB/s.
+The Rust and C xxHash numbers are close enough that run-to-run variance could change
+their relative order.
 
 **XXH3_128, 1 MiB payload** (`xxh3-128-1m`):
 
 | Comparator       | Median throughput |
 |------------------|-------------------|
-| `c_xxhsum`       | ~338 MB/s         |
-| `rust_xxhash_rs` | ~339 MB/s         |
-| `b3sum`          | ~266 MB/s         |
-| `md5`            | ~221 MB/s         |
+| `c_xxhsum`       | ~448 MB/s         |
+| `rust_xxhash_rs` | ~414 MB/s         |
+| `b3sum`          | ~333 MB/s         |
+| `md5`            | ~272 MB/s         |
 
-For XXH3_128 at 1 MiB, the Rust implementation matches the C reference within
-measurement noise. Both the C and Rust NEON-optimized XXH3 paths are exercised on
+For XXH3_128 at 1 MiB, the C reference leads the Rust implementation by about 8%
+(~448 vs ~414 MB/s). Both the C and Rust NEON-optimized XXH3 paths are exercised on
 this Apple Silicon host.
 
 **XXH64, 1 MiB payload** (`xxh64-1m`):
 
 | Comparator       | Median throughput |
 |------------------|-------------------|
-| `c_xxhsum`       | ~258 MB/s         |
-| `rust_xxhash_rs` | ~284 MB/s         |
-| `b3sum`          | ~216 MB/s         |
-| `md5`            | ~183 MB/s         |
+| `c_xxhsum`       | ~565 MB/s         |
+| `rust_xxhash_rs` | ~472 MB/s         |
+| `b3sum`          | ~424 MB/s         |
+| `md5`            | ~306 MB/s         |
 
-At 1 MiB, process startup is a larger fraction of the measured time. The apparent
-Rust advantage here is within the range where startup and I/O variance dominate,
-so this should not be read as the Rust hash core being faster than the C hash core.
+At 1 MiB, process startup is a larger fraction of measured time. The C reference
+leads the Rust implementation by about 16% (~565 vs ~472 MB/s), though some of that
+gap reflects startup and I/O variance rather than pure hash throughput differences.
 
 **XXH64, 4 KiB payload** (`xxh64-4k`):
 
 | Comparator       | Median throughput |
 |------------------|-------------------|
-| `c_xxhsum`       | ~1.2 MB/s         |
-| `rust_xxhash_rs` | ~1.1 MB/s         |
-| `b3sum`          | ~1.1 MB/s         |
-| `md5`            | ~1.1 MB/s         |
+| `c_xxhsum`       | ~2.2 MB/s         |
+| `rust_xxhash_rs` | ~2.0 MB/s         |
+| `b3sum`          | ~1.7 MB/s         |
+| `md5`            | ~2.4 MB/s         |
 
 At 4 KiB, process startup overwhelms the hash computation entirely. All comparators
-converge to the same throughput floor. These numbers say nothing about hash
+converge to a similar throughput floor (~2 MB/s). These numbers say nothing about hash
 performance and are included only to illustrate the startup-dominated regime.
 
 ### Interpretation
 
 The CLI-level benchmarks show that `xxhash-rs` delivers throughput in the same
 range as the C reference across the measured scenarios. On the largest payload
-(16 MiB), the C reference is faster on XXH64 by about 17%. On XXH3_128 at 1 MiB,
-the two implementations are within noise of each other.
+(XXH64 at 16 MiB), the two are comparable. On XXH3_128 at 1 MiB and XXH64 at 1 MiB,
+the C reference leads by 8–16%, though process startup, file I/O, and output
+formatting contribute fixed overhead that compresses the apparent gap at smaller
+payloads.
 
 The throughput numbers above reflect the full CLI invocation path. The hash core
 itself is faster than what these CLI numbers suggest, because process startup, file

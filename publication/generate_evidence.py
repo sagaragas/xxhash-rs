@@ -77,9 +77,17 @@ def collect_parity_evidence() -> dict:
     # workspace test command (services.yaml: --test-threads=3) instead of
     # the known-flaky --test-threads=5 that causes intermittent CLI parity
     # failures due to reference binary path contention under high concurrency.
+    env = os.environ.copy()
+    # Ensure the reference root is set for parity tests that compare against
+    # the external C reference binary.
+    if "XXHASH_REFERENCE_ROOT" not in env:
+        default_ref = Path(REPO_ROOT).parent / "xxhash-reference"
+        if default_ref.exists():
+            env["XXHASH_REFERENCE_ROOT"] = str(default_ref)
     result = subprocess.run(
         ["cargo", "test", "--workspace", "--all-targets", "--", "--test-threads=3"],
         capture_output=True, text=True, cwd=REPO_ROOT,
+        env=env,
         timeout=300,
     )
 

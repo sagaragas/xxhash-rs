@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 /// Default path to the external reference checkout.
-const DEFAULT_REFERENCE_ROOT: &str = "/Users/ragas/code/missions/xxhash-reference";
+const DEFAULT_REFERENCE_ROOT: &str = "/Users/ragas/code/rewrites/xxhash-reference";
 
 /// Environment variable that overrides the reference checkout path.
 const REFERENCE_ROOT_ENV: &str = "XXHASH_REFERENCE_ROOT";

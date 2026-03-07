@@ -10,7 +10,7 @@
       "resolve": {
         "binary_path_env": "XXHASH_REFERENCE_ROOT",
         "binary_name": "xxhsum",
-        "default_path": "/Users/ragas/code/missions/xxhash-reference/xxhsum",
+        "default_path": "/Users/ragas/code/rewrites/xxhash-reference/xxhsum",
         "version_flag": "--version"
       },
       "invocation_template": {

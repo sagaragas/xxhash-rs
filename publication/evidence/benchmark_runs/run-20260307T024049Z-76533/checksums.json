@@ -1,5 +1,5 @@
 {
-  "manifest.json": "9a0f08a35346731d3a223fbf361d612a2be977ea7b1fa76ccbb45d14ab9be06d",
+  "manifest.json": "80f2d254f3434fe506e962a29e28b10f6834fd24b25eed2dd9c70ada6dd30ea2",
   "samples/xxh3-128-1m.json": "8f29b6538a0b86db93b4ff011e98585c42df83d2a8f156c016b3f7a4f093f5c7",
   "samples/xxh64-16m.json": "442d7cea53e0c08883e241017465e1b2e8c92a2f9277b355fb6653129163f78c",
   "samples/xxh64-1m.json": "498e234b851cc775813de24b8a227711df3ab35a6eeac32706224dffe04a45db",

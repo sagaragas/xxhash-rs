@@ -20,7 +20,7 @@ fn rust_binary() -> PathBuf {
 }
 
 /// Default path to the external reference checkout.
-const DEFAULT_REFERENCE_ROOT: &str = "/Users/ragas/code/missions/xxhash-reference";
+const DEFAULT_REFERENCE_ROOT: &str = "/Users/ragas/code/rewrites/xxhash-reference";
 
 /// Returns the path to the reference `xxhsum` binary, if available.
 fn reference_binary() -> Option<PathBuf> {

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "description": "Publication evidence pack artifact manifest for xxhash-rs rewrite study",
-  "measured_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328",
+  "measured_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
   "generated_utc": "2026-03-07T02:40:50.110067+00:00",
   "artifacts": {
     "parity": {
@@ -37,7 +37,7 @@
   },
   "manifest_file_checksums": {
     "benchmarks/scenarios.json": "9e18d9ad105b9805aa90cc8166062fa5543d4e7b02bf86aa9f53024c690663e3",
-    "benchmarks/comparators.json": "6d4104442642fc33ccfe27aac7f96b1ba4c42788bc8aaa61a2be6e9aac2220d6",
+    "benchmarks/comparators.json": "062b7c1c36320e75685e2c995088ad1a7a0727b65a77848336941006a3e5f994",
     "benchmarks/policy.json": "19e93029184aeaa616fc5e232ce6cb2e246a06619922c401c4aa49706451944c"
   }
 }
