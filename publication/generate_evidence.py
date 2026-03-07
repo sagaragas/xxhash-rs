@@ -704,8 +704,15 @@ def main():
         release["repo"]["measured_commit"] = (
             f"https://github.com/sagaragas/xxhash-rs/commit/{measured_revision}"
         )
-        # Update pinned evidence URLs to use new revision
+        # Update pinned evidence URLs to use new revision.
+        # IMPORTANT: Skip clean_checkout_provenance — that artifact is
+        # written by this script and committed *after* measured_revision,
+        # so its blob only exists at a later commit.  Blindly rewriting
+        # its URL to measured_revision creates a 404.  The URL is managed
+        # separately after the commit that includes the file is pushed.
         for key in release.get("repo", {}).get("pinned_evidence_urls", {}):
+            if key == "clean_checkout_provenance":
+                continue
             old_url = release["repo"]["pinned_evidence_urls"][key]
             release["repo"]["pinned_evidence_urls"][key] = old_url.replace(
                 old_rev, measured_revision
@@ -716,11 +723,10 @@ def main():
                 link["target"] = link["target"].replace(old_rev, measured_revision)
         # Update revision lineage
         release.setdefault("revision_lineage", {})["measured_revision"] = measured_revision
-        # Add provenance artifact reference
-        release["repo"]["pinned_evidence_urls"]["clean_checkout_provenance"] = (
-            f"https://github.com/sagaragas/xxhash-rs/blob/{measured_revision}"
-            "/publication/evidence/clean_checkout_provenance.json"
-        )
+        # NOTE: clean_checkout_provenance URL is NOT updated here.
+        # The provenance file is committed after measured_revision, so its
+        # public blob URL must point to the commit that actually contains it.
+        # Rewriting it to measured_revision would recreate the 404 regression.
         release["clean_checkout_reproducibility"]["checkout_command"] = (
             f"git checkout {measured_revision}"
         )

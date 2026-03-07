@@ -14,7 +14,7 @@
       "claim_map_inputs": "https://github.com/sagaragas/xxhash-rs/blob/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/claim_map_inputs.json",
       "artifact_manifest": "https://github.com/sagaragas/xxhash-rs/blob/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/artifact_manifest.json",
       "benchmark_runs": "https://github.com/sagaragas/xxhash-rs/tree/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/benchmark_runs",
-      "clean_checkout_provenance": "https://github.com/sagaragas/xxhash-rs/blob/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/clean_checkout_provenance.json"
+      "clean_checkout_provenance": "https://github.com/sagaragas/xxhash-rs/blob/dc941d96b9d412175bdd8503421b708158fd2175/publication/evidence/clean_checkout_provenance.json"
     }
   },
   "website": {
