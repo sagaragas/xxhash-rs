@@ -20,7 +20,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 EVIDENCE_DIR = REPO_ROOT / "publication" / "evidence"
 BENCHMARKS_DIR = REPO_ROOT / "benchmarks"
-RUNS_DIR = BENCHMARKS_DIR / "runs"
 
 
 def load_json(path: Path) -> dict:
@@ -105,17 +104,15 @@ def check_pinned_benchmark_runs() -> list:
             errors.append(f"Pinned run ID contains mutable 'latest': {rid}")
             continue
 
-        # First check the committed snapshot
+        # Require committed snapshot in the evidence directory (no fallback
+        # to mutable benchmarks/runs state)
         run_dir = snapshot_dir / rid
         if not run_dir.exists():
-            # Fall back to the gitignored runs dir
-            run_dir = RUNS_DIR / rid
-            if not run_dir.exists():
-                errors.append(
-                    f"Pinned run snapshot missing: "
-                    f"publication/evidence/benchmark_runs/{rid}"
-                )
-                continue
+            errors.append(
+                f"Pinned run snapshot missing from committed evidence: "
+                f"publication/evidence/benchmark_runs/{rid}"
+            )
+            continue
 
         # Check required run artifacts exist
         manifest_path = run_dir / "manifest.json"

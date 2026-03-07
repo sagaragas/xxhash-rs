@@ -12,7 +12,7 @@ The work follows a correctness-first methodology: algorithm parity is validated
 before benchmarking, and benchmark claims are tied to pinned artifacts rather than
 cherry-picked runs.
 
-**Measured revision:** [`df03fbc`](https://github.com/sagaragas/xxhash-rs/commit/df03fbc75ad22dd34b8f479a624c934dbc6e1590)
+**Measured revision:** [`a7cd8e5`](https://github.com/sagaragas/xxhash-rs/commit/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab)
 
 ---
 
@@ -131,9 +131,9 @@ ran for all scenarios), the correctness gate passed, raw samples are retained, a
 artifact checksums are recorded. The evidence pack includes three pinned claim-ready
 runs:
 
-- `run-20260306T235225Z-37931`
-- `run-20260306T235224Z-37732`
-- `run-20260306T235224Z-37736`
+- `run-20260307T001529Z-49348`
+- `run-20260307T001529Z-49342`
+- `run-20260307T001529Z-49060`
 
 ([evidence: `publication/evidence/benchmark_summary.json`](publication/evidence/benchmark_summary.json))
 
@@ -295,7 +295,7 @@ For the full clean-room boundary and attribution details, see [LEGAL.md](../LEGA
 ### Source and artifacts
 
 The measured revision for all evidence in this study is
-[`df03fbc`](https://github.com/sagaragas/xxhash-rs/commit/df03fbc75ad22dd34b8f479a624c934dbc6e1590).
+[`a7cd8e5`](https://github.com/sagaragas/xxhash-rs/commit/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab).
 
 The evidence pack is committed under `publication/evidence/` and includes:
 
@@ -320,16 +320,19 @@ To reproduce the core validation from a clean checkout of the measured revision:
 # Clone and checkout the measured revision
 git clone https://github.com/sagaragas/xxhash-rs.git
 cd xxhash-rs
-git checkout df03fbc75ad22dd34b8f479a624c934dbc6e1590
+git checkout a7cd8e53bd71c7498b75f8d1857c2f7b609315ab
 
 # Build the workspace
 cargo build --workspace --release
 
-# Run the parity test suite
-cargo test --workspace --all-targets
+# Run the parity test suite (use --test-threads=3 for stable concurrency)
+cargo test --workspace --all-targets -- --test-threads=3
 
 # Verify the claim/evidence map
 python3 publication/claim_map.py --verify
+
+# Run the traceability check
+python3 publication/traceability_check.py
 
 # Run the style gate
 python3 publication/style_gate.py
