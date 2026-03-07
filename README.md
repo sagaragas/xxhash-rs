@@ -19,9 +19,28 @@ xxhash-rs/          # Library crate: hash algorithm implementations
 xxhash-cli/         # CLI binary crate: xxhsum-compatible tool
 tests/              # Integration and parity tests
 benchmarks/         # Benchmark harness and artifacts
-publication/        # Rewrite study and publication materials
+publication/        # Rewrite study and publication evidence
 docs/               # Additional documentation
 ```
+
+## Rewrite Study
+
+This project is the subject of a rewrite study that documents the design decisions,
+correctness validation, benchmark methodology, and performance characteristics of the
+Rust reimplementation.
+
+**[Read the rewrite study](publication/REWRITE_STUDY.md)** for the full technical
+analysis, including:
+
+- Bit-exact parity validation across all four hash variants (508 tests)
+- CLI behavioral parity against the upstream `xxhsum` reference
+- NEON-optimized XXH3 paths on Apple Silicon with scalar-parity verification
+- End-to-end CLI benchmark results against the C reference, BLAKE3, and MD5
+- Clean-room methodology and licensing boundary documentation
+
+The study's claims are backed by machine-readable evidence artifacts under
+[`publication/evidence/`](publication/evidence/), each pinned to the measured
+revision [`df03fbc`](https://github.com/sagaragas/xxhash-rs/commit/df03fbc75ad22dd34b8f479a624c934dbc6e1590).
 
 ## Clean-Room Implementation
 
@@ -43,6 +62,21 @@ cargo build --workspace
 
 ```sh
 cargo test --workspace
+```
+
+## Verification
+
+The publication evidence can be verified with:
+
+```sh
+# Verify the claim/evidence map
+python3 publication/claim_map.py --verify
+
+# Run the style gate
+python3 publication/style_gate.py
+
+# Check traceability across evidence artifacts
+python3 publication/traceability_check.py
 ```
 
 ## License
