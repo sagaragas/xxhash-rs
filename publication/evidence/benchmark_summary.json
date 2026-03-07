@@ -1,13 +1,13 @@
 {
   "schema_version": "1.0.0",
   "description": "Benchmark evidence with pinned run IDs for xxhash-rs rewrite study",
-  "generated_utc": "2026-03-07T00:15:30.042654+00:00",
-  "measured_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
-  "claim_ready_run_count": 14,
+  "generated_utc": "2026-03-07T02:40:50.104648+00:00",
+  "measured_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328",
+  "claim_ready_run_count": 7,
   "pinned_run_ids": [
-    "run-20260307T001529Z-49348",
-    "run-20260307T001529Z-49342",
-    "run-20260307T001529Z-49060"
+    "run-20260307T024049Z-76539",
+    "run-20260307T024049Z-76533",
+    "run-20260307T024049Z-76247"
   ],
   "scenario_ids": [
     "xxh3-128-1m",
@@ -101,10 +101,10 @@
     "machine": "arm64"
   },
   "artifact_checksums": {
-    "manifest.json": "96f076570307c6fb28fbb8171e5ef73f0466f25247418642323bb660680c0f36",
-    "samples/xxh3-128-1m.json": "f0b1120b13707123ff81b976309ac965b8ac067bb6e16b6aa9e76ec5289187bd",
-    "samples/xxh64-16m.json": "e1b4da14dd5254c3789fbcb550817506dd56d41db8e0da7a4afdf6599af780b0",
-    "samples/xxh64-1m.json": "a333d347be5c88aba79258873c9d5314e77c3858e178102d0e49b0616779d5c4",
-    "samples/xxh64-4k.json": "8780f36e5a896dcc4c4c8fb54256815728b8071a77bca3bf25e6d52f4bcd16c0"
+    "manifest.json": "2f7e0a752df5809739b3bdfc903c9c2935807713b4316e90453807701ceece6f",
+    "samples/xxh3-128-1m.json": "5177912b11228682f94e4b5ed83c8dd5b707deaa1e15d921460973d8f2de72a7",
+    "samples/xxh64-16m.json": "0c1f0f8eaede8a96947d1ea601db990ca2810cf7ac9f5230ed134c48c37e5159",
+    "samples/xxh64-1m.json": "2b266633400839564c5fe0449c61cc44eb186229e286a7e060052fb52a3fbb35",
+    "samples/xxh64-4k.json": "b00fd1ead50ff49e29b74630a6a12582ea2a9c16544cf04263029ecaec8c1e8e"
   }
 }

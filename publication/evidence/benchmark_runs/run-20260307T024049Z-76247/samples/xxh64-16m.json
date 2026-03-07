@@ -1,0 +1,212 @@
+{
+  "scenario_id": "xxh64-16m",
+  "algorithm": "XXH64",
+  "payload_bytes": 16777216,
+  "payload_checksum": "341aacac661ccb210720bedaa9ead5d668fe5ea41a73532fc147c71e34040df1",
+  "warmup_iterations": 1,
+  "measured_iterations": 2,
+  "comparator_results": {
+    "c_xxhsum": {
+      "status": "success",
+      "invocation": [
+        "/Users/ragas/code/missions/xxhash-reference/xxhsum",
+        "-H1",
+        "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin"
+      ],
+      "warmup_samples": [
+        {
+          "command": [
+            "/Users/ragas/code/missions/xxhash-reference/xxhsum",
+            "-H1",
+            "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin"
+          ],
+          "elapsed_ns": 4213333,
+          "exit_code": 0,
+          "stdout_first_line": "aacc10d892ee9f91  /var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin",
+          "stderr_snippet": "",
+          "success": true
+        }
+      ],
+      "measured_samples": [
+        {
+          "command": [
+            "/Users/ragas/code/missions/xxhash-reference/xxhsum",
+            "-H1",
+            "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin"
+          ],
+          "elapsed_ns": 4741667,
+          "exit_code": 0,
+          "stdout_first_line": "aacc10d892ee9f91  /var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin",
+          "stderr_snippet": "",
+          "success": true
+        },
+        {
+          "command": [
+            "/Users/ragas/code/missions/xxhash-reference/xxhsum",
+            "-H1",
+            "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin"
+          ],
+          "elapsed_ns": 5025791,
+          "exit_code": 0,
+          "stdout_first_line": "aacc10d892ee9f91  /var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin",
+          "stderr_snippet": "",
+          "success": true
+        }
+      ],
+      "median_ns": 5025791,
+      "sample_count": 2
+    },
+    "rust_xxhash_rs": {
+      "status": "success",
+      "invocation": [
+        "/Users/ragas/code/missions/xxhash-rs/target/release/xxhash-rs",
+        "-H1",
+        "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin"
+      ],
+      "warmup_samples": [
+        {
+          "command": [
+            "/Users/ragas/code/missions/xxhash-rs/target/release/xxhash-rs",
+            "-H1",
+            "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin"
+          ],
+          "elapsed_ns": 4670708,
+          "exit_code": 0,
+          "stdout_first_line": "aacc10d892ee9f91  /var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin",
+          "stderr_snippet": "",
+          "success": true
+        }
+      ],
+      "measured_samples": [
+        {
+          "command": [
+            "/Users/ragas/code/missions/xxhash-rs/target/release/xxhash-rs",
+            "-H1",
+            "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin"
+          ],
+          "elapsed_ns": 5037417,
+          "exit_code": 0,
+          "stdout_first_line": "aacc10d892ee9f91  /var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin",
+          "stderr_snippet": "",
+          "success": true
+        },
+        {
+          "command": [
+            "/Users/ragas/code/missions/xxhash-rs/target/release/xxhash-rs",
+            "-H1",
+            "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin"
+          ],
+          "elapsed_ns": 4727917,
+          "exit_code": 0,
+          "stdout_first_line": "aacc10d892ee9f91  /var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin",
+          "stderr_snippet": "",
+          "success": true
+        }
+      ],
+      "median_ns": 5037417,
+      "sample_count": 2
+    },
+    "b3sum": {
+      "status": "success",
+      "invocation": [
+        "/opt/homebrew/bin/b3sum",
+        "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin"
+      ],
+      "warmup_samples": [
+        {
+          "command": [
+            "/opt/homebrew/bin/b3sum",
+            "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin"
+          ],
+          "elapsed_ns": 12371375,
+          "exit_code": 0,
+          "stdout_first_line": "29c8bcea6b2c862b871804b272d5ee82da4dc272ac9aec792f3fc2a7fbcdf644  /var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin",
+          "stderr_snippet": "",
+          "success": true
+        }
+      ],
+      "measured_samples": [
+        {
+          "command": [
+            "/opt/homebrew/bin/b3sum",
+            "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin"
+          ],
+          "elapsed_ns": 9443083,
+          "exit_code": 0,
+          "stdout_first_line": "29c8bcea6b2c862b871804b272d5ee82da4dc272ac9aec792f3fc2a7fbcdf644  /var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin",
+          "stderr_snippet": "",
+          "success": true
+        },
+        {
+          "command": [
+            "/opt/homebrew/bin/b3sum",
+            "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin"
+          ],
+          "elapsed_ns": 9709375,
+          "exit_code": 0,
+          "stdout_first_line": "29c8bcea6b2c862b871804b272d5ee82da4dc272ac9aec792f3fc2a7fbcdf644  /var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin",
+          "stderr_snippet": "",
+          "success": true
+        }
+      ],
+      "median_ns": 9709375,
+      "sample_count": 2
+    },
+    "md5": {
+      "status": "success",
+      "invocation": [
+        "/sbin/md5",
+        "-r",
+        "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin"
+      ],
+      "warmup_samples": [
+        {
+          "command": [
+            "/sbin/md5",
+            "-r",
+            "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin"
+          ],
+          "elapsed_ns": 28803208,
+          "exit_code": 0,
+          "stdout_first_line": "e06888832b83d4f381e885edebd1d782 /var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin",
+          "stderr_snippet": "",
+          "success": true
+        }
+      ],
+      "measured_samples": [
+        {
+          "command": [
+            "/sbin/md5",
+            "-r",
+            "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin"
+          ],
+          "elapsed_ns": 32350500,
+          "exit_code": 0,
+          "stdout_first_line": "e06888832b83d4f381e885edebd1d782 /var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin",
+          "stderr_snippet": "",
+          "success": true
+        },
+        {
+          "command": [
+            "/sbin/md5",
+            "-r",
+            "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin"
+          ],
+          "elapsed_ns": 29523334,
+          "exit_code": 0,
+          "stdout_first_line": "e06888832b83d4f381e885edebd1d782 /var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_80exy0rz/payload_16777216.bin",
+          "stderr_snippet": "",
+          "success": true
+        }
+      ],
+      "median_ns": 32350500,
+      "sample_count": 2
+    }
+  },
+  "coverage_ledger": {
+    "c_xxhsum": "success",
+    "rust_xxhash_rs": "success",
+    "b3sum": "success",
+    "md5": "success"
+  }
+}

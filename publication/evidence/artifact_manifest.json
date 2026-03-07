@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
   "description": "Publication evidence pack artifact manifest for xxhash-rs rewrite study",
-  "measured_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
-  "generated_utc": "2026-03-07T00:15:30.047341+00:00",
+  "measured_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328",
+  "generated_utc": "2026-03-07T02:40:50.110067+00:00",
   "artifacts": {
     "parity": {
       "summary": "publication/evidence/parity_summary.json",
@@ -13,14 +13,14 @@
       "summary": "publication/evidence/benchmark_summary.json",
       "description": "Benchmark evidence with pinned run IDs and correctness gate results",
       "pinned_run_ids": [
-        "run-20260307T001529Z-49348",
-        "run-20260307T001529Z-49342",
-        "run-20260307T001529Z-49060"
+        "run-20260307T024049Z-76539",
+        "run-20260307T024049Z-76533",
+        "run-20260307T024049Z-76247"
       ],
       "run_snapshot_paths": [
-        "publication/evidence/benchmark_runs/run-20260307T001529Z-49348",
-        "publication/evidence/benchmark_runs/run-20260307T001529Z-49342",
-        "publication/evidence/benchmark_runs/run-20260307T001529Z-49060"
+        "publication/evidence/benchmark_runs/run-20260307T024049Z-76539",
+        "publication/evidence/benchmark_runs/run-20260307T024049Z-76533",
+        "publication/evidence/benchmark_runs/run-20260307T024049Z-76247"
       ],
       "scenarios_manifest": "benchmarks/scenarios.json",
       "comparators_manifest": "benchmarks/comparators.json",
@@ -30,9 +30,9 @@
       "claim_map_inputs": "publication/evidence/claim_map_inputs.json",
       "description": "Claim-to-evidence mapping inputs for publication traceability"
     },
-    "release_traceability": {
-      "path": "publication/evidence/release_traceability.json",
-      "description": "Cross-repo release traceability binding repo evidence, website article, and revision lineage"
+    "provenance": {
+      "path": "publication/evidence/clean_checkout_provenance.json",
+      "description": "Clean-checkout provenance artifact proving reproducibility with manifest hashes and run IDs"
     }
   },
   "manifest_file_checksums": {

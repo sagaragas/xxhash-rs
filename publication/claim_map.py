@@ -104,6 +104,47 @@ def verify():
             if "latest" in rid.lower():
                 errors.append(f"Claim {claim_id}: pinned_run_id contains 'latest': {rid}")
 
+    # 5b. Verify required claim classes are covered
+    claim_classes_found = set()
+    claim_ids = set()
+    for claim in claims:
+        cid = claim.get("claim_id", "")
+        claim_ids.add(cid)
+        cc = claim.get("claim_class", "")
+        if cc:
+            claim_classes_found.add(cc)
+        # Infer class from claim_id prefix for backward compat
+        if cid.startswith("methodology-"):
+            claim_classes_found.add("methodology")
+        elif cid.startswith("limitation-"):
+            claim_classes_found.add("limitation")
+        elif cid.startswith("licensing-"):
+            claim_classes_found.add("licensing")
+        elif cid.startswith("benchmark-"):
+            claim_classes_found.add("benchmark")
+        elif cid.startswith("parity-") or cid.startswith("simd-") or cid.startswith("cli-"):
+            claim_classes_found.add("parity")
+
+    required_classes = {"methodology", "limitation", "licensing", "benchmark", "parity"}
+    missing_classes = required_classes - claim_classes_found
+    if missing_classes:
+        errors.append(
+            f"Missing required claim classes: {sorted(missing_classes)}. "
+            f"Found: {sorted(claim_classes_found)}"
+        )
+
+    # 5c. Verify benchmark claims have numeric_values for reconciliation
+    benchmark_claims_with_numerics = 0
+    for claim in claims:
+        if claim.get("evidence_type") == "benchmark_samples":
+            if claim.get("numeric_values"):
+                benchmark_claims_with_numerics += 1
+    if benchmark_claims_with_numerics == 0:
+        errors.append(
+            "No benchmark claims have numeric_values for reconciliation; "
+            "exact numeric evidence is required for claim traceability"
+        )
+
     # 6. Check artifact manifest exists
     if not ARTIFACT_MANIFEST_PATH.exists():
         errors.append(f"{ARTIFACT_MANIFEST_PATH.relative_to(REPO_ROOT)} does not exist")
@@ -139,6 +180,21 @@ def verify():
             errors.append(
                 f"Fewer than 3 claim-ready runs: {bench.get('claim_ready_run_count', 0)}"
             )
+
+    # 8. Check clean-checkout provenance artifact exists
+    provenance_path = EVIDENCE_DIR / "clean_checkout_provenance.json"
+    if not provenance_path.exists():
+        errors.append("publication/evidence/clean_checkout_provenance.json does not exist")
+    else:
+        provenance = load_json(provenance_path)
+        if provenance.get("measured_revision") != revision:
+            errors.append("Provenance artifact revision does not match claim map revision")
+        if not provenance.get("validation_commands"):
+            errors.append("Provenance artifact missing validation_commands")
+        if not provenance.get("manifest_hashes"):
+            errors.append("Provenance artifact missing manifest_hashes")
+        if not provenance.get("produced_run_ids"):
+            errors.append("Provenance artifact missing produced_run_ids")
 
     # Report
     if errors:

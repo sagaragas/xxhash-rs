@@ -43,6 +43,7 @@ def check_evidence_files_exist() -> list:
         EVIDENCE_DIR / "parity_summary.json",
         EVIDENCE_DIR / "benchmark_summary.json",
         EVIDENCE_DIR / "claim_map_inputs.json",
+        EVIDENCE_DIR / "clean_checkout_provenance.json",
     ]
     for f in required_files:
         if not f.exists():
@@ -58,12 +59,14 @@ def check_revision_lineage() -> list:
     parity = load_json(EVIDENCE_DIR / "parity_summary.json")
     benchmark = load_json(EVIDENCE_DIR / "benchmark_summary.json")
     claim_map = load_json(EVIDENCE_DIR / "claim_map_inputs.json")
+    provenance = load_json(EVIDENCE_DIR / "clean_checkout_provenance.json")
 
     revisions = {
         "artifact_manifest": manifest.get("measured_revision"),
         "parity_summary": parity.get("measured_revision"),
         "benchmark_summary": benchmark.get("measured_revision"),
         "claim_map_inputs": claim_map.get("measured_revision"),
+        "clean_checkout_provenance": provenance.get("measured_revision"),
     }
 
     unique_revisions = set(v for v in revisions.values() if v)
@@ -266,6 +269,64 @@ def check_release_traceability() -> list:
     return errors
 
 
+def check_clean_checkout_provenance() -> list:
+    """Verify the clean-checkout provenance artifact is present, consistent, and complete."""
+    errors = []
+
+    provenance_path = EVIDENCE_DIR / "clean_checkout_provenance.json"
+    if not provenance_path.exists():
+        errors.append("Missing clean-checkout provenance artifact: publication/evidence/clean_checkout_provenance.json")
+        return errors
+
+    provenance = load_json(provenance_path)
+
+    # Verify measured revision matches other evidence
+    manifest = load_json(EVIDENCE_DIR / "artifact_manifest.json")
+    if provenance.get("measured_revision") != manifest.get("measured_revision"):
+        errors.append(
+            f"Provenance measured_revision ({provenance.get('measured_revision')}) "
+            f"does not match artifact_manifest ({manifest.get('measured_revision')})"
+        )
+
+    # Verify required fields
+    if not provenance.get("checkout_command"):
+        errors.append("Provenance artifact missing checkout_command")
+    if not provenance.get("manifest_hashes"):
+        errors.append("Provenance artifact missing manifest_hashes")
+    if not provenance.get("validation_commands"):
+        errors.append("Provenance artifact missing validation_commands")
+    if not provenance.get("produced_run_ids"):
+        errors.append("Provenance artifact missing produced_run_ids")
+    if not provenance.get("clone_url"):
+        errors.append("Provenance artifact missing clone_url")
+
+    # Verify manifest hashes match benchmark summary
+    benchmark = load_json(EVIDENCE_DIR / "benchmark_summary.json")
+    bench_hashes = benchmark.get("manifest_hashes", {})
+    prov_hashes = provenance.get("manifest_hashes", {})
+    for key in ["scenarios", "comparators", "policy"]:
+        if bench_hashes.get(key) and prov_hashes.get(key):
+            if bench_hashes[key] != prov_hashes[key]:
+                errors.append(
+                    f"Provenance manifest hash for '{key}' does not match benchmark summary"
+                )
+
+    # Verify produced run IDs match benchmark pinned IDs
+    bench_ids = set(benchmark.get("pinned_run_ids", []))
+    prov_ids = set(provenance.get("produced_run_ids", []))
+    if bench_ids and prov_ids and bench_ids != prov_ids:
+        errors.append(
+            f"Provenance produced_run_ids {sorted(prov_ids)} do not match "
+            f"benchmark pinned_run_ids {sorted(bench_ids)}"
+        )
+
+    # Verify script checksums are present (proves the scripts are committed)
+    if not provenance.get("script_checksums"):
+        errors.append("Provenance artifact missing script_checksums")
+
+    return errors
+
+
 def check_bidirectional_repo_links() -> list:
     """Verify that README and REWRITE_STUDY link to the published article."""
     errors = []
@@ -328,6 +389,7 @@ def main():
         ("No mutable latest references", check_no_latest_references),
         ("Scenario ID coverage", check_scenario_ids),
         ("Release traceability", check_release_traceability),
+        ("Clean-checkout provenance", check_clean_checkout_provenance),
         ("Bidirectional repo/article links", check_bidirectional_repo_links),
     ]
 

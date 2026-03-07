@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Clean-checkout provenance artifact proving the cited revision can reproduce linked benchmark and parity evidence",
+  "measured_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328",
+  "generated_utc": "2026-03-07T02:40:50.110524+00:00",
+  "clone_url": "https://github.com/sagaragas/xxhash-rs.git",
+  "checkout_command": "git checkout 69457341cce38cd4b3f1012cde82fdd6a4a48328",
+  "manifest_hashes": {
+    "scenarios": "9e18d9ad105b9805aa90cc8166062fa5543d4e7b02bf86aa9f53024c690663e3",
+    "comparators": "6d4104442642fc33ccfe27aac7f96b1ba4c42788bc8aaa61a2be6e9aac2220d6",
+    "policy": "19e93029184aeaa616fc5e232ce6cb2e246a06619922c401c4aa49706451944c"
+  },
+  "produced_run_ids": [
+    "run-20260307T024049Z-76539",
+    "run-20260307T024049Z-76533",
+    "run-20260307T024049Z-76247"
+  ],
+  "validation_commands": {
+    "build": "cargo build --workspace --release",
+    "test": "cargo test --workspace --all-targets -- --test-threads=3",
+    "claim_map_verify": "python3 publication/claim_map.py --verify",
+    "traceability_check": "python3 publication/traceability_check.py",
+    "style_gate": "python3 publication/style_gate.py",
+    "benchmark_seed": "python3 benchmarks/seed_run_set.py --output /tmp/xxhash-rs-benchmark-claim-gate-runs --num-runs 3",
+    "benchmark_reconcile": "python3 benchmarks/reconcile.py --run latest --run-dir /tmp/xxhash-rs-benchmark-claim-gate-runs"
+  },
+  "external_dependencies": {
+    "c_reference": {
+      "description": "External C xxhsum binary for parity testing and benchmark comparison",
+      "source": "https://github.com/sagaragas/xxHash",
+      "version": "xxhsum 0.8.3",
+      "build_command": "make -C /path/to/xxhash-reference xxhsum",
+      "note": "Not vendored into this repo; maintained outside for clean-room boundary"
+    },
+    "b3sum": {
+      "description": "BLAKE3 CLI for benchmark contrast comparison",
+      "version": "b3sum 1.8.3"
+    }
+  },
+  "script_checksums": {
+    "benchmarks/scenarios.json": "9e18d9ad105b9805aa90cc8166062fa5543d4e7b02bf86aa9f53024c690663e3",
+    "benchmarks/comparators.json": "6d4104442642fc33ccfe27aac7f96b1ba4c42788bc8aaa61a2be6e9aac2220d6",
+    "benchmarks/policy.json": "19e93029184aeaa616fc5e232ce6cb2e246a06619922c401c4aa49706451944c",
+    "benchmarks/harness.py": "96485929fb23b6886824358ef073a4f9f70f27910d4f5f78dbc101672746ce89",
+    "benchmarks/seed_run_set.py": "35ba9ddb496d5487fd8d6b5a2a6e4f431108f6fb614a14d8ae817f88e7a76e99",
+    "benchmarks/reconcile.py": "689742afcc33e715d0015d1fe7328903f4f03115dcc1eb2a9d39aa35ee0be44e",
+    "benchmarks/claim_gate.py": "2ea521ef63697ee80d47c3147e3bc05e7076418aef83cd908c760a1f8b9b43e8",
+    "publication/generate_evidence.py": "66580380913f03bd040657a05b34f17d4b0a382bf3c1462595726f6ff45ffef9",
+    "publication/claim_map.py": "130fa569a0f8f11a64b7fbc9de2d627365420b0cd01a007ce14ca01153213ce5",
+    "publication/traceability_check.py": "effc96e8d9d81d7a41cb19219f5a4b1a5c607b87bb2aa6a9185a857669523586",
+    "publication/style_gate.py": "847be3dd2feca528cce5fc3e137e02f514e7991f9f95ddff8697b9908258cad9"
+  },
+  "artifact_references": {
+    "parity_summary": "publication/evidence/parity_summary.json",
+    "benchmark_summary": "publication/evidence/benchmark_summary.json",
+    "claim_map_inputs": "publication/evidence/claim_map_inputs.json",
+    "artifact_manifest": "publication/evidence/artifact_manifest.json",
+    "benchmark_run_snapshots": [
+      "publication/evidence/benchmark_runs/run-20260307T024049Z-76539",
+      "publication/evidence/benchmark_runs/run-20260307T024049Z-76533",
+      "publication/evidence/benchmark_runs/run-20260307T024049Z-76247"
+    ]
+  }
+}

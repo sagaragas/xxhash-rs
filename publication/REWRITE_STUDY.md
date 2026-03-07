@@ -313,6 +313,9 @@ The evidence pack is committed under `publication/evidence/` and includes:
   and pinned revision.
 - **Artifact manifest:** [`publication/evidence/artifact_manifest.json`](evidence/artifact_manifest.json)
   — master index of all evidence artifacts with file checksums.
+- **Clean-checkout provenance:** [`publication/evidence/clean_checkout_provenance.json`](evidence/clean_checkout_provenance.json)
+  — provenance artifact with manifest hashes, validation commands, and produced
+  run identifiers proving the cited revision can reproduce the linked evidence.
 
 ### Reproducing from a clean checkout
 

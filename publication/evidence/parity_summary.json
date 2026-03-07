@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
   "description": "Machine-readable parity test results for xxhash-rs",
-  "measured_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
-  "generated_utc": "2026-03-07T00:15:30.041215+00:00",
+  "measured_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328",
+  "generated_utc": "2026-03-07T02:40:50.103087+00:00",
   "total_passed": 508,
   "total_failed": 0,
   "all_passed": true,
@@ -46,11 +46,11 @@
           "status": "ok"
         },
         {
-          "name": "cli_algorithm_selection_h3_has_xxh3_prefix",
+          "name": "cli_algorithm_selection_h2_is_xxh3_128",
           "status": "ok"
         },
         {
-          "name": "cli_algorithm_selection_h2_is_xxh3_128",
+          "name": "cli_algorithm_selection_h3_has_xxh3_prefix",
           "status": "ok"
         },
         {
@@ -106,11 +106,11 @@
           "status": "ok"
         },
         {
-          "name": "cli_algorithm_selection_xxh32_seed_boundary_4294967290_rejected",
+          "name": "cli_algorithm_selection_xxh32_seed_boundary_4294967295_rejected",
           "status": "ok"
         },
         {
-          "name": "cli_algorithm_selection_xxh32_seed_boundary_4294967295_rejected",
+          "name": "cli_algorithm_selection_xxh32_seed_boundary_4294967290_rejected",
           "status": "ok"
         },
         {
@@ -145,15 +145,15 @@
       "failed": 0,
       "tests": [
         {
+          "name": "cli_check_escaped_and_little_endian_bsd_backslash",
+          "status": "ok"
+        },
+        {
           "name": "cli_check_escaped_and_little_endian_bsd_le_explicit_flag",
           "status": "ok"
         },
         {
           "name": "cli_check_escaped_and_little_endian_bsd_cr",
-          "status": "ok"
-        },
-        {
-          "name": "cli_check_escaped_and_little_endian_bsd_backslash",
           "status": "ok"
         },
         {
@@ -181,11 +181,11 @@
           "status": "ok"
         },
         {
-          "name": "cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh3",
+          "name": "cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh128",
           "status": "ok"
         },
         {
-          "name": "cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh128",
+          "name": "cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh3",
           "status": "ok"
         },
         {
@@ -201,7 +201,7 @@
           "status": "ok"
         },
         {
-          "name": "cli_check_escaped_and_little_endian_gnu_cr",
+          "name": "cli_check_escaped_and_little_endian_gnu_le_xxh128",
           "status": "ok"
         },
         {
@@ -209,7 +209,7 @@
           "status": "ok"
         },
         {
-          "name": "cli_check_escaped_and_little_endian_gnu_le_xxh128",
+          "name": "cli_check_escaped_and_little_endian_gnu_cr",
           "status": "ok"
         },
         {
@@ -248,11 +248,11 @@
           "status": "ok"
         },
         {
-          "name": "cli_check_malformed_lines_default_single_malformed",
+          "name": "cli_check_malformed_lines_default_mixed",
           "status": "ok"
         },
         {
-          "name": "cli_check_malformed_lines_default_mixed",
+          "name": "cli_check_malformed_lines_default_single_malformed",
           "status": "ok"
         },
         {
@@ -272,11 +272,11 @@
           "status": "ok"
         },
         {
-          "name": "cli_check_malformed_lines_warn_all_invalid",
+          "name": "cli_check_malformed_lines_strict_no_malformed_succeeds",
           "status": "ok"
         },
         {
-          "name": "cli_check_malformed_lines_strict_no_malformed_succeeds",
+          "name": "cli_check_malformed_lines_warn_all_invalid",
           "status": "ok"
         },
         {
@@ -323,11 +323,11 @@
           "status": "ok"
         },
         {
-          "name": "cli_check_status_and_ignore_missing_status_mixed_missing",
+          "name": "cli_check_status_and_ignore_missing_status_success",
           "status": "ok"
         },
         {
-          "name": "cli_check_status_and_ignore_missing_status_success",
+          "name": "cli_check_status_and_ignore_missing_status_mixed_missing",
           "status": "ok"
         },
         {
@@ -477,15 +477,15 @@
           "status": "ok"
         },
         {
-          "name": "cli_filelist_parity_all_algorithms",
-          "status": "ok"
-        },
-        {
           "name": "cli_filelist_parity_files_from_stdin",
           "status": "ok"
         },
         {
           "name": "cli_filelist_parity_files_from_basic_order",
+          "status": "ok"
+        },
+        {
+          "name": "cli_filelist_parity_all_algorithms",
           "status": "ok"
         },
         {
@@ -579,11 +579,11 @@
       "failed": 0,
       "tests": [
         {
-          "name": "cli_output_format_parity_escaped_backslash_le",
+          "name": "cli_output_format_parity_escaped_backslash_gnu",
           "status": "ok"
         },
         {
-          "name": "cli_output_format_parity_escaped_backslash_gnu",
+          "name": "cli_output_format_parity_escaped_backslash_le",
           "status": "ok"
         },
         {
@@ -595,19 +595,19 @@
           "status": "ok"
         },
         {
-          "name": "cli_output_format_parity_escaped_cr_tag",
-          "status": "ok"
-        },
-        {
           "name": "cli_output_format_parity_escaped_cr_gnu",
           "status": "ok"
         },
         {
-          "name": "cli_output_format_parity_escaped_newline_gnu",
+          "name": "cli_output_format_parity_escaped_cr_tag",
           "status": "ok"
         },
         {
           "name": "cli_output_format_parity_escaped_newline_tag",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_escaped_newline_gnu",
           "status": "ok"
         },
         {
@@ -631,19 +631,19 @@
           "status": "ok"
         },
         {
-          "name": "cli_output_format_parity_filename_with_paren_eq_tag",
-          "status": "ok"
-        },
-        {
           "name": "cli_output_format_parity_filename_with_paren_eq_nonhex",
           "status": "ok"
         },
         {
-          "name": "cli_output_format_parity_all_formats_all_algos_file",
+          "name": "cli_output_format_parity_filename_with_paren_eq_tag",
           "status": "ok"
         },
         {
           "name": "cli_output_format_parity_gnu_default_xxh64_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_all_formats_all_algos_file",
           "status": "ok"
         },
         {
@@ -663,15 +663,15 @@
           "status": "ok"
         },
         {
+          "name": "cli_output_format_parity_le_xxh32_stdin",
+          "status": "ok"
+        },
+        {
           "name": "cli_output_format_parity_le_xxh3_128_stdin",
           "status": "ok"
         },
         {
           "name": "cli_output_format_parity_le_file",
-          "status": "ok"
-        },
-        {
-          "name": "cli_output_format_parity_le_xxh32_stdin",
           "status": "ok"
         },
         {
@@ -703,15 +703,11 @@
           "status": "ok"
         },
         {
-          "name": "cli_output_format_parity_tag_le_xxh32_stdin",
-          "status": "ok"
-        },
-        {
           "name": "cli_output_format_parity_tag_le_file",
           "status": "ok"
         },
         {
-          "name": "cli_output_format_parity_tag_le_xxh64_stdin",
+          "name": "cli_output_format_parity_tag_le_xxh32_stdin",
           "status": "ok"
         },
         {
@@ -723,15 +719,19 @@
           "status": "ok"
         },
         {
+          "name": "cli_output_format_parity_tag_le_xxh64_stdin",
+          "status": "ok"
+        },
+        {
+          "name": "cli_output_format_parity_tag_xxh32_stdin",
+          "status": "ok"
+        },
+        {
           "name": "cli_output_format_parity_tag_xxh3_128_stdin",
           "status": "ok"
         },
         {
           "name": "cli_output_format_parity_tag_xxh3_64_stdin",
-          "status": "ok"
-        },
-        {
-          "name": "cli_output_format_parity_tag_xxh32_stdin",
           "status": "ok"
         },
         {
@@ -1111,11 +1111,11 @@
       "failed": 0,
       "tests": [
         {
-          "name": "streaming_digest_state_fresh_digest",
+          "name": "streaming_digest_state_empty_updates",
           "status": "ok"
         },
         {
-          "name": "streaming_digest_state_empty_updates",
+          "name": "streaming_digest_state_fresh_digest",
           "status": "ok"
         },
         {
@@ -1135,11 +1135,11 @@
           "status": "ok"
         },
         {
-          "name": "streaming_digest_state_xxh3_128_reset",
+          "name": "streaming_digest_state_xxh3_128_repeated_digest",
           "status": "ok"
         },
         {
-          "name": "streaming_digest_state_xxh3_128_repeated_digest",
+          "name": "streaming_digest_state_xxh3_128_reset",
           "status": "ok"
         },
         {
@@ -1229,11 +1229,11 @@
       "failed": 0,
       "tests": [
         {
-          "name": "xxh3_simd_scalar_parity_accumulate_stripe_all_offsets",
+          "name": "xxh3_simd_scalar_parity_accumulate_stripe_basic",
           "status": "ok"
         },
         {
-          "name": "xxh3_simd_scalar_parity_accumulate_stripe_basic",
+          "name": "xxh3_simd_scalar_parity_accumulate_stripe_all_offsets",
           "status": "ok"
         },
         {
@@ -1253,11 +1253,11 @@
           "status": "ok"
         },
         {
-          "name": "xxh3_simd_scalar_parity_derived_secret_large",
+          "name": "xxh3_simd_scalar_parity_streaming_various_chunk_sizes",
           "status": "ok"
         },
         {
-          "name": "xxh3_simd_scalar_parity_streaming_various_chunk_sizes",
+          "name": "xxh3_simd_scalar_parity_derived_secret_large",
           "status": "ok"
         },
         {

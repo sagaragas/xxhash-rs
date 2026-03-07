@@ -261,6 +261,10 @@ def build_artifact_manifest(
             "claim_map_inputs": "publication/evidence/claim_map_inputs.json",
             "description": "Claim-to-evidence mapping inputs for publication traceability",
         },
+        "provenance": {
+            "path": "publication/evidence/clean_checkout_provenance.json",
+            "description": "Clean-checkout provenance artifact proving reproducibility with manifest hashes and run IDs",
+        },
     }
 
     # Compute checksums for key manifest files
@@ -282,6 +286,53 @@ def build_artifact_manifest(
         "artifacts": artifacts,
         "manifest_file_checksums": manifest_file_checksums,
     }
+
+
+def _compute_scenario_numerics(scenario_id: str, pinned_run_ids: list) -> dict:
+    """Compute exact median throughput values from pinned benchmark run samples.
+
+    For each comparator, computes the median throughput (in MB/s) from the
+    median_ns value across all pinned runs. This produces the exact numeric
+    values that publication prose must reconcile against.
+    """
+    snapshot_dir = EVIDENCE_DIR / "benchmark_runs"
+    per_comparator = {}
+
+    for rid in pinned_run_ids:
+        sample_path = snapshot_dir / rid / "samples" / f"{scenario_id}.json"
+        if not sample_path.exists():
+            continue
+        sample = load_json_safe(sample_path)
+        payload_bytes = sample.get("payload_bytes", 0)
+        comparator_results = sample.get("comparator_results", {})
+        for comp_id, comp_data in comparator_results.items():
+            if comp_data.get("status") != "success":
+                continue
+            median_ns = comp_data.get("median_ns")
+            if median_ns and median_ns > 0 and payload_bytes > 0:
+                throughput_mbs = (payload_bytes / (median_ns / 1e9)) / (1024 * 1024)
+                per_comparator.setdefault(comp_id, []).append({
+                    "run_id": rid,
+                    "median_ns": median_ns,
+                    "throughput_mbs": round(throughput_mbs, 1),
+                    "payload_bytes": payload_bytes,
+                })
+
+    # Compute cross-run median for each comparator
+    result = {}
+    for comp_id, runs in per_comparator.items():
+        throughputs = sorted(r["throughput_mbs"] for r in runs)
+        n = len(throughputs)
+        if n % 2 == 1:
+            cross_run_median = throughputs[n // 2]
+        else:
+            cross_run_median = round((throughputs[n // 2 - 1] + throughputs[n // 2]) / 2, 1)
+        result[comp_id] = {
+            "cross_run_median_throughput_mbs": cross_run_median,
+            "per_run": runs,
+        }
+
+    return result
 
 
 def build_claim_map_inputs(
@@ -346,8 +397,10 @@ def build_claim_map_inputs(
             "pinned_revision": measured_revision,
         })
 
-    # Per-scenario benchmark claims
+    # Per-scenario benchmark claims with exact numeric medians
     for sid in scenario_ids:
+        # Compute exact median throughput from pinned run samples
+        scenario_numerics = _compute_scenario_numerics(sid, pinned_run_ids)
         claims.append({
             "claim_id": f"benchmark-{sid}",
             "claim": f"Benchmark throughput data available for scenario {sid}",
@@ -358,7 +411,102 @@ def build_claim_map_inputs(
             ],
             "pinned_run_ids": pinned_run_ids,
             "pinned_revision": measured_revision,
+            "numeric_values": scenario_numerics,
         })
+
+    # Methodology claims
+    claims.append({
+        "claim_id": "methodology-cli-throughput",
+        "claim": "Benchmarks measure end-to-end CLI throughput with external process invocation, not isolated hash-core microbenchmarks",
+        "claim_class": "methodology",
+        "evidence_type": "benchmark_metadata",
+        "evidence_path": "publication/evidence/benchmark_summary.json",
+        "pinned_revision": measured_revision,
+    })
+    claims.append({
+        "claim_id": "methodology-median-after-warmup",
+        "claim": "Summary statistic is the median of measured samples after discarding warmup iterations",
+        "claim_class": "methodology",
+        "evidence_type": "benchmark_metadata",
+        "evidence_path": "publication/evidence/benchmark_summary.json",
+        "pinned_revision": measured_revision,
+    })
+    claims.append({
+        "claim_id": "methodology-correctness-gate",
+        "claim": "Timing results are accepted only after a hard correctness gate verifying C and Rust digests agree",
+        "claim_class": "methodology",
+        "evidence_type": "benchmark_metadata",
+        "evidence_path": "publication/evidence/benchmark_summary.json",
+        "pinned_revision": measured_revision,
+    })
+
+    # Limitation claims
+    claims.append({
+        "claim_id": "limitation-single-platform",
+        "claim": "All measurements were taken on a single Apple Silicon host (arm64, macOS); x86_64 SIMD paths are not benchmarked",
+        "claim_class": "limitation",
+        "evidence_type": "benchmark_metadata",
+        "evidence_path": "publication/evidence/benchmark_summary.json",
+        "pinned_revision": measured_revision,
+    })
+    claims.append({
+        "claim_id": "limitation-cli-level-measurement",
+        "claim": "Benchmarks measure CLI-level throughput including process startup overhead, not isolated hash-core performance",
+        "claim_class": "limitation",
+        "evidence_type": "benchmark_metadata",
+        "evidence_path": "publication/evidence/benchmark_summary.json",
+        "pinned_revision": measured_revision,
+    })
+    claims.append({
+        "claim_id": "limitation-smoke-sample-count",
+        "claim": "Pinned runs use 2 measured iterations per comparator per scenario (smoke-level); production benchmarks would use higher sample counts",
+        "claim_class": "limitation",
+        "evidence_type": "benchmark_metadata",
+        "evidence_path": "publication/evidence/benchmark_summary.json",
+        "pinned_revision": measured_revision,
+    })
+    claims.append({
+        "claim_id": "limitation-scenario-subset",
+        "claim": "Evidence pack covers a subset of declared benchmark scenarios; remaining scenarios are declared but not pinned",
+        "claim_class": "limitation",
+        "evidence_type": "benchmark_metadata",
+        "evidence_path": "publication/evidence/benchmark_summary.json",
+        "pinned_revision": measured_revision,
+    })
+    claims.append({
+        "claim_id": "limitation-no-production-evidence",
+        "claim": "Implementation has not been tested in production workloads; evidence demonstrates correctness and baseline performance only",
+        "claim_class": "limitation",
+        "evidence_type": "parity_test",
+        "evidence_path": "publication/evidence/parity_summary.json",
+        "pinned_revision": measured_revision,
+    })
+
+    # Licensing and clean-room claims
+    claims.append({
+        "claim_id": "licensing-clean-room-boundary",
+        "claim": "Hash algorithms implemented from published xxHash specification and BSD-2-Clause reference library; CLI behavioral parity via black-box observation only, no GPL source translation",
+        "claim_class": "licensing",
+        "evidence_type": "legal_artifact",
+        "evidence_path": "LEGAL.md",
+        "pinned_revision": measured_revision,
+    })
+    claims.append({
+        "claim_id": "licensing-no-gpl-vendoring",
+        "claim": "Repository does not vendor upstream GPL CLI source; external C reference checkout is maintained outside this repo",
+        "claim_class": "licensing",
+        "evidence_type": "legal_artifact",
+        "evidence_path": "LEGAL.md",
+        "pinned_revision": measured_revision,
+    })
+    claims.append({
+        "claim_id": "licensing-dual-license",
+        "claim": "Rust reimplementation released under MIT OR Apache-2.0 dual license",
+        "claim_class": "licensing",
+        "evidence_type": "legal_artifact",
+        "evidence_paths": ["LICENSE-MIT", "LICENSE-APACHE"],
+        "pinned_revision": measured_revision,
+    })
 
     return {
         "schema_version": "1.0.0",
@@ -366,6 +514,82 @@ def build_claim_map_inputs(
         "measured_revision": measured_revision,
         "generated_utc": datetime.now(timezone.utc).isoformat(),
         "claims": claims,
+    }
+
+
+def build_clean_checkout_provenance(
+    measured_revision: str,
+    benchmark_evidence: dict,
+) -> dict:
+    """Build a clean-checkout provenance artifact proving reproducibility.
+
+    This artifact documents the exact revision, manifest hashes, commands,
+    and produced run identifiers needed to reproduce the cited evidence
+    from a clean checkout — satisfying VAL-CROSS-004.
+    """
+    pinned_run_ids = benchmark_evidence.get("pinned_run_ids", [])
+    manifest_hashes = benchmark_evidence.get("manifest_hashes", {})
+
+    # Compute checksums of key repo scripts/manifests at measured revision
+    script_checksums = {}
+    for rel_path in [
+        "benchmarks/scenarios.json",
+        "benchmarks/comparators.json",
+        "benchmarks/policy.json",
+        "benchmarks/harness.py",
+        "benchmarks/seed_run_set.py",
+        "benchmarks/reconcile.py",
+        "benchmarks/claim_gate.py",
+        "publication/generate_evidence.py",
+        "publication/claim_map.py",
+        "publication/traceability_check.py",
+        "publication/style_gate.py",
+    ]:
+        abs_path = REPO_ROOT / rel_path
+        if abs_path.exists():
+            script_checksums[rel_path] = file_sha256(abs_path)
+
+    return {
+        "schema_version": "1.0.0",
+        "description": "Clean-checkout provenance artifact proving the cited revision can reproduce linked benchmark and parity evidence",
+        "measured_revision": measured_revision,
+        "generated_utc": datetime.now(timezone.utc).isoformat(),
+        "clone_url": "https://github.com/sagaragas/xxhash-rs.git",
+        "checkout_command": f"git checkout {measured_revision}",
+        "manifest_hashes": manifest_hashes,
+        "produced_run_ids": pinned_run_ids,
+        "validation_commands": {
+            "build": "cargo build --workspace --release",
+            "test": "cargo test --workspace --all-targets -- --test-threads=3",
+            "claim_map_verify": "python3 publication/claim_map.py --verify",
+            "traceability_check": "python3 publication/traceability_check.py",
+            "style_gate": "python3 publication/style_gate.py",
+            "benchmark_seed": "python3 benchmarks/seed_run_set.py --output /tmp/xxhash-rs-benchmark-claim-gate-runs --num-runs 3",
+            "benchmark_reconcile": "python3 benchmarks/reconcile.py --run latest --run-dir /tmp/xxhash-rs-benchmark-claim-gate-runs",
+        },
+        "external_dependencies": {
+            "c_reference": {
+                "description": "External C xxhsum binary for parity testing and benchmark comparison",
+                "source": "https://github.com/sagaragas/xxHash",
+                "version": "xxhsum 0.8.3",
+                "build_command": "make -C /path/to/xxhash-reference xxhsum",
+                "note": "Not vendored into this repo; maintained outside for clean-room boundary",
+            },
+            "b3sum": {
+                "description": "BLAKE3 CLI for benchmark contrast comparison",
+                "version": benchmark_evidence.get("resolved_comparators", {}).get("b3sum", {}).get("version", "b3sum"),
+            },
+        },
+        "script_checksums": script_checksums,
+        "artifact_references": {
+            "parity_summary": "publication/evidence/parity_summary.json",
+            "benchmark_summary": "publication/evidence/benchmark_summary.json",
+            "claim_map_inputs": "publication/evidence/claim_map_inputs.json",
+            "artifact_manifest": "publication/evidence/artifact_manifest.json",
+            "benchmark_run_snapshots": [
+                f"publication/evidence/benchmark_runs/{rid}" for rid in pinned_run_ids
+            ],
+        },
     }
 
 
@@ -450,6 +674,54 @@ def main():
         json.dump(artifact_manifest, f, indent=2)
         f.write("\n")
     print(f"  Written: {manifest_path.relative_to(REPO_ROOT)}")
+
+    # 5. Build clean-checkout provenance artifact
+    print("Building clean-checkout provenance artifact...")
+    provenance = build_clean_checkout_provenance(
+        measured_revision, benchmark_evidence,
+    )
+    provenance_path = EVIDENCE_DIR / "clean_checkout_provenance.json"
+    with open(provenance_path, "w") as f:
+        json.dump(provenance, f, indent=2)
+        f.write("\n")
+    print(f"  Written: {provenance_path.relative_to(REPO_ROOT)}")
+
+    # 6. Update release traceability with current revision
+    print("Updating release traceability...")
+    release_path = EVIDENCE_DIR / "release_traceability.json"
+    if release_path.exists():
+        release = load_json(release_path)
+        old_rev = release.get("measured_revision", "")
+        release["measured_revision"] = measured_revision
+        release["repo"]["measured_commit"] = (
+            f"https://github.com/sagaragas/xxhash-rs/commit/{measured_revision}"
+        )
+        # Update pinned evidence URLs to use new revision
+        for key in release.get("repo", {}).get("pinned_evidence_urls", {}):
+            old_url = release["repo"]["pinned_evidence_urls"][key]
+            release["repo"]["pinned_evidence_urls"][key] = old_url.replace(
+                old_rev, measured_revision
+            )
+        # Update bidirectional links that reference the old revision
+        for link in release.get("bidirectional_links", {}).get("website_to_repo", []):
+            if old_rev in link.get("target", ""):
+                link["target"] = link["target"].replace(old_rev, measured_revision)
+        # Update revision lineage
+        release.setdefault("revision_lineage", {})["measured_revision"] = measured_revision
+        # Add provenance artifact reference
+        release["repo"]["pinned_evidence_urls"]["clean_checkout_provenance"] = (
+            f"https://github.com/sagaragas/xxhash-rs/blob/{measured_revision}"
+            "/publication/evidence/clean_checkout_provenance.json"
+        )
+        release["clean_checkout_reproducibility"]["checkout_command"] = (
+            f"git checkout {measured_revision}"
+        )
+        with open(release_path, "w") as f:
+            json.dump(release, f, indent=2)
+            f.write("\n")
+        print(f"  Updated: {release_path.relative_to(REPO_ROOT)}")
+    else:
+        print("  SKIP: release_traceability.json not found (will be created by release worker)")
 
     # Summary
     print("\n=== Evidence Pack Summary ===")

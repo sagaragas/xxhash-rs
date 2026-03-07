@@ -1,29 +1,29 @@
 {
   "schema_version": "1.0.0",
   "description": "Claim-to-evidence mapping inputs for publication traceability",
-  "measured_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
-  "generated_utc": "2026-03-07T00:15:30.047092+00:00",
+  "measured_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328",
+  "generated_utc": "2026-03-07T02:40:50.109575+00:00",
   "claims": [
     {
       "claim_id": "parity-all-variants",
       "claim": "Rust implementation produces bit-exact output for XXH32, XXH64, XXH3_64, and XXH3_128 across all tested input lengths and seeds",
       "evidence_type": "parity_test",
       "evidence_path": "publication/evidence/parity_summary.json",
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328"
     },
     {
       "claim_id": "simd-parity",
       "claim": "NEON-optimized XXH3 long-input paths produce bit-exact output matching the scalar reference on Apple Silicon",
       "evidence_type": "parity_test",
       "evidence_path": "publication/evidence/parity_summary.json",
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328"
     },
     {
       "claim_id": "cli-behavioral-parity",
       "claim": "CLI achieves behavioral parity with the reference xxhsum for the validated output formats, check modes, and input flows",
       "evidence_type": "parity_test",
       "evidence_path": "publication/evidence/parity_summary.json",
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328"
     },
     {
       "claim_id": "benchmark-correctness-gate",
@@ -31,75 +31,542 @@
       "evidence_type": "benchmark_correctness_gate",
       "evidence_path": "publication/evidence/benchmark_summary.json",
       "pinned_run_ids": [
-        "run-20260307T001529Z-49348",
-        "run-20260307T001529Z-49342",
-        "run-20260307T001529Z-49060"
+        "run-20260307T024049Z-76539",
+        "run-20260307T024049Z-76533",
+        "run-20260307T024049Z-76247"
       ],
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328"
     },
     {
       "claim_id": "benchmark-xxh3-128-1m",
       "claim": "Benchmark throughput data available for scenario xxh3-128-1m",
       "evidence_type": "benchmark_samples",
       "evidence_paths": [
-        "publication/evidence/benchmark_runs/run-20260307T001529Z-49348/samples/xxh3-128-1m.json",
-        "publication/evidence/benchmark_runs/run-20260307T001529Z-49342/samples/xxh3-128-1m.json",
-        "publication/evidence/benchmark_runs/run-20260307T001529Z-49060/samples/xxh3-128-1m.json"
+        "publication/evidence/benchmark_runs/run-20260307T024049Z-76539/samples/xxh3-128-1m.json",
+        "publication/evidence/benchmark_runs/run-20260307T024049Z-76533/samples/xxh3-128-1m.json",
+        "publication/evidence/benchmark_runs/run-20260307T024049Z-76247/samples/xxh3-128-1m.json"
       ],
       "pinned_run_ids": [
-        "run-20260307T001529Z-49348",
-        "run-20260307T001529Z-49342",
-        "run-20260307T001529Z-49060"
+        "run-20260307T024049Z-76539",
+        "run-20260307T024049Z-76533",
+        "run-20260307T024049Z-76247"
       ],
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328",
+      "numeric_values": {
+        "c_xxhsum": {
+          "cross_run_median_throughput_mbs": 447.8,
+          "per_run": [
+            {
+              "run_id": "run-20260307T024049Z-76539",
+              "median_ns": 2185417,
+              "throughput_mbs": 457.6,
+              "payload_bytes": 1048576
+            },
+            {
+              "run_id": "run-20260307T024049Z-76533",
+              "median_ns": 2233042,
+              "throughput_mbs": 447.8,
+              "payload_bytes": 1048576
+            },
+            {
+              "run_id": "run-20260307T024049Z-76247",
+              "median_ns": 2892709,
+              "throughput_mbs": 345.7,
+              "payload_bytes": 1048576
+            }
+          ]
+        },
+        "rust_xxhash_rs": {
+          "cross_run_median_throughput_mbs": 413.6,
+          "per_run": [
+            {
+              "run_id": "run-20260307T024049Z-76539",
+              "median_ns": 2417750,
+              "throughput_mbs": 413.6,
+              "payload_bytes": 1048576
+            },
+            {
+              "run_id": "run-20260307T024049Z-76533",
+              "median_ns": 2295542,
+              "throughput_mbs": 435.6,
+              "payload_bytes": 1048576
+            },
+            {
+              "run_id": "run-20260307T024049Z-76247",
+              "median_ns": 2768792,
+              "throughput_mbs": 361.2,
+              "payload_bytes": 1048576
+            }
+          ]
+        },
+        "b3sum": {
+          "cross_run_median_throughput_mbs": 332.5,
+          "per_run": [
+            {
+              "run_id": "run-20260307T024049Z-76539",
+              "median_ns": 3007958,
+              "throughput_mbs": 332.5,
+              "payload_bytes": 1048576
+            },
+            {
+              "run_id": "run-20260307T024049Z-76533",
+              "median_ns": 2676916,
+              "throughput_mbs": 373.6,
+              "payload_bytes": 1048576
+            },
+            {
+              "run_id": "run-20260307T024049Z-76247",
+              "median_ns": 3541792,
+              "throughput_mbs": 282.3,
+              "payload_bytes": 1048576
+            }
+          ]
+        },
+        "md5": {
+          "cross_run_median_throughput_mbs": 272.2,
+          "per_run": [
+            {
+              "run_id": "run-20260307T024049Z-76539",
+              "median_ns": 3673125,
+              "throughput_mbs": 272.2,
+              "payload_bytes": 1048576
+            },
+            {
+              "run_id": "run-20260307T024049Z-76533",
+              "median_ns": 3371166,
+              "throughput_mbs": 296.6,
+              "payload_bytes": 1048576
+            },
+            {
+              "run_id": "run-20260307T024049Z-76247",
+              "median_ns": 4269959,
+              "throughput_mbs": 234.2,
+              "payload_bytes": 1048576
+            }
+          ]
+        }
+      }
     },
     {
       "claim_id": "benchmark-xxh64-16m",
       "claim": "Benchmark throughput data available for scenario xxh64-16m",
       "evidence_type": "benchmark_samples",
       "evidence_paths": [
-        "publication/evidence/benchmark_runs/run-20260307T001529Z-49348/samples/xxh64-16m.json",
-        "publication/evidence/benchmark_runs/run-20260307T001529Z-49342/samples/xxh64-16m.json",
-        "publication/evidence/benchmark_runs/run-20260307T001529Z-49060/samples/xxh64-16m.json"
+        "publication/evidence/benchmark_runs/run-20260307T024049Z-76539/samples/xxh64-16m.json",
+        "publication/evidence/benchmark_runs/run-20260307T024049Z-76533/samples/xxh64-16m.json",
+        "publication/evidence/benchmark_runs/run-20260307T024049Z-76247/samples/xxh64-16m.json"
       ],
       "pinned_run_ids": [
-        "run-20260307T001529Z-49348",
-        "run-20260307T001529Z-49342",
-        "run-20260307T001529Z-49060"
+        "run-20260307T024049Z-76539",
+        "run-20260307T024049Z-76533",
+        "run-20260307T024049Z-76247"
       ],
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328",
+      "numeric_values": {
+        "c_xxhsum": {
+          "cross_run_median_throughput_mbs": 3693.9,
+          "per_run": [
+            {
+              "run_id": "run-20260307T024049Z-76539",
+              "median_ns": 3746250,
+              "throughput_mbs": 4270.9,
+              "payload_bytes": 16777216
+            },
+            {
+              "run_id": "run-20260307T024049Z-76533",
+              "median_ns": 4331500,
+              "throughput_mbs": 3693.9,
+              "payload_bytes": 16777216
+            },
+            {
+              "run_id": "run-20260307T024049Z-76247",
+              "median_ns": 5025791,
+              "throughput_mbs": 3183.6,
+              "payload_bytes": 16777216
+            }
+          ]
+        },
+        "rust_xxhash_rs": {
+          "cross_run_median_throughput_mbs": 3971.9,
+          "per_run": [
+            {
+              "run_id": "run-20260307T024049Z-76539",
+              "median_ns": 4028292,
+              "throughput_mbs": 3971.9,
+              "payload_bytes": 16777216
+            },
+            {
+              "run_id": "run-20260307T024049Z-76533",
+              "median_ns": 3697875,
+              "throughput_mbs": 4326.8,
+              "payload_bytes": 16777216
+            },
+            {
+              "run_id": "run-20260307T024049Z-76247",
+              "median_ns": 5037417,
+              "throughput_mbs": 3176.2,
+              "payload_bytes": 16777216
+            }
+          ]
+        },
+        "b3sum": {
+          "cross_run_median_throughput_mbs": 3965.4,
+          "per_run": [
+            {
+              "run_id": "run-20260307T024049Z-76539",
+              "median_ns": 3840875,
+              "throughput_mbs": 4165.7,
+              "payload_bytes": 16777216
+            },
+            {
+              "run_id": "run-20260307T024049Z-76533",
+              "median_ns": 4034916,
+              "throughput_mbs": 3965.4,
+              "payload_bytes": 16777216
+            },
+            {
+              "run_id": "run-20260307T024049Z-76247",
+              "median_ns": 9709375,
+              "throughput_mbs": 1647.9,
+              "payload_bytes": 16777216
+            }
+          ]
+        },
+        "md5": {
+          "cross_run_median_throughput_mbs": 531.6,
+          "per_run": [
+            {
+              "run_id": "run-20260307T024049Z-76539",
+              "median_ns": 30096458,
+              "throughput_mbs": 531.6,
+              "payload_bytes": 16777216
+            },
+            {
+              "run_id": "run-20260307T024049Z-76533",
+              "median_ns": 27912542,
+              "throughput_mbs": 573.2,
+              "payload_bytes": 16777216
+            },
+            {
+              "run_id": "run-20260307T024049Z-76247",
+              "median_ns": 32350500,
+              "throughput_mbs": 494.6,
+              "payload_bytes": 16777216
+            }
+          ]
+        }
+      }
     },
     {
       "claim_id": "benchmark-xxh64-1m",
       "claim": "Benchmark throughput data available for scenario xxh64-1m",
       "evidence_type": "benchmark_samples",
       "evidence_paths": [
-        "publication/evidence/benchmark_runs/run-20260307T001529Z-49348/samples/xxh64-1m.json",
-        "publication/evidence/benchmark_runs/run-20260307T001529Z-49342/samples/xxh64-1m.json",
-        "publication/evidence/benchmark_runs/run-20260307T001529Z-49060/samples/xxh64-1m.json"
+        "publication/evidence/benchmark_runs/run-20260307T024049Z-76539/samples/xxh64-1m.json",
+        "publication/evidence/benchmark_runs/run-20260307T024049Z-76533/samples/xxh64-1m.json",
+        "publication/evidence/benchmark_runs/run-20260307T024049Z-76247/samples/xxh64-1m.json"
       ],
       "pinned_run_ids": [
-        "run-20260307T001529Z-49348",
-        "run-20260307T001529Z-49342",
-        "run-20260307T001529Z-49060"
+        "run-20260307T024049Z-76539",
+        "run-20260307T024049Z-76533",
+        "run-20260307T024049Z-76247"
       ],
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328",
+      "numeric_values": {
+        "c_xxhsum": {
+          "cross_run_median_throughput_mbs": 564.6,
+          "per_run": [
+            {
+              "run_id": "run-20260307T024049Z-76539",
+              "median_ns": 1764125,
+              "throughput_mbs": 566.9,
+              "payload_bytes": 1048576
+            },
+            {
+              "run_id": "run-20260307T024049Z-76533",
+              "median_ns": 1771042,
+              "throughput_mbs": 564.6,
+              "payload_bytes": 1048576
+            },
+            {
+              "run_id": "run-20260307T024049Z-76247",
+              "median_ns": 2421000,
+              "throughput_mbs": 413.1,
+              "payload_bytes": 1048576
+            }
+          ]
+        },
+        "rust_xxhash_rs": {
+          "cross_run_median_throughput_mbs": 471.8,
+          "per_run": [
+            {
+              "run_id": "run-20260307T024049Z-76539",
+              "median_ns": 2107250,
+              "throughput_mbs": 474.6,
+              "payload_bytes": 1048576
+            },
+            {
+              "run_id": "run-20260307T024049Z-76533",
+              "median_ns": 2119542,
+              "throughput_mbs": 471.8,
+              "payload_bytes": 1048576
+            },
+            {
+              "run_id": "run-20260307T024049Z-76247",
+              "median_ns": 2506417,
+              "throughput_mbs": 399.0,
+              "payload_bytes": 1048576
+            }
+          ]
+        },
+        "b3sum": {
+          "cross_run_median_throughput_mbs": 424.0,
+          "per_run": [
+            {
+              "run_id": "run-20260307T024049Z-76539",
+              "median_ns": 2345125,
+              "throughput_mbs": 426.4,
+              "payload_bytes": 1048576
+            },
+            {
+              "run_id": "run-20260307T024049Z-76533",
+              "median_ns": 2358708,
+              "throughput_mbs": 424.0,
+              "payload_bytes": 1048576
+            },
+            {
+              "run_id": "run-20260307T024049Z-76247",
+              "median_ns": 2872125,
+              "throughput_mbs": 348.2,
+              "payload_bytes": 1048576
+            }
+          ]
+        },
+        "md5": {
+          "cross_run_median_throughput_mbs": 306.4,
+          "per_run": [
+            {
+              "run_id": "run-20260307T024049Z-76539",
+              "median_ns": 3264208,
+              "throughput_mbs": 306.4,
+              "payload_bytes": 1048576
+            },
+            {
+              "run_id": "run-20260307T024049Z-76533",
+              "median_ns": 2994917,
+              "throughput_mbs": 333.9,
+              "payload_bytes": 1048576
+            },
+            {
+              "run_id": "run-20260307T024049Z-76247",
+              "median_ns": 3555583,
+              "throughput_mbs": 281.2,
+              "payload_bytes": 1048576
+            }
+          ]
+        }
+      }
     },
     {
       "claim_id": "benchmark-xxh64-4k",
       "claim": "Benchmark throughput data available for scenario xxh64-4k",
       "evidence_type": "benchmark_samples",
       "evidence_paths": [
-        "publication/evidence/benchmark_runs/run-20260307T001529Z-49348/samples/xxh64-4k.json",
-        "publication/evidence/benchmark_runs/run-20260307T001529Z-49342/samples/xxh64-4k.json",
-        "publication/evidence/benchmark_runs/run-20260307T001529Z-49060/samples/xxh64-4k.json"
+        "publication/evidence/benchmark_runs/run-20260307T024049Z-76539/samples/xxh64-4k.json",
+        "publication/evidence/benchmark_runs/run-20260307T024049Z-76533/samples/xxh64-4k.json",
+        "publication/evidence/benchmark_runs/run-20260307T024049Z-76247/samples/xxh64-4k.json"
       ],
       "pinned_run_ids": [
-        "run-20260307T001529Z-49348",
-        "run-20260307T001529Z-49342",
-        "run-20260307T001529Z-49060"
+        "run-20260307T024049Z-76539",
+        "run-20260307T024049Z-76533",
+        "run-20260307T024049Z-76247"
       ],
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328",
+      "numeric_values": {
+        "c_xxhsum": {
+          "cross_run_median_throughput_mbs": 2.2,
+          "per_run": [
+            {
+              "run_id": "run-20260307T024049Z-76539",
+              "median_ns": 1745417,
+              "throughput_mbs": 2.2,
+              "payload_bytes": 4096
+            },
+            {
+              "run_id": "run-20260307T024049Z-76533",
+              "median_ns": 1790250,
+              "throughput_mbs": 2.2,
+              "payload_bytes": 4096
+            },
+            {
+              "run_id": "run-20260307T024049Z-76247",
+              "median_ns": 2174542,
+              "throughput_mbs": 1.8,
+              "payload_bytes": 4096
+            }
+          ]
+        },
+        "rust_xxhash_rs": {
+          "cross_run_median_throughput_mbs": 2.0,
+          "per_run": [
+            {
+              "run_id": "run-20260307T024049Z-76539",
+              "median_ns": 1908708,
+              "throughput_mbs": 2.0,
+              "payload_bytes": 4096
+            },
+            {
+              "run_id": "run-20260307T024049Z-76533",
+              "median_ns": 1900958,
+              "throughput_mbs": 2.1,
+              "payload_bytes": 4096
+            },
+            {
+              "run_id": "run-20260307T024049Z-76247",
+              "median_ns": 2446334,
+              "throughput_mbs": 1.6,
+              "payload_bytes": 4096
+            }
+          ]
+        },
+        "b3sum": {
+          "cross_run_median_throughput_mbs": 1.7,
+          "per_run": [
+            {
+              "run_id": "run-20260307T024049Z-76539",
+              "median_ns": 2275667,
+              "throughput_mbs": 1.7,
+              "payload_bytes": 4096
+            },
+            {
+              "run_id": "run-20260307T024049Z-76533",
+              "median_ns": 2249750,
+              "throughput_mbs": 1.7,
+              "payload_bytes": 4096
+            },
+            {
+              "run_id": "run-20260307T024049Z-76247",
+              "median_ns": 2815708,
+              "throughput_mbs": 1.4,
+              "payload_bytes": 4096
+            }
+          ]
+        },
+        "md5": {
+          "cross_run_median_throughput_mbs": 2.4,
+          "per_run": [
+            {
+              "run_id": "run-20260307T024049Z-76539",
+              "median_ns": 1460250,
+              "throughput_mbs": 2.7,
+              "payload_bytes": 4096
+            },
+            {
+              "run_id": "run-20260307T024049Z-76533",
+              "median_ns": 1607541,
+              "throughput_mbs": 2.4,
+              "payload_bytes": 4096
+            },
+            {
+              "run_id": "run-20260307T024049Z-76247",
+              "median_ns": 2728750,
+              "throughput_mbs": 1.4,
+              "payload_bytes": 4096
+            }
+          ]
+        }
+      }
+    },
+    {
+      "claim_id": "methodology-cli-throughput",
+      "claim": "Benchmarks measure end-to-end CLI throughput with external process invocation, not isolated hash-core microbenchmarks",
+      "claim_class": "methodology",
+      "evidence_type": "benchmark_metadata",
+      "evidence_path": "publication/evidence/benchmark_summary.json",
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328"
+    },
+    {
+      "claim_id": "methodology-median-after-warmup",
+      "claim": "Summary statistic is the median of measured samples after discarding warmup iterations",
+      "claim_class": "methodology",
+      "evidence_type": "benchmark_metadata",
+      "evidence_path": "publication/evidence/benchmark_summary.json",
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328"
+    },
+    {
+      "claim_id": "methodology-correctness-gate",
+      "claim": "Timing results are accepted only after a hard correctness gate verifying C and Rust digests agree",
+      "claim_class": "methodology",
+      "evidence_type": "benchmark_metadata",
+      "evidence_path": "publication/evidence/benchmark_summary.json",
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328"
+    },
+    {
+      "claim_id": "limitation-single-platform",
+      "claim": "All measurements were taken on a single Apple Silicon host (arm64, macOS); x86_64 SIMD paths are not benchmarked",
+      "claim_class": "limitation",
+      "evidence_type": "benchmark_metadata",
+      "evidence_path": "publication/evidence/benchmark_summary.json",
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328"
+    },
+    {
+      "claim_id": "limitation-cli-level-measurement",
+      "claim": "Benchmarks measure CLI-level throughput including process startup overhead, not isolated hash-core performance",
+      "claim_class": "limitation",
+      "evidence_type": "benchmark_metadata",
+      "evidence_path": "publication/evidence/benchmark_summary.json",
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328"
+    },
+    {
+      "claim_id": "limitation-smoke-sample-count",
+      "claim": "Pinned runs use 2 measured iterations per comparator per scenario (smoke-level); production benchmarks would use higher sample counts",
+      "claim_class": "limitation",
+      "evidence_type": "benchmark_metadata",
+      "evidence_path": "publication/evidence/benchmark_summary.json",
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328"
+    },
+    {
+      "claim_id": "limitation-scenario-subset",
+      "claim": "Evidence pack covers a subset of declared benchmark scenarios; remaining scenarios are declared but not pinned",
+      "claim_class": "limitation",
+      "evidence_type": "benchmark_metadata",
+      "evidence_path": "publication/evidence/benchmark_summary.json",
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328"
+    },
+    {
+      "claim_id": "limitation-no-production-evidence",
+      "claim": "Implementation has not been tested in production workloads; evidence demonstrates correctness and baseline performance only",
+      "claim_class": "limitation",
+      "evidence_type": "parity_test",
+      "evidence_path": "publication/evidence/parity_summary.json",
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328"
+    },
+    {
+      "claim_id": "licensing-clean-room-boundary",
+      "claim": "Hash algorithms implemented from published xxHash specification and BSD-2-Clause reference library; CLI behavioral parity via black-box observation only, no GPL source translation",
+      "claim_class": "licensing",
+      "evidence_type": "legal_artifact",
+      "evidence_path": "LEGAL.md",
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328"
+    },
+    {
+      "claim_id": "licensing-no-gpl-vendoring",
+      "claim": "Repository does not vendor upstream GPL CLI source; external C reference checkout is maintained outside this repo",
+      "claim_class": "licensing",
+      "evidence_type": "legal_artifact",
+      "evidence_path": "LEGAL.md",
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328"
+    },
+    {
+      "claim_id": "licensing-dual-license",
+      "claim": "Rust reimplementation released under MIT OR Apache-2.0 dual license",
+      "claim_class": "licensing",
+      "evidence_type": "legal_artifact",
+      "evidence_paths": [
+        "LICENSE-MIT",
+        "LICENSE-APACHE"
+      ],
+      "pinned_revision": "69457341cce38cd4b3f1012cde82fdd6a4a48328"
     }
   ]
 }
