@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Cross-repo release traceability for the xxhash-rs rewrite study publication",
+  "measured_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+  "repo": {
+    "name": "sagaragas/xxhash-rs",
+    "url": "https://github.com/sagaragas/xxhash-rs",
+    "measured_commit": "https://github.com/sagaragas/xxhash-rs/commit/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+    "publication_surface": "publication/REWRITE_STUDY.md",
+    "evidence_pack": "publication/evidence/",
+    "pinned_evidence_urls": {
+      "parity_summary": "https://github.com/sagaragas/xxhash-rs/blob/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/parity_summary.json",
+      "benchmark_summary": "https://github.com/sagaragas/xxhash-rs/blob/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/benchmark_summary.json",
+      "claim_map_inputs": "https://github.com/sagaragas/xxhash-rs/blob/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/claim_map_inputs.json",
+      "artifact_manifest": "https://github.com/sagaragas/xxhash-rs/blob/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/artifact_manifest.json",
+      "benchmark_runs": "https://github.com/sagaragas/xxhash-rs/tree/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/benchmark_runs"
+    }
+  },
+  "website": {
+    "article_url": "https://ragas.dev/blog/rewriting-xxhash-in-rust",
+    "article_source": "content/blog/rewriting-xxhash-in-rust.mdx",
+    "website_repo": "sagaragas/ragas-dev",
+    "website_post_commit": "8131a6f8e7862b286a1702fddcdeb2eef15828d6"
+  },
+  "bidirectional_links": {
+    "website_to_repo": [
+      {
+        "source": "rewriteStudy.projectUrl",
+        "target": "https://github.com/sagaragas/xxhash-rs"
+      },
+      {
+        "source": "body evidence links",
+        "target": "https://github.com/sagaragas/xxhash-rs/blob/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/parity_summary.json"
+      },
+      {
+        "source": "body evidence links",
+        "target": "https://github.com/sagaragas/xxhash-rs/blob/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/benchmark_summary.json"
+      },
+      {
+        "source": "Repo and evidence section",
+        "target": "https://github.com/sagaragas/xxhash-rs/commit/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      },
+      {
+        "source": "Repo and evidence section",
+        "target": "https://github.com/sagaragas/xxhash-rs/tree/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication"
+      },
+      {
+        "source": "Repo and evidence section",
+        "target": "https://github.com/sagaragas/xxhash-rs/tree/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/benchmarks"
+      }
+    ],
+    "repo_to_website": [
+      {
+        "source": "README.md",
+        "target": "https://ragas.dev/blog/rewriting-xxhash-in-rust"
+      },
+      {
+        "source": "publication/REWRITE_STUDY.md",
+        "target": "https://ragas.dev/blog/rewriting-xxhash-in-rust"
+      }
+    ]
+  },
+  "revision_lineage": {
+    "measured_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+    "artifacts_citing_revision": [
+      "publication/evidence/artifact_manifest.json",
+      "publication/evidence/parity_summary.json",
+      "publication/evidence/benchmark_summary.json",
+      "publication/evidence/claim_map_inputs.json"
+    ],
+    "website_citing_revision": true,
+    "readme_citing_revision": true,
+    "rewrite_study_citing_revision": true
+  },
+  "clean_checkout_reproducibility": {
+    "instructions_location": "publication/REWRITE_STUDY.md#reproducing-from-a-clean-checkout",
+    "clone_url": "https://github.com/sagaragas/xxhash-rs.git",
+    "checkout_command": "git checkout a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+    "validation_commands": [
+      "cargo build --workspace --release",
+      "cargo test --workspace --all-targets -- --test-threads=3",
+      "python3 publication/claim_map.py --verify",
+      "python3 publication/traceability_check.py"
+    ]
+  }
+}

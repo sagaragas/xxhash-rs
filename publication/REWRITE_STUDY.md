@@ -14,6 +14,8 @@ cherry-picked runs.
 
 **Measured revision:** [`a7cd8e5`](https://github.com/sagaragas/xxhash-rs/commit/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab)
 
+**Published article:** [Rewriting xxHash in Rust](https://ragas.dev/blog/rewriting-xxhash-in-rust)
+
 ---
 
 ## Correctness and Parity

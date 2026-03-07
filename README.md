@@ -29,8 +29,10 @@ This project is the subject of a rewrite study that documents the design decisio
 correctness validation, benchmark methodology, and performance characteristics of the
 Rust reimplementation.
 
-**[Read the rewrite study](publication/REWRITE_STUDY.md)** for the full technical
-analysis, including:
+**[Read the full article on ragas.dev](https://ragas.dev/blog/rewriting-xxhash-in-rust)** |
+**[Read the repo-side study](publication/REWRITE_STUDY.md)**
+
+The study covers:
 
 - Bit-exact parity validation across all four hash variants (508 tests)
 - CLI behavioral parity against the upstream `xxhsum` reference
@@ -40,7 +42,7 @@ analysis, including:
 
 The study's claims are backed by machine-readable evidence artifacts under
 [`publication/evidence/`](publication/evidence/), each pinned to the measured
-revision [`df03fbc`](https://github.com/sagaragas/xxhash-rs/commit/df03fbc75ad22dd34b8f479a624c934dbc6e1590).
+revision [`a7cd8e5`](https://github.com/sagaragas/xxhash-rs/commit/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab).
 
 ## Clean-Room Implementation
 

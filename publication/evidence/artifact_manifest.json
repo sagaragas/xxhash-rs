@@ -29,6 +29,10 @@
     "traceability": {
       "claim_map_inputs": "publication/evidence/claim_map_inputs.json",
       "description": "Claim-to-evidence mapping inputs for publication traceability"
+    },
+    "release_traceability": {
+      "path": "publication/evidence/release_traceability.json",
+      "description": "Cross-repo release traceability binding repo evidence, website article, and revision lineage"
     }
   },
   "manifest_file_checksums": {

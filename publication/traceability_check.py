@@ -216,6 +216,82 @@ def check_no_latest_references() -> list:
     return errors
 
 
+def check_release_traceability() -> list:
+    """Verify cross-repo release traceability artifact is present and consistent."""
+    errors = []
+
+    release_path = EVIDENCE_DIR / "release_traceability.json"
+    if not release_path.exists():
+        errors.append("Missing release traceability artifact: publication/evidence/release_traceability.json")
+        return errors
+
+    release = load_json(release_path)
+
+    # Verify measured revision matches other evidence
+    manifest = load_json(EVIDENCE_DIR / "artifact_manifest.json")
+    if release.get("measured_revision") != manifest.get("measured_revision"):
+        errors.append(
+            f"Release traceability measured_revision ({release.get('measured_revision')}) "
+            f"does not match artifact_manifest ({manifest.get('measured_revision')})"
+        )
+
+    # Verify bidirectional links are present
+    bidir = release.get("bidirectional_links", {})
+    w2r = bidir.get("website_to_repo", [])
+    r2w = bidir.get("repo_to_website", [])
+
+    if not w2r:
+        errors.append("No website-to-repo links recorded in release traceability")
+    if not r2w:
+        errors.append("No repo-to-website links recorded in release traceability")
+
+    # Verify repo-to-website links reference an actual website URL
+    for link in r2w:
+        target = link.get("target", "")
+        if not target or "ragas.dev" not in target:
+            errors.append(f"Repo-to-website link target is missing or invalid: {target}")
+
+    # Verify website post commit is recorded
+    website = release.get("website", {})
+    if not website.get("website_post_commit"):
+        errors.append("Website post commit not recorded in release traceability")
+
+    # Verify clean-checkout reproducibility is documented
+    repro = release.get("clean_checkout_reproducibility", {})
+    if not repro.get("checkout_command"):
+        errors.append("Clean-checkout reproducibility missing checkout command")
+    if not repro.get("validation_commands"):
+        errors.append("Clean-checkout reproducibility missing validation commands")
+
+    return errors
+
+
+def check_bidirectional_repo_links() -> list:
+    """Verify that README and REWRITE_STUDY link to the published article."""
+    errors = []
+
+    readme_path = REPO_ROOT / "README.md"
+    study_path = REPO_ROOT / "publication" / "REWRITE_STUDY.md"
+
+    article_url = "https://ragas.dev/blog/rewriting-xxhash-in-rust"
+
+    if readme_path.exists():
+        readme_text = readme_path.read_text()
+        if article_url not in readme_text:
+            errors.append(f"README.md does not link to published article: {article_url}")
+    else:
+        errors.append("README.md not found")
+
+    if study_path.exists():
+        study_text = study_path.read_text()
+        if article_url not in study_text:
+            errors.append(f"REWRITE_STUDY.md does not link to published article: {article_url}")
+    else:
+        errors.append("publication/REWRITE_STUDY.md not found")
+
+    return errors
+
+
 def check_scenario_ids() -> list:
     """Verify recorded scenario IDs match the scenarios manifest."""
     errors = []
@@ -251,6 +327,8 @@ def main():
         ("Manifest file integrity", check_manifest_file_integrity),
         ("No mutable latest references", check_no_latest_references),
         ("Scenario ID coverage", check_scenario_ids),
+        ("Release traceability", check_release_traceability),
+        ("Bidirectional repo/article links", check_bidirectional_repo_links),
     ]
 
     for name, check_fn in checks:
