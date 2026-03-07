@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
   "description": "Publication evidence pack artifact manifest for xxhash-rs rewrite study",
-  "measured_revision": "df03fbc75ad22dd34b8f479a624c934dbc6e1590",
-  "generated_utc": "2026-03-06T23:52:25.346343+00:00",
+  "measured_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+  "generated_utc": "2026-03-07T00:15:30.047341+00:00",
   "artifacts": {
     "parity": {
       "summary": "publication/evidence/parity_summary.json",
@@ -13,14 +13,14 @@
       "summary": "publication/evidence/benchmark_summary.json",
       "description": "Benchmark evidence with pinned run IDs and correctness gate results",
       "pinned_run_ids": [
-        "run-20260306T235225Z-37931",
-        "run-20260306T235224Z-37732",
-        "run-20260306T235224Z-37736"
+        "run-20260307T001529Z-49348",
+        "run-20260307T001529Z-49342",
+        "run-20260307T001529Z-49060"
       ],
       "run_snapshot_paths": [
-        "publication/evidence/benchmark_runs/run-20260306T235225Z-37931",
-        "publication/evidence/benchmark_runs/run-20260306T235224Z-37732",
-        "publication/evidence/benchmark_runs/run-20260306T235224Z-37736"
+        "publication/evidence/benchmark_runs/run-20260307T001529Z-49348",
+        "publication/evidence/benchmark_runs/run-20260307T001529Z-49342",
+        "publication/evidence/benchmark_runs/run-20260307T001529Z-49060"
       ],
       "scenarios_manifest": "benchmarks/scenarios.json",
       "comparators_manifest": "benchmarks/comparators.json",

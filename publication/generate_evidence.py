@@ -73,9 +73,12 @@ def load_json_safe(path: Path, default=None):
 
 def collect_parity_evidence() -> dict:
     """Run cargo test and collect parity/vector test results."""
-    # Run the full parity + vector test suite and capture results
+    # Run the full parity + vector test suite using the canonical stable
+    # workspace test command (services.yaml: --test-threads=3) instead of
+    # the known-flaky --test-threads=5 that causes intermittent CLI parity
+    # failures due to reference binary path contention under high concurrency.
     result = subprocess.run(
-        ["cargo", "test", "--workspace", "--all-targets", "--", "--test-threads=5"],
+        ["cargo", "test", "--workspace", "--all-targets", "--", "--test-threads=3"],
         capture_output=True, text=True, cwd=REPO_ROOT,
         timeout=300,
     )

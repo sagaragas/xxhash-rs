@@ -1,0 +1,7 @@
+{
+  "manifest.json": "aa65b71342f076ae2411b04fe278eafed099cf3e9acf8b1de19edea78ec10174",
+  "samples/xxh3-128-1m.json": "0b4b2ae130084697d79f57f757deebcbefbf8dfcad257bf606e5894ab9dd31fa",
+  "samples/xxh64-16m.json": "25a43f51d0c2f5f426a745c44c04dcb83eb91965bc50c9fab3cf010baf3cb1c4",
+  "samples/xxh64-1m.json": "707048617ad6034661a71ff71f780db515e8c38847d66b6061b8adf45c23ce0e",
+  "samples/xxh64-4k.json": "fb0546d25eb3a380e530563e4514a1d15e482b8c59809ef99dd929d066917395"
+}
