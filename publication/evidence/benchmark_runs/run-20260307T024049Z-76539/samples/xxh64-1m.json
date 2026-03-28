@@ -9,14 +9,14 @@
     "c_xxhsum": {
       "status": "success",
       "invocation": [
-        "/Users/ragas/code/missions/xxhash-reference/xxhsum",
+        "xxhash-reference/xxhsum",
         "-H1",
         "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_fts43egr/payload_1048576.bin"
       ],
       "warmup_samples": [
         {
           "command": [
-            "/Users/ragas/code/missions/xxhash-reference/xxhsum",
+            "xxhash-reference/xxhsum",
             "-H1",
             "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_fts43egr/payload_1048576.bin"
           ],
@@ -30,7 +30,7 @@
       "measured_samples": [
         {
           "command": [
-            "/Users/ragas/code/missions/xxhash-reference/xxhsum",
+            "xxhash-reference/xxhsum",
             "-H1",
             "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_fts43egr/payload_1048576.bin"
           ],
@@ -42,7 +42,7 @@
         },
         {
           "command": [
-            "/Users/ragas/code/missions/xxhash-reference/xxhsum",
+            "xxhash-reference/xxhsum",
             "-H1",
             "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_fts43egr/payload_1048576.bin"
           ],
@@ -59,14 +59,14 @@
     "rust_xxhash_rs": {
       "status": "success",
       "invocation": [
-        "/Users/ragas/code/missions/xxhash-rs/target/release/xxhash-rs",
+        "target/release/xxhash-rs",
         "-H1",
         "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_fts43egr/payload_1048576.bin"
       ],
       "warmup_samples": [
         {
           "command": [
-            "/Users/ragas/code/missions/xxhash-rs/target/release/xxhash-rs",
+            "target/release/xxhash-rs",
             "-H1",
             "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_fts43egr/payload_1048576.bin"
           ],
@@ -80,7 +80,7 @@
       "measured_samples": [
         {
           "command": [
-            "/Users/ragas/code/missions/xxhash-rs/target/release/xxhash-rs",
+            "target/release/xxhash-rs",
             "-H1",
             "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_fts43egr/payload_1048576.bin"
           ],
@@ -92,7 +92,7 @@
         },
         {
           "command": [
-            "/Users/ragas/code/missions/xxhash-rs/target/release/xxhash-rs",
+            "target/release/xxhash-rs",
             "-H1",
             "/var/folders/9s/gdy76tpx1mg5nl7p8r1xj_vc0000gn/T/xxhash_bench_fts43egr/payload_1048576.bin"
           ],

@@ -4,6 +4,8 @@ Cargo.lock
 *.swo
 *~
 .DS_Store
+.factory/
+.pytest_cache/
 
 # Benchmark run artifacts (generated, not committed)
 benchmarks/runs/

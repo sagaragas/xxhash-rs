@@ -26,14 +26,14 @@
       "version": "xxhsum 0.8.3 by Yann Collet ",
       "role": "reference",
       "parity_oracle": true,
-      "binary_path": "/Users/ragas/code/missions/xxhash-reference/xxhsum"
+      "binary_path": "xxhash-reference/xxhsum"
     },
     "rust_xxhash_rs": {
       "id": "rust_xxhash_rs",
       "version": "xxhash-rs 0.1.0",
       "role": "subject",
       "parity_oracle": true,
-      "binary_path": "/Users/ragas/code/missions/xxhash-rs/target/release/xxhash-rs"
+      "binary_path": "target/release/xxhash-rs"
     },
     "b3sum": {
       "id": "b3sum",
