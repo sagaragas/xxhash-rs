@@ -18,6 +18,16 @@ use xxhash_rs::xxh64::xxh64;
 
 /// Hash using the appropriate Rust implementation and return hex string.
 /// Uses lo||hi order for XXH3_128 (matching internal vector format).
+
+macro_rules! skip_without_reference {
+    () => {
+        if fixtures::reference::reference_binary().is_none() {
+            eprintln!("Skipped: reference binary not available (set XXHASH_REFERENCE_ROOT)");
+            return;
+        }
+    };
+}
+
 fn hash_with_algo(algo: Algorithm, data: &[u8], seed: u64) -> String {
     match algo {
         Algorithm::XXH32 => {
@@ -136,6 +146,7 @@ fn oneshot_reference_parity() {
 /// external reference binary, and verify they agree.
 #[test]
 fn oneshot_reference_parity_vs_reference_binary() {
+    skip_without_reference!();
     let boundary_lengths = val_hash_001_lengths();
     let max_len = *boundary_lengths.iter().max().unwrap_or(&512);
     let buf = generate_test_buffer(max_len);
@@ -232,6 +243,7 @@ fn oneshot_reference_parity_vs_reference_binary() {
 /// correct results against the reference binary.
 #[test]
 fn oneshot_reference_parity_seeded() {
+    skip_without_reference!();
     let buf = generate_test_buffer(128);
 
     // Test a subset of lengths with non-zero seeds

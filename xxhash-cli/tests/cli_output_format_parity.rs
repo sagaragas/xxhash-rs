@@ -13,6 +13,16 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 /// Returns the path to the Rust CLI binary built by cargo.
+
+macro_rules! skip_without_reference {
+    () => {
+        if reference_binary().is_none() {
+            eprintln!("Skipped: reference binary not available (set XXHASH_REFERENCE_ROOT)");
+            return;
+        }
+    };
+}
+
 fn rust_binary() -> PathBuf {
     env!("CARGO_BIN_EXE_xxhash-rs").into()
 }
@@ -94,6 +104,7 @@ fn create_temp_file(name: &str, content: &[u8]) -> PathBuf {
 
 #[test]
 fn cli_output_format_parity_gnu_default_xxh64_stdin() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rc) = run_rust(&[], Some(data));
     let (ref_out, _, _) = run_ref(&[], Some(data));
@@ -103,6 +114,7 @@ fn cli_output_format_parity_gnu_default_xxh64_stdin() {
 
 #[test]
 fn cli_output_format_parity_gnu_xxh32_stdin() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rc) = run_rust(&["-H0"], Some(data));
     let (ref_out, _, _) = run_ref(&["-H0"], Some(data));
@@ -112,6 +124,7 @@ fn cli_output_format_parity_gnu_xxh32_stdin() {
 
 #[test]
 fn cli_output_format_parity_gnu_xxh3_64_stdin() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rc) = run_rust(&["-H3"], Some(data));
     let (ref_out, _, _) = run_ref(&["-H3"], Some(data));
@@ -121,6 +134,7 @@ fn cli_output_format_parity_gnu_xxh3_64_stdin() {
 
 #[test]
 fn cli_output_format_parity_gnu_xxh3_128_stdin() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rc) = run_rust(&["-H2"], Some(data));
     let (ref_out, _, _) = run_ref(&["-H2"], Some(data));
@@ -130,6 +144,7 @@ fn cli_output_format_parity_gnu_xxh3_128_stdin() {
 
 #[test]
 fn cli_output_format_parity_gnu_file() {
+    skip_without_reference!();
     let file = create_temp_file("gnu_file.txt", b"test content\n");
     let path = file.to_str().unwrap();
     let (rust_out, _, rc) = run_rust(&[path], None);
@@ -144,6 +159,7 @@ fn cli_output_format_parity_gnu_file() {
 
 #[test]
 fn cli_output_format_parity_tag_xxh64_stdin() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rc) = run_rust(&["--tag"], Some(data));
     let (ref_out, _, _) = run_ref(&["--tag"], Some(data));
@@ -153,6 +169,7 @@ fn cli_output_format_parity_tag_xxh64_stdin() {
 
 #[test]
 fn cli_output_format_parity_tag_xxh32_stdin() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rc) = run_rust(&["--tag", "-H0"], Some(data));
     let (ref_out, _, _) = run_ref(&["--tag", "-H0"], Some(data));
@@ -162,6 +179,7 @@ fn cli_output_format_parity_tag_xxh32_stdin() {
 
 #[test]
 fn cli_output_format_parity_tag_xxh3_64_stdin() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rc) = run_rust(&["--tag", "-H3"], Some(data));
     let (ref_out, _, _) = run_ref(&["--tag", "-H3"], Some(data));
@@ -171,6 +189,7 @@ fn cli_output_format_parity_tag_xxh3_64_stdin() {
 
 #[test]
 fn cli_output_format_parity_tag_xxh3_128_stdin() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rc) = run_rust(&["--tag", "-H2"], Some(data));
     let (ref_out, _, _) = run_ref(&["--tag", "-H2"], Some(data));
@@ -180,6 +199,7 @@ fn cli_output_format_parity_tag_xxh3_128_stdin() {
 
 #[test]
 fn cli_output_format_parity_tag_file() {
+    skip_without_reference!();
     let file = create_temp_file("tag_file.txt", b"tagged output\n");
     let path = file.to_str().unwrap();
     let (rust_out, _, rc) = run_rust(&["--tag", path], None);
@@ -194,6 +214,7 @@ fn cli_output_format_parity_tag_file() {
 
 #[test]
 fn cli_output_format_parity_le_xxh64_stdin() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rc) = run_rust(&["--little-endian"], Some(data));
     let (ref_out, _, _) = run_ref(&["--little-endian"], Some(data));
@@ -203,6 +224,7 @@ fn cli_output_format_parity_le_xxh64_stdin() {
 
 #[test]
 fn cli_output_format_parity_le_xxh32_stdin() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rc) = run_rust(&["--little-endian", "-H0"], Some(data));
     let (ref_out, _, _) = run_ref(&["--little-endian", "-H0"], Some(data));
@@ -212,6 +234,7 @@ fn cli_output_format_parity_le_xxh32_stdin() {
 
 #[test]
 fn cli_output_format_parity_le_xxh3_64_stdin() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rc) = run_rust(&["--little-endian", "-H3"], Some(data));
     let (ref_out, _, _) = run_ref(&["--little-endian", "-H3"], Some(data));
@@ -221,6 +244,7 @@ fn cli_output_format_parity_le_xxh3_64_stdin() {
 
 #[test]
 fn cli_output_format_parity_le_xxh3_128_stdin() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rc) = run_rust(&["--little-endian", "-H2"], Some(data));
     let (ref_out, _, _) = run_ref(&["--little-endian", "-H2"], Some(data));
@@ -230,6 +254,7 @@ fn cli_output_format_parity_le_xxh3_128_stdin() {
 
 #[test]
 fn cli_output_format_parity_le_file() {
+    skip_without_reference!();
     let file = create_temp_file("le_file.txt", b"little endian test\n");
     let path = file.to_str().unwrap();
     let (rust_out, _, rc) = run_rust(&["--little-endian", path], None);
@@ -244,6 +269,7 @@ fn cli_output_format_parity_le_file() {
 
 #[test]
 fn cli_output_format_parity_tag_le_xxh64_stdin() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rc) = run_rust(&["--tag", "--little-endian"], Some(data));
     let (ref_out, _, _) = run_ref(&["--tag", "--little-endian"], Some(data));
@@ -253,6 +279,7 @@ fn cli_output_format_parity_tag_le_xxh64_stdin() {
 
 #[test]
 fn cli_output_format_parity_tag_le_xxh32_stdin() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rc) = run_rust(&["--tag", "--little-endian", "-H0"], Some(data));
     let (ref_out, _, _) = run_ref(&["--tag", "--little-endian", "-H0"], Some(data));
@@ -262,6 +289,7 @@ fn cli_output_format_parity_tag_le_xxh32_stdin() {
 
 #[test]
 fn cli_output_format_parity_tag_le_xxh3_64_stdin() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rc) = run_rust(&["--tag", "--little-endian", "-H3"], Some(data));
     let (ref_out, _, _) = run_ref(&["--tag", "--little-endian", "-H3"], Some(data));
@@ -271,6 +299,7 @@ fn cli_output_format_parity_tag_le_xxh3_64_stdin() {
 
 #[test]
 fn cli_output_format_parity_tag_le_xxh3_128_stdin() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rc) = run_rust(&["--tag", "--little-endian", "-H2"], Some(data));
     let (ref_out, _, _) = run_ref(&["--tag", "--little-endian", "-H2"], Some(data));
@@ -280,6 +309,7 @@ fn cli_output_format_parity_tag_le_xxh3_128_stdin() {
 
 #[test]
 fn cli_output_format_parity_tag_le_file() {
+    skip_without_reference!();
     let file = create_temp_file("tagle_file.txt", b"tagged little endian\n");
     let path = file.to_str().unwrap();
     let (rust_out, _, rc) = run_rust(&["--tag", "--little-endian", path], None);
@@ -294,6 +324,7 @@ fn cli_output_format_parity_tag_le_file() {
 
 #[test]
 fn cli_output_format_parity_escaped_backslash_gnu() {
+    skip_without_reference!();
     let file = create_temp_file("back\\slash.txt", b"hello\n");
     let path = file.to_str().unwrap();
     let (rust_out, _, rc) = run_rust(&[path], None);
@@ -309,6 +340,7 @@ fn cli_output_format_parity_escaped_backslash_gnu() {
 
 #[test]
 fn cli_output_format_parity_escaped_backslash_tag() {
+    skip_without_reference!();
     let file = create_temp_file("back\\slash.txt", b"hello\n");
     let path = file.to_str().unwrap();
     let (rust_out, _, rc) = run_rust(&["--tag", path], None);
@@ -319,6 +351,7 @@ fn cli_output_format_parity_escaped_backslash_tag() {
 
 #[test]
 fn cli_output_format_parity_escaped_backslash_le() {
+    skip_without_reference!();
     let file = create_temp_file("back\\slash.txt", b"hello\n");
     let path = file.to_str().unwrap();
     let (rust_out, _, rc) = run_rust(&["--little-endian", path], None);
@@ -329,6 +362,7 @@ fn cli_output_format_parity_escaped_backslash_le() {
 
 #[test]
 fn cli_output_format_parity_escaped_backslash_tag_le() {
+    skip_without_reference!();
     let file = create_temp_file("back\\slash.txt", b"hello\n");
     let path = file.to_str().unwrap();
     let (rust_out, _, rc) = run_rust(&["--tag", "--little-endian", path], None);
@@ -343,6 +377,7 @@ fn cli_output_format_parity_escaped_backslash_tag_le() {
 
 #[test]
 fn cli_output_format_parity_escaped_newline_gnu() {
+    skip_without_reference!();
     let dir = std::env::temp_dir().join("xxhash_cli_fmt_tests");
     fs::create_dir_all(&dir).expect("failed to create temp dir");
     let name = "new\nline.txt";
@@ -362,6 +397,7 @@ fn cli_output_format_parity_escaped_newline_gnu() {
 
 #[test]
 fn cli_output_format_parity_escaped_newline_tag() {
+    skip_without_reference!();
     let dir = std::env::temp_dir().join("xxhash_cli_fmt_tests");
     fs::create_dir_all(&dir).expect("failed to create temp dir");
     let name = "new\nline.txt";
@@ -381,6 +417,7 @@ fn cli_output_format_parity_escaped_newline_tag() {
 
 #[test]
 fn cli_output_format_parity_escaped_cr_gnu() {
+    skip_without_reference!();
     let dir = std::env::temp_dir().join("xxhash_cli_fmt_tests");
     fs::create_dir_all(&dir).expect("failed to create temp dir");
     let name = "cr\rname.txt";
@@ -400,6 +437,7 @@ fn cli_output_format_parity_escaped_cr_gnu() {
 
 #[test]
 fn cli_output_format_parity_escaped_cr_tag() {
+    skip_without_reference!();
     let dir = std::env::temp_dir().join("xxhash_cli_fmt_tests");
     fs::create_dir_all(&dir).expect("failed to create temp dir");
     let name = "cr\rname.txt";
@@ -419,6 +457,7 @@ fn cli_output_format_parity_escaped_cr_tag() {
 
 #[test]
 fn cli_output_format_parity_all_formats_all_algos_file() {
+    skip_without_reference!();
     let file = create_temp_file("matrix.txt", b"matrix test data\n");
     let path = file.to_str().unwrap();
 
@@ -458,6 +497,7 @@ fn cli_output_format_parity_all_formats_all_algos_file() {
 
 #[test]
 fn cli_output_format_parity_seeded_tag() {
+    skip_without_reference!();
     let data = b"seeded tag test\n";
     let (rust_out, _, rc) = run_rust(&["--tag", "--seed", "42"], Some(data));
     let (ref_out, _, _) = run_ref(&["--tag", "--seed", "42"], Some(data));
@@ -467,6 +507,7 @@ fn cli_output_format_parity_seeded_tag() {
 
 #[test]
 fn cli_output_format_parity_seeded_le() {
+    skip_without_reference!();
     let data = b"seeded le test\n";
     let (rust_out, _, rc) = run_rust(&["--little-endian", "--seed", "42"], Some(data));
     let (ref_out, _, _) = run_ref(&["--little-endian", "--seed", "42"], Some(data));
@@ -476,6 +517,7 @@ fn cli_output_format_parity_seeded_le() {
 
 #[test]
 fn cli_output_format_parity_seeded_tag_le() {
+    skip_without_reference!();
     let data = b"seeded tag le test\n";
     let (rust_out, _, rc) =
         run_rust(&["--tag", "--little-endian", "--seed", "42"], Some(data));
@@ -515,6 +557,7 @@ fn cli_output_format_parity_normal_filename_no_escape_prefix() {
 
 #[test]
 fn cli_output_format_parity_filename_with_equals_gnu() {
+    skip_without_reference!();
     let file = create_temp_file("key = value.txt", b"test data\n");
     let path = file.to_str().unwrap();
 
@@ -529,6 +572,7 @@ fn cli_output_format_parity_filename_with_equals_gnu() {
 
 #[test]
 fn cli_output_format_parity_filename_with_equals_tag() {
+    skip_without_reference!();
     let file = create_temp_file("key = value.txt", b"test data\n");
     let path = file.to_str().unwrap();
 
@@ -543,6 +587,7 @@ fn cli_output_format_parity_filename_with_equals_tag() {
 
 #[test]
 fn cli_output_format_parity_filename_with_equals_all_algos() {
+    skip_without_reference!();
     let file = create_temp_file("key = value.txt", b"test data\n");
     let path = file.to_str().unwrap();
 
@@ -575,6 +620,7 @@ fn cli_output_format_parity_filename_with_equals_all_algos() {
 
 #[test]
 fn cli_output_format_parity_filename_with_paren_eq_gnu() {
+    skip_without_reference!();
     let file = create_temp_file("data) = deadbeef", b"test data\n");
     let path = file.to_str().unwrap();
 
@@ -589,6 +635,7 @@ fn cli_output_format_parity_filename_with_paren_eq_gnu() {
 
 #[test]
 fn cli_output_format_parity_filename_with_paren_eq_tag() {
+    skip_without_reference!();
     let file = create_temp_file("data) = deadbeef", b"test data\n");
     let path = file.to_str().unwrap();
 
@@ -603,6 +650,7 @@ fn cli_output_format_parity_filename_with_paren_eq_tag() {
 
 #[test]
 fn cli_output_format_parity_filename_with_paren_eq_all_algos() {
+    skip_without_reference!();
     let file = create_temp_file("data) = deadbeef", b"test data\n");
     let path = file.to_str().unwrap();
 
@@ -631,6 +679,7 @@ fn cli_output_format_parity_filename_with_paren_eq_all_algos() {
 
 #[test]
 fn cli_output_format_parity_filename_with_paren_eq_nonhex() {
+    skip_without_reference!();
     // Filename with `) = ` but non-hex suffix — still must match reference.
     let file = create_temp_file("result) = pass.log", b"test data\n");
     let path = file.to_str().unwrap();

@@ -12,6 +12,16 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 /// Returns the path to the Rust CLI binary built by cargo.
+
+macro_rules! skip_without_reference {
+    () => {
+        if reference_binary().is_none() {
+            eprintln!("Skipped: reference binary not available (set XXHASH_REFERENCE_ROOT)");
+            return;
+        }
+    };
+}
+
 fn rust_binary() -> PathBuf {
     env!("CARGO_BIN_EXE_xxhash-rs").into()
 }
@@ -115,6 +125,7 @@ fn cleanup_temp_dir() {
 
 #[test]
 fn cli_input_flow_parity_file_order_preserved() {
+    skip_without_reference!();
     let file_a = create_temp_file("order_a.txt", b"content A\n");
     let file_b = create_temp_file("order_b.txt", b"content B\n");
     let file_c = create_temp_file("order_c.txt", b"content C\n");
@@ -150,6 +161,7 @@ fn cli_input_flow_parity_file_order_preserved() {
 
 #[test]
 fn cli_input_flow_parity_single_file_matches_reference() {
+    skip_without_reference!();
     let file = create_temp_file("single.txt", b"single file content\n");
     let path = file.to_str().unwrap();
 
@@ -167,6 +179,7 @@ fn cli_input_flow_parity_single_file_matches_reference() {
 
 #[test]
 fn cli_input_flow_parity_no_files_reads_stdin() {
+    skip_without_reference!();
     let data = b"stdin test data\n";
 
     let (rust_out, _, rust_code) = run_rust(&[], Some(data));
@@ -190,6 +203,7 @@ fn cli_input_flow_parity_no_files_reads_stdin() {
 
 #[test]
 fn cli_input_flow_parity_empty_stdin() {
+    skip_without_reference!();
     let data = b"";
 
     let (rust_out, _, rust_code) = run_rust(&[], Some(data));
@@ -209,6 +223,7 @@ fn cli_input_flow_parity_empty_stdin() {
 
 #[test]
 fn cli_input_flow_parity_explicit_dash_reads_stdin() {
+    skip_without_reference!();
     let data = b"explicit stdin\n";
 
     let (rust_out, _, rust_code) = run_rust(&["-"], Some(data));
@@ -241,6 +256,7 @@ fn cli_input_flow_parity_dash_shows_stdin_as_name() {
 
 #[test]
 fn cli_input_flow_parity_good_then_bad_then_good() {
+    skip_without_reference!();
     let good1 = create_temp_file("good1.txt", b"good one\n");
     let good2 = create_temp_file("good2.txt", b"good two\n");
     let bad = "/tmp/xxhash_cli_tests/nonexistent_file_12345.txt";
@@ -324,6 +340,7 @@ fn cli_input_flow_parity_all_bad_files() {
 
 #[test]
 fn cli_input_flow_parity_single_bad_file() {
+    skip_without_reference!();
     let bad = "/tmp/xxhash_cli_tests/totally_missing.txt";
 
     let (rust_out, rust_err, rust_code) = run_rust(&[bad], None);
@@ -353,6 +370,7 @@ fn cli_input_flow_parity_single_bad_file() {
 
 #[test]
 fn cli_input_flow_parity_file_hash_all_algorithms() {
+    skip_without_reference!();
     let file = create_temp_file("algo_test.txt", b"algorithm test content\n");
     let path = file.to_str().unwrap();
 
@@ -372,6 +390,7 @@ fn cli_input_flow_parity_file_hash_all_algorithms() {
 
 #[test]
 fn cli_input_flow_parity_file_hash_with_seed() {
+    skip_without_reference!();
     let file = create_temp_file("seed_test.txt", b"seeded file content\n");
     let path = file.to_str().unwrap();
 
@@ -390,6 +409,7 @@ fn cli_input_flow_parity_file_hash_with_seed() {
 
 #[test]
 fn cli_input_flow_parity_multiple_files_xxh32() {
+    skip_without_reference!();
     let f1 = create_temp_file("multi1.txt", b"file one\n");
     let f2 = create_temp_file("multi2.txt", b"file two\n");
 
@@ -413,6 +433,7 @@ fn cli_input_flow_parity_multiple_files_xxh32() {
 
 #[test]
 fn cli_input_flow_parity_stdin_xxh3_64() {
+    skip_without_reference!();
     let data = b"xxh3 stdin test\n";
     let (rust_out, _, _) = run_rust(&["-H3"], Some(data));
     let (ref_out, _, _) = run_ref(&["-H3"], Some(data));
@@ -425,6 +446,7 @@ fn cli_input_flow_parity_stdin_xxh3_64() {
 
 #[test]
 fn cli_input_flow_parity_stdin_xxh3_128_seeded() {
+    skip_without_reference!();
     let data = b"seeded 128 stdin\n";
     let (rust_out, _, _) = run_rust(&["-H2", "--seed", "99"], Some(data));
     let (ref_out, _, _) = run_ref(&["-H2", "--seed", "99"], Some(data));
@@ -441,6 +463,7 @@ fn cli_input_flow_parity_stdin_xxh3_128_seeded() {
 
 #[test]
 fn cli_input_flow_parity_large_file() {
+    skip_without_reference!();
     // Create a file larger than the typical read buffer (64KB)
     let data: Vec<u8> = (0..100_000u32)
         .flat_map(|i| format!("line {}\n", i).into_bytes())
@@ -466,6 +489,7 @@ fn cli_input_flow_parity_large_file() {
 
 #[test]
 fn cli_input_flow_parity_no_trailing_newline() {
+    skip_without_reference!();
     let file = create_temp_file("no_newline.txt", b"no newline here");
     let path = file.to_str().unwrap();
 

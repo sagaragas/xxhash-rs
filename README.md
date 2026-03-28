@@ -17,10 +17,8 @@ family of hash functions, with a CLI tool for hashing and checksum verification.
 ```
 xxhash-rs/          # Library crate: hash algorithm implementations
 xxhash-cli/         # CLI binary crate: xxhsum-compatible tool
-tests/              # Integration and parity tests
 benchmarks/         # Benchmark harness and artifacts
 publication/        # Rewrite study and publication evidence
-docs/               # Additional documentation
 ```
 
 ## Rewrite Study
@@ -63,7 +61,17 @@ cargo build --workspace
 ## Testing
 
 ```sh
+# Run all self-contained tests (hash vectors, streaming, SIMD parity)
 cargo test --workspace
+```
+
+CLI parity tests compare output against the upstream C reference binary (`xxhsum`).
+These tests skip automatically when the reference is not available. To enable them:
+
+```sh
+export XXHASH_REFERENCE_ROOT=/path/to/xxHash   # checkout of github.com/Cyan4973/xxHash
+make -C "$XXHASH_REFERENCE_ROOT" xxhsum         # build the reference binary
+cargo test --workspace                           # parity tests now run
 ```
 
 ## Verification

@@ -19,6 +19,16 @@ use fixtures::{
 // Test buffer generation
 // ============================================================================
 
+macro_rules! skip_without_reference {
+    () => {
+        if fixtures::reference::reference_binary().is_none() {
+            eprintln!("Skipped: reference binary not available (set XXHASH_REFERENCE_ROOT)");
+            return;
+        }
+    };
+}
+
+
 #[test]
 fn reference_fixture_loading_test_buffer_deterministic() {
     let buf1 = generate_test_buffer(1024);
@@ -193,6 +203,7 @@ fn reference_fixture_loading_hex_format_consistency() {
 
 #[test]
 fn reference_fixture_loading_reference_available() {
+    skip_without_reference!();
     let root = reference::reference_root();
     assert!(
         root.is_some(),
@@ -205,6 +216,7 @@ fn reference_fixture_loading_reference_available() {
 
 #[test]
 fn reference_fixture_loading_reference_metadata() {
+    skip_without_reference!();
     let meta = reference::collect_metadata();
     assert!(meta.available, "Reference binary should be available");
     assert!(
@@ -219,6 +231,7 @@ fn reference_fixture_loading_reference_metadata() {
 
 #[test]
 fn reference_fixture_loading_reference_stdin_hash() {
+    skip_without_reference!();
     // Hash an empty input with XXH64 (default)
     let result = reference::hash_stdin(b"", "-H1", &[]).expect("Should invoke reference binary");
 
@@ -238,6 +251,7 @@ fn reference_fixture_loading_reference_stdin_hash() {
 
 #[test]
 fn reference_fixture_loading_reference_all_algorithms() {
+    skip_without_reference!();
     let test_data = b"hello world";
 
     for algo in [
@@ -271,6 +285,7 @@ fn reference_fixture_loading_reference_all_algorithms() {
 
 #[test]
 fn reference_fixture_loading_reference_with_seed() {
+    skip_without_reference!();
     // Hash empty input with seed=0x9E3779B1 for XXH32
     let result = reference::hash_stdin(b"", "-H0", &["--seed", "2654435761"])
         .expect("Should invoke reference binary with seed");
@@ -463,6 +478,7 @@ fn reference_fixture_loading_parse_tagged_output_gnu_128bit_filename_with_equals
 
 #[test]
 fn reference_fixture_loading_parse_tagged_output_reference_integration() {
+    skip_without_reference!();
     // Integration test: invoke the reference binary in tagged mode and verify
     // the parser extracts the correct digest.
     let result_gnu = reference::hash_stdin(b"hello\n", "-H1", &[])
@@ -481,6 +497,7 @@ fn reference_fixture_loading_parse_tagged_output_reference_integration() {
 
 #[test]
 fn reference_fixture_loading_parse_tagged_output_reference_all_algos() {
+    skip_without_reference!();
     // Verify the parser works for all algorithms in tagged mode via reference.
     for algo in [
         Algorithm::XXH32,
@@ -708,6 +725,7 @@ fn reference_fixture_loading_parse_tagged_output_tagged_with_eq_and_paren_eq() {
 
 #[test]
 fn reference_fixture_loading_parity_harness_smoke() {
+    skip_without_reference!();
     // Verify we can generate a test buffer, hash it with the reference,
     // and get a consistent result.
     let buf = generate_test_buffer(16);
@@ -729,6 +747,7 @@ fn reference_fixture_loading_parity_harness_smoke() {
 
 #[test]
 fn reference_fixture_loading_parity_test_buffer_against_reference() {
+    skip_without_reference!();
     // Cross-check: hash the canonical test buffer at a known length with the
     // reference binary and verify it matches the expected vector.
 

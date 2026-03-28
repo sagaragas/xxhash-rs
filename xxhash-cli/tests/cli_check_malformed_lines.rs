@@ -15,6 +15,16 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 /// Returns the path to the Rust CLI binary built by cargo.
+
+macro_rules! skip_without_reference {
+    () => {
+        if reference_binary().is_none() {
+            eprintln!("Skipped: reference binary not available (set XXHASH_REFERENCE_ROOT)");
+            return;
+        }
+    };
+}
+
 fn rust_binary() -> PathBuf {
     env!("CARGO_BIN_EXE_xxhash-rs").into()
 }
@@ -98,6 +108,7 @@ fn generate_checksums_ref(args: &[&str]) -> String {
 
 #[test]
 fn cli_check_malformed_lines_default_mixed() {
+    skip_without_reference!();
     let dir = test_dir("default_mixed");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -133,6 +144,7 @@ fn cli_check_malformed_lines_default_mixed() {
 
 #[test]
 fn cli_check_malformed_lines_default_single_malformed() {
+    skip_without_reference!();
     let dir = test_dir("default_single_malformed");
     let file = dir.join("test.txt");
     fs::write(&file, b"test content\n").unwrap();
@@ -163,6 +175,7 @@ fn cli_check_malformed_lines_default_single_malformed() {
 
 #[test]
 fn cli_check_malformed_lines_warn_mixed() {
+    skip_without_reference!();
     let dir = test_dir("warn_mixed");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -210,6 +223,7 @@ fn cli_check_malformed_lines_warn_mixed() {
 
 #[test]
 fn cli_check_malformed_lines_warn_all_invalid() {
+    skip_without_reference!();
     let dir = test_dir("warn_all_invalid");
     let checksum_file = dir.join("bad.xxh");
     fs::write(&checksum_file, "garbage 1\ngarbage 2\ngarbage 3\n").unwrap();
@@ -257,6 +271,7 @@ fn cli_check_malformed_lines_warn_all_invalid() {
 
 #[test]
 fn cli_check_malformed_lines_strict_mixed() {
+    skip_without_reference!();
     let dir = test_dir("strict_mixed");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -294,6 +309,7 @@ fn cli_check_malformed_lines_strict_mixed() {
 
 #[test]
 fn cli_check_malformed_lines_strict_no_malformed_succeeds() {
+    skip_without_reference!();
     let dir = test_dir("strict_clean");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -315,6 +331,7 @@ fn cli_check_malformed_lines_strict_no_malformed_succeeds() {
 
 #[test]
 fn cli_check_malformed_lines_strict_all_invalid() {
+    skip_without_reference!();
     let dir = test_dir("strict_all_invalid");
     let checksum_file = dir.join("bad.xxh");
     fs::write(&checksum_file, "garbage 1\ngarbage 2\n").unwrap();
@@ -340,6 +357,7 @@ fn cli_check_malformed_lines_strict_all_invalid() {
 
 #[test]
 fn cli_check_malformed_lines_default_all_invalid() {
+    skip_without_reference!();
     let dir = test_dir("default_all_invalid");
     let checksum_file = dir.join("bad.xxh");
     fs::write(&checksum_file, "garbage 1\ngarbage 2\ngarbage 3\n").unwrap();
@@ -369,6 +387,7 @@ fn cli_check_malformed_lines_default_all_invalid() {
 
 #[test]
 fn cli_check_malformed_lines_empty_file() {
+    skip_without_reference!();
     let dir = test_dir("empty_file");
     let checksum_file = dir.join("empty.xxh");
     fs::write(&checksum_file, "").unwrap();
@@ -394,6 +413,7 @@ fn cli_check_malformed_lines_empty_file() {
 
 #[test]
 fn cli_check_malformed_lines_warn_strict_combined() {
+    skip_without_reference!();
     let dir = test_dir("warn_strict");
     let file = dir.join("test.txt");
     fs::write(&file, b"content\n").unwrap();
@@ -420,6 +440,7 @@ fn cli_check_malformed_lines_warn_strict_combined() {
 
 #[test]
 fn cli_check_malformed_lines_status_mixed_malformed() {
+    skip_without_reference!();
     let dir = test_dir("status_mixed_malformed");
     let file = dir.join("test.txt");
     fs::write(&file, b"test\n").unwrap();

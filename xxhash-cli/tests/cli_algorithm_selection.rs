@@ -9,6 +9,16 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 /// Returns the path to the Rust CLI binary built by cargo.
+
+macro_rules! skip_without_reference {
+    () => {
+        if reference_binary().is_none() {
+            eprintln!("Skipped: reference binary not available (set XXHASH_REFERENCE_ROOT)");
+            return;
+        }
+    };
+}
+
 fn rust_binary() -> PathBuf {
     // cargo test sets CARGO_BIN_EXE_<name> for binaries in the same package.
     // For integration tests in the same crate, use env var or fall back to
@@ -102,6 +112,7 @@ fn first_line(output: &str) -> &str {
 
 #[test]
 fn cli_algorithm_selection_default_is_xxh64() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rust_code) = run_rust_cli(&[], data);
     let (ref_out, _, ref_code) = run_reference_cli(&["-H1"], data);
@@ -121,6 +132,7 @@ fn cli_algorithm_selection_default_is_xxh64() {
 
 #[test]
 fn cli_algorithm_selection_default_matches_reference_default() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, _) = run_rust_cli(&[], data);
     let (ref_out, _, _) = run_reference_cli(&[], data);
@@ -138,6 +150,7 @@ fn cli_algorithm_selection_default_matches_reference_default() {
 
 #[test]
 fn cli_algorithm_selection_h0_is_xxh32() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, rust_code) = run_rust_cli(&["-H0"], data);
     let (ref_out, _, ref_code) = run_reference_cli(&["-H0"], data);
@@ -153,6 +166,7 @@ fn cli_algorithm_selection_h0_is_xxh32() {
 
 #[test]
 fn cli_algorithm_selection_h32_is_xxh32() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, _) = run_rust_cli(&["-H32"], data);
     let (ref_out, _, _) = run_reference_cli(&["-H32"], data);
@@ -183,6 +197,7 @@ fn cli_algorithm_selection_h0_and_h32_agree() {
 
 #[test]
 fn cli_algorithm_selection_h1_is_xxh64() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, _) = run_rust_cli(&["-H1"], data);
     let (ref_out, _, _) = run_reference_cli(&["-H1"], data);
@@ -196,6 +211,7 @@ fn cli_algorithm_selection_h1_is_xxh64() {
 
 #[test]
 fn cli_algorithm_selection_h64_is_xxh64() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, _) = run_rust_cli(&["-H64"], data);
     let (ref_out, _, _) = run_reference_cli(&["-H64"], data);
@@ -213,6 +229,7 @@ fn cli_algorithm_selection_h64_is_xxh64() {
 
 #[test]
 fn cli_algorithm_selection_h2_is_xxh3_128() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, _) = run_rust_cli(&["-H2"], data);
     let (ref_out, _, _) = run_reference_cli(&["-H2"], data);
@@ -226,6 +243,7 @@ fn cli_algorithm_selection_h2_is_xxh3_128() {
 
 #[test]
 fn cli_algorithm_selection_h128_is_xxh3_128() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, _) = run_rust_cli(&["-H128"], data);
     let (ref_out, _, _) = run_reference_cli(&["-H128"], data);
@@ -243,6 +261,7 @@ fn cli_algorithm_selection_h128_is_xxh3_128() {
 
 #[test]
 fn cli_algorithm_selection_h3_is_xxh3_64() {
+    skip_without_reference!();
     let data = b"hello\n";
     let (rust_out, _, _) = run_rust_cli(&["-H3"], data);
     let (ref_out, _, _) = run_reference_cli(&["-H3"], data);
@@ -319,6 +338,7 @@ fn cli_algorithm_selection_seed_0_matches_default() {
 
 #[test]
 fn cli_algorithm_selection_seed_0_matches_reference_default() {
+    skip_without_reference!();
     let data = b"hello\n";
 
     let (rust_out, _, _) = run_rust_cli(&["--seed", "0"], data);
@@ -333,6 +353,7 @@ fn cli_algorithm_selection_seed_0_matches_reference_default() {
 
 #[test]
 fn cli_algorithm_selection_nonzero_seed_xxh64() {
+    skip_without_reference!();
     let data = b"hello\n";
 
     let (rust_out, _, _) = run_rust_cli(&["--seed", "42"], data);
@@ -355,6 +376,7 @@ fn cli_algorithm_selection_nonzero_seed_xxh64() {
 
 #[test]
 fn cli_algorithm_selection_nonzero_seed_xxh32() {
+    skip_without_reference!();
     let data = b"hello\n";
 
     let (rust_out, _, _) = run_rust_cli(&["-H0", "--seed", "42"], data);
@@ -369,6 +391,7 @@ fn cli_algorithm_selection_nonzero_seed_xxh32() {
 
 #[test]
 fn cli_algorithm_selection_nonzero_seed_xxh3_128() {
+    skip_without_reference!();
     let data = b"hello\n";
 
     let (rust_out, _, _) = run_rust_cli(&["-H2", "--seed", "42"], data);
@@ -383,6 +406,7 @@ fn cli_algorithm_selection_nonzero_seed_xxh3_128() {
 
 #[test]
 fn cli_algorithm_selection_nonzero_seed_xxh3_64() {
+    skip_without_reference!();
     let data = b"hello\n";
 
     let (rust_out, _, _) = run_rust_cli(&["-H3", "--seed", "42"], data);
@@ -397,6 +421,7 @@ fn cli_algorithm_selection_nonzero_seed_xxh3_64() {
 
 #[test]
 fn cli_algorithm_selection_seed_0_all_algorithms_match_reference() {
+    skip_without_reference!();
     let data = b"test data for all algorithms\n";
 
     for (flag, name) in &[
@@ -485,6 +510,7 @@ fn cli_algorithm_selection_xxh32_seed_large_overflow_rejected() {
 
 #[test]
 fn cli_algorithm_selection_xxh32_seed_overflow_parity_with_reference() {
+    skip_without_reference!();
     // Both Rust and reference should reject the same out-of-range seed for XXH32
     let data = b"hello\n";
 
@@ -510,6 +536,7 @@ fn cli_algorithm_selection_xxh32_seed_overflow_parity_with_reference() {
 
 #[test]
 fn cli_algorithm_selection_xxh64_large_seed_still_accepted() {
+    skip_without_reference!();
     // XXH64 should accept seeds > u32::MAX since it uses a u64 seed
     let data = b"hello\n";
     let (rust_out, _, rust_code) = run_rust_cli(&["-H1", "--seed", "4294967296"], data);
@@ -525,6 +552,7 @@ fn cli_algorithm_selection_xxh64_large_seed_still_accepted() {
 
 #[test]
 fn cli_algorithm_selection_xxh32_boundary_seeds_match_reference() {
+    skip_without_reference!();
     // Valid boundary seeds for XXH32 should produce matching output
     let data = b"hello\n";
 
@@ -561,6 +589,7 @@ fn cli_algorithm_selection_xxh32_boundary_seeds_match_reference() {
 
 #[test]
 fn cli_algorithm_selection_xxh32_seed_boundary_4294967289_accepted() {
+    skip_without_reference!();
     // Last accepted seed before the reference overflow boundary.
     let data = b"hello\n";
     let (rust_out, rust_err, rust_code) =
@@ -582,6 +611,7 @@ fn cli_algorithm_selection_xxh32_seed_boundary_4294967289_accepted() {
 
 #[test]
 fn cli_algorithm_selection_xxh32_seed_boundary_4294967290_rejected() {
+    skip_without_reference!();
     // First rejected seed — reference overflow boundary.
     let data = b"hello\n";
     let (_, rust_err, rust_code) =
@@ -608,6 +638,7 @@ fn cli_algorithm_selection_xxh32_seed_boundary_4294967290_rejected() {
 
 #[test]
 fn cli_algorithm_selection_xxh32_seed_boundary_4294967295_rejected() {
+    skip_without_reference!();
     // u32::MAX itself is rejected by the reference's conservative parser.
     let data = b"hello\n";
     let (_, rust_err, rust_code) =
@@ -626,6 +657,7 @@ fn cli_algorithm_selection_xxh32_seed_boundary_4294967295_rejected() {
 
 #[test]
 fn cli_algorithm_selection_xxh32_seed_overflow_range_parity() {
+    skip_without_reference!();
     // The full rejected range 4294967290..=4294967295 must be rejected.
     let data = b"hello\n";
     for seed in 4294967290u64..=4294967295 {
@@ -655,6 +687,7 @@ fn cli_algorithm_selection_xxh32_seed_overflow_range_parity() {
 
 #[test]
 fn cli_algorithm_selection_xxh32_seed_accepted_range_parity() {
+    skip_without_reference!();
     // Seeds just below the boundary should succeed and match reference.
     let data = b"hello\n";
     for seed in &["4294967285", "4294967286", "4294967287", "4294967288", "4294967289"] {

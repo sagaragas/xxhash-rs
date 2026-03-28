@@ -13,6 +13,16 @@ use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 /// Returns the path to the Rust CLI binary built by cargo.
+
+macro_rules! skip_without_reference {
+    () => {
+        if reference_binary().is_none() {
+            eprintln!("Skipped: reference binary not available (set XXHASH_REFERENCE_ROOT)");
+            return;
+        }
+    };
+}
+
 fn rust_binary() -> PathBuf {
     env!("CARGO_BIN_EXE_xxhash-rs").into()
 }
@@ -129,6 +139,7 @@ fn create_filelist(dir: &std::path::Path, name: &str, content: &str) -> PathBuf 
 
 #[test]
 fn cli_filelist_parity_files_from_basic_order() {
+    skip_without_reference!();
     let dir = unique_temp_dir();
     create_file(&dir, "aaa.txt", b"alpha\n");
     create_file(&dir, "bbb.txt", b"beta\n");
@@ -159,6 +170,7 @@ fn cli_filelist_parity_files_from_basic_order() {
 
 #[test]
 fn cli_filelist_parity_filelist_alias() {
+    skip_without_reference!();
     let dir = unique_temp_dir();
     create_file(&dir, "aaa.txt", b"alpha\n");
     create_file(&dir, "bbb.txt", b"beta\n");
@@ -189,6 +201,7 @@ fn cli_filelist_parity_filelist_alias() {
 
 #[test]
 fn cli_filelist_parity_comments_ignored() {
+    skip_without_reference!();
     let dir = unique_temp_dir();
     create_file(&dir, "file1.txt", b"one\n");
     create_file(&dir, "file2.txt", b"two\n");
@@ -218,6 +231,7 @@ fn cli_filelist_parity_comments_ignored() {
 
 #[test]
 fn cli_filelist_parity_files_from_stdin() {
+    skip_without_reference!();
     let dir = unique_temp_dir();
     create_file(&dir, "stdin_a.txt", b"data a\n");
     create_file(&dir, "stdin_b.txt", b"data b\n");
@@ -235,6 +249,7 @@ fn cli_filelist_parity_files_from_stdin() {
 
 #[test]
 fn cli_filelist_parity_filelist_stdin() {
+    skip_without_reference!();
     let dir = unique_temp_dir();
     create_file(&dir, "stdin_a.txt", b"data a\n");
     create_file(&dir, "stdin_b.txt", b"data b\n");
@@ -256,6 +271,7 @@ fn cli_filelist_parity_filelist_stdin() {
 
 #[test]
 fn cli_filelist_parity_stdin_with_comments() {
+    skip_without_reference!();
     let dir = unique_temp_dir();
     create_file(&dir, "f1.txt", b"one\n");
     create_file(&dir, "f2.txt", b"two\n");
@@ -277,6 +293,7 @@ fn cli_filelist_parity_stdin_with_comments() {
 
 #[test]
 fn cli_filelist_parity_ordering_preserved() {
+    skip_without_reference!();
     let dir = unique_temp_dir();
     create_file(&dir, "c.txt", b"cc\n");
     create_file(&dir, "a.txt", b"aa\n");
@@ -306,6 +323,7 @@ fn cli_filelist_parity_ordering_preserved() {
 
 #[test]
 fn cli_filelist_parity_escaped_entries() {
+    skip_without_reference!();
     let dir = unique_temp_dir();
     // Create a file with a backslash in its name
     create_file(&dir, "back\\slash.txt", b"hello\n");
@@ -334,6 +352,7 @@ fn cli_filelist_parity_escaped_entries() {
 
 #[test]
 fn cli_filelist_parity_with_tag_output() {
+    skip_without_reference!();
     let dir = unique_temp_dir();
     create_file(&dir, "t1.txt", b"tag1\n");
     create_file(&dir, "t2.txt", b"tag2\n");
@@ -358,6 +377,7 @@ fn cli_filelist_parity_with_tag_output() {
 
 #[test]
 fn cli_filelist_parity_all_algorithms() {
+    skip_without_reference!();
     let dir = unique_temp_dir();
     create_file(&dir, "algo.txt", b"algorithm test\n");
 

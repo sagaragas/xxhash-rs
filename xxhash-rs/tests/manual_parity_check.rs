@@ -12,6 +12,15 @@ use fixtures::reference;
 use xxhash_rs::xxh32::xxh32;
 use xxhash_rs::xxh64::xxh64;
 
+macro_rules! skip_without_reference {
+    () => {
+        if reference::reference_binary().is_none() {
+            eprintln!("Skipped: reference binary not available (set XXHASH_REFERENCE_ROOT)");
+            return;
+        }
+    };
+}
+
 /// Helper: hash data with Rust and reference, assert they match.
 fn assert_parity_xxh32(data: &[u8], seed: u32, description: &str) {
     let rust_hash = xxh32(data, seed);
@@ -71,26 +80,31 @@ fn assert_parity_xxh64(data: &[u8], seed: u64, description: &str) {
 
 #[test]
 fn parity_xxh32_empty() {
+    skip_without_reference!();
     assert_parity_xxh32(b"", 0, "empty input seed=0");
 }
 
 #[test]
 fn parity_xxh32_short_string() {
+    skip_without_reference!();
     assert_parity_xxh32(b"test input data", 0, "\"test input data\" seed=0");
 }
 
 #[test]
 fn parity_xxh32_hello_world() {
+    skip_without_reference!();
     assert_parity_xxh32(b"hello world", 0, "\"hello world\" seed=0");
 }
 
 #[test]
 fn parity_xxh32_seeded() {
+    skip_without_reference!();
     assert_parity_xxh32(b"hello world", 42, "\"hello world\" seed=42");
 }
 
 #[test]
 fn parity_xxh32_longer_input() {
+    skip_without_reference!();
     let data: Vec<u8> = (0..256).map(|i| (i & 0xFF) as u8).collect();
     assert_parity_xxh32(&data, 0, "256 bytes sequential seed=0");
 }
@@ -101,26 +115,31 @@ fn parity_xxh32_longer_input() {
 
 #[test]
 fn parity_xxh64_empty() {
+    skip_without_reference!();
     assert_parity_xxh64(b"", 0, "empty input seed=0");
 }
 
 #[test]
 fn parity_xxh64_short_string() {
+    skip_without_reference!();
     assert_parity_xxh64(b"test input data", 0, "\"test input data\" seed=0");
 }
 
 #[test]
 fn parity_xxh64_hello_world() {
+    skip_without_reference!();
     assert_parity_xxh64(b"hello world", 0, "\"hello world\" seed=0");
 }
 
 #[test]
 fn parity_xxh64_seeded() {
+    skip_without_reference!();
     assert_parity_xxh64(b"hello world", 42, "\"hello world\" seed=42");
 }
 
 #[test]
 fn parity_xxh64_longer_input() {
+    skip_without_reference!();
     let data: Vec<u8> = (0..256).map(|i| (i & 0xFF) as u8).collect();
     assert_parity_xxh64(&data, 0, "256 bytes sequential seed=0");
 }

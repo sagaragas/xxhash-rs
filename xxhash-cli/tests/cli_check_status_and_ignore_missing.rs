@@ -10,6 +10,16 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 /// Returns the path to the Rust CLI binary built by cargo.
+
+macro_rules! skip_without_reference {
+    () => {
+        if reference_binary().is_none() {
+            eprintln!("Skipped: reference binary not available (set XXHASH_REFERENCE_ROOT)");
+            return;
+        }
+    };
+}
+
 fn rust_binary() -> PathBuf {
     env!("CARGO_BIN_EXE_xxhash-rs").into()
 }
@@ -77,6 +87,7 @@ fn generate_checksums_ref(args: &[&str]) -> String {
 
 #[test]
 fn cli_check_status_and_ignore_missing_status_success() {
+    skip_without_reference!();
     let dir = test_dir("status_success");
     let file = dir.join("test.txt");
     fs::write(&file, b"status test\n").unwrap();
@@ -104,6 +115,7 @@ fn cli_check_status_and_ignore_missing_status_success() {
 
 #[test]
 fn cli_check_status_and_ignore_missing_status_mismatch() {
+    skip_without_reference!();
     let dir = test_dir("status_mismatch");
     let file = dir.join("test.txt");
     fs::write(&file, b"original\n").unwrap();
@@ -133,6 +145,7 @@ fn cli_check_status_and_ignore_missing_status_mismatch() {
 
 #[test]
 fn cli_check_status_and_ignore_missing_status_mixed_missing() {
+    skip_without_reference!();
     let dir = test_dir("status_mixed_missing");
     let file_a = dir.join("a.txt");
     let file_b = dir.join("b.txt");
@@ -164,6 +177,7 @@ fn cli_check_status_and_ignore_missing_status_mixed_missing() {
 
 #[test]
 fn cli_check_status_and_ignore_missing_status_all_malformed() {
+    skip_without_reference!();
     let dir = test_dir("status_malformed");
     let checksum_file = dir.join("bad.xxh");
     fs::write(&checksum_file, "garbage line 1\ngarbage line 2\n").unwrap();
@@ -191,6 +205,7 @@ fn cli_check_status_and_ignore_missing_status_all_malformed() {
 
 #[test]
 fn cli_check_status_and_ignore_missing_status_mixed_malformed() {
+    skip_without_reference!();
     let dir = test_dir("status_mixed_malformed");
     let file = dir.join("test.txt");
     fs::write(&file, b"test content\n").unwrap();
@@ -218,6 +233,7 @@ fn cli_check_status_and_ignore_missing_status_mixed_malformed() {
 
 #[test]
 fn cli_check_status_and_ignore_missing_ignore_missing_mixed() {
+    skip_without_reference!();
     let dir = test_dir("ignore_missing_mixed");
     let file_a = dir.join("a.txt");
     let file_b = dir.join("b.txt");
@@ -262,6 +278,7 @@ fn cli_check_status_and_ignore_missing_ignore_missing_mixed() {
 
 #[test]
 fn cli_check_status_and_ignore_missing_ignore_missing_all_missing() {
+    skip_without_reference!();
     let dir = test_dir("ignore_missing_all");
     let file_a = dir.join("a.txt");
     let file_b = dir.join("b.txt");
@@ -301,6 +318,7 @@ fn cli_check_status_and_ignore_missing_ignore_missing_all_missing() {
 
 #[test]
 fn cli_check_status_and_ignore_missing_ignore_missing_with_mismatch() {
+    skip_without_reference!();
     let dir = test_dir("ignore_missing_mismatch");
     let file_a = dir.join("a.txt");
     let file_b = dir.join("b.txt");
@@ -337,6 +355,7 @@ fn cli_check_status_and_ignore_missing_ignore_missing_with_mismatch() {
 
 #[test]
 fn cli_check_status_and_ignore_missing_status_with_ignore_missing_success() {
+    skip_without_reference!();
     let dir = test_dir("status_ignore_missing_success");
     let file_a = dir.join("a.txt");
     let file_b = dir.join("b.txt");
@@ -370,6 +389,7 @@ fn cli_check_status_and_ignore_missing_status_with_ignore_missing_success() {
 
 #[test]
 fn cli_check_status_and_ignore_missing_status_zero_verified() {
+    skip_without_reference!();
     // All missing (not malformed), with --status → no output, exit 1
     let dir = test_dir("status_zero_verified");
     let file = dir.join("test.txt");
@@ -398,6 +418,7 @@ fn cli_check_status_and_ignore_missing_status_zero_verified() {
 
 #[test]
 fn cli_check_status_and_ignore_missing_combined_all_missing_emits_diagnostic() {
+    skip_without_reference!();
     // --check --status --ignore-missing with all referenced files missing
     // must still emit the "no file was verified" diagnostic to stdout,
     // matching the reference CLI behavior for the zero-verified edge case.

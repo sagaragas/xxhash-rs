@@ -25,6 +25,16 @@ use xxhash_rs::xxh3_simd::active_simd_path;
 // Path identification
 // ============================================================================
 
+macro_rules! skip_without_reference {
+    () => {
+        if fixtures::reference::reference_binary().is_none() {
+            eprintln!("Skipped: reference binary not available (set XXHASH_REFERENCE_ROOT)");
+            return;
+        }
+    };
+}
+
+
 #[test]
 fn xxh3_optimized_path_detection_reports_valid_path() {
     let path = active_simd_path();
@@ -181,6 +191,7 @@ fn xxh3_optimized_path_detection_seeded_large_inputs() {
 /// diagnostic message instead of silently passing.
 #[test]
 fn xxh3_optimized_path_detection_reference_parity_large() {
+    skip_without_reference!();
     use fixtures::reference;
 
     let ref_bin = match reference::reference_binary() {

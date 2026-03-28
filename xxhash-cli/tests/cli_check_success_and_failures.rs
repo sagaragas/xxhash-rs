@@ -13,6 +13,16 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 /// Returns the path to the Rust CLI binary built by cargo.
+
+macro_rules! skip_without_reference {
+    () => {
+        if reference_binary().is_none() {
+            eprintln!("Skipped: reference binary not available (set XXHASH_REFERENCE_ROOT)");
+            return;
+        }
+    };
+}
+
 fn rust_binary() -> PathBuf {
     env!("CARGO_BIN_EXE_xxhash-rs").into()
 }
@@ -96,6 +106,7 @@ fn generate_checksums_ref(args: &[&str]) -> String {
 
 #[test]
 fn cli_check_success_and_failures_basic_success() {
+    skip_without_reference!();
     let dir = test_dir("basic_success");
     let file_a = dir.join("a.txt");
     let file_b = dir.join("b.txt");
@@ -131,6 +142,7 @@ fn cli_check_success_and_failures_basic_success() {
 
 #[test]
 fn cli_check_success_and_failures_comment_lines_ignored() {
+    skip_without_reference!();
     let dir = test_dir("comment_lines");
     let file_a = dir.join("a.txt");
     let file_b = dir.join("b.txt");
@@ -179,6 +191,7 @@ fn cli_check_success_and_failures_comment_lines_ignored() {
 
 #[test]
 fn cli_check_success_and_failures_parity_with_reference() {
+    skip_without_reference!();
     let dir = test_dir("parity_success");
     let file = dir.join("test.txt");
     fs::write(&file, b"parity test content\n").unwrap();
@@ -203,6 +216,7 @@ fn cli_check_success_and_failures_parity_with_reference() {
 
 #[test]
 fn cli_check_success_and_failures_tagged_format() {
+    skip_without_reference!();
     let dir = test_dir("tagged_format");
     let file = dir.join("tag.txt");
     fs::write(&file, b"tagged test\n").unwrap();
@@ -223,6 +237,7 @@ fn cli_check_success_and_failures_tagged_format() {
 
 #[test]
 fn cli_check_success_and_failures_tagged_xxh32() {
+    skip_without_reference!();
     let dir = test_dir("tagged_xxh32");
     let file = dir.join("f.txt");
     fs::write(&file, b"xxh32 tagged\n").unwrap();
@@ -242,6 +257,7 @@ fn cli_check_success_and_failures_tagged_xxh32() {
 
 #[test]
 fn cli_check_success_and_failures_tagged_xxh3() {
+    skip_without_reference!();
     let dir = test_dir("tagged_xxh3");
     let file = dir.join("f.txt");
     fs::write(&file, b"xxh3 tagged\n").unwrap();
@@ -261,6 +277,7 @@ fn cli_check_success_and_failures_tagged_xxh3() {
 
 #[test]
 fn cli_check_success_and_failures_tagged_xxh128() {
+    skip_without_reference!();
     let dir = test_dir("tagged_xxh128");
     let file = dir.join("f.txt");
     fs::write(&file, b"xxh128 tagged\n").unwrap();
@@ -284,6 +301,7 @@ fn cli_check_success_and_failures_tagged_xxh128() {
 
 #[test]
 fn cli_check_success_and_failures_single_mismatch() {
+    skip_without_reference!();
     let dir = test_dir("single_mismatch");
     let file = dir.join("test.txt");
     fs::write(&file, b"original content\n").unwrap();
@@ -317,6 +335,7 @@ fn cli_check_success_and_failures_single_mismatch() {
 
 #[test]
 fn cli_check_success_and_failures_multiple_mismatches() {
+    skip_without_reference!();
     let dir = test_dir("multi_mismatch");
     let file_a = dir.join("a.txt");
     let file_b = dir.join("b.txt");
@@ -356,6 +375,7 @@ fn cli_check_success_and_failures_multiple_mismatches() {
 
 #[test]
 fn cli_check_success_and_failures_mismatch_preserves_ok() {
+    skip_without_reference!();
     let dir = test_dir("mismatch_preserves_ok");
     let file_a = dir.join("a.txt");
     let file_b = dir.join("b.txt");
@@ -392,6 +412,7 @@ fn cli_check_success_and_failures_mismatch_preserves_ok() {
 
 #[test]
 fn cli_check_success_and_failures_missing_file() {
+    skip_without_reference!();
     let dir = test_dir("missing_file");
     let file_a = dir.join("a.txt");
     let file_b = dir.join("b.txt");
@@ -439,6 +460,7 @@ fn cli_check_success_and_failures_missing_file() {
 
 #[test]
 fn cli_check_success_and_failures_unreadable_file() {
+    skip_without_reference!();
     let dir = test_dir("unreadable_file");
     let file_a = dir.join("a.txt");
     let file_b = dir.join("b.txt");
@@ -483,6 +505,7 @@ fn cli_check_success_and_failures_unreadable_file() {
 
 #[test]
 fn cli_check_success_and_failures_multiple_unreadable() {
+    skip_without_reference!();
     let dir = test_dir("multi_unreadable");
     let file_a = dir.join("a.txt");
     let file_b = dir.join("b.txt");
@@ -517,6 +540,7 @@ fn cli_check_success_and_failures_multiple_unreadable() {
 
 #[test]
 fn cli_check_success_and_failures_mixed_mismatch_and_missing() {
+    skip_without_reference!();
     let dir = test_dir("mixed_mismatch_missing");
     let file_a = dir.join("a.txt");
     let file_b = dir.join("b.txt");
@@ -553,6 +577,7 @@ fn cli_check_success_and_failures_mixed_mismatch_and_missing() {
 
 #[test]
 fn cli_check_success_and_failures_quiet_success() {
+    skip_without_reference!();
     let dir = test_dir("quiet_success");
     let file = dir.join("test.txt");
     fs::write(&file, b"quiet test\n").unwrap();
@@ -575,6 +600,7 @@ fn cli_check_success_and_failures_quiet_success() {
 
 #[test]
 fn cli_check_success_and_failures_quiet_mismatch() {
+    skip_without_reference!();
     let dir = test_dir("quiet_mismatch");
     let file_a = dir.join("a.txt");
     let file_b = dir.join("b.txt");
@@ -617,6 +643,7 @@ fn cli_check_success_and_failures_quiet_mismatch() {
 
 #[test]
 fn cli_check_success_and_failures_quiet_missing_and_mismatch() {
+    skip_without_reference!();
     let dir = test_dir("quiet_mixed");
     let file_a = dir.join("a.txt");
     let file_b = dir.join("b.txt");
@@ -665,6 +692,7 @@ fn run_ref_stdin(args: &[&str], stdin_data: &[u8]) -> (String, String, i32) {
 
 #[test]
 fn cli_check_success_and_failures_stdin_default_empty() {
+    skip_without_reference!();
     // --check with no FILE and empty stdin → "stdin: no properly formatted..."
     let (rust_out, rust_err, rust_code) = run_rust_stdin(&["--check"], b"");
     let (ref_out, ref_err, ref_code) = run_ref_stdin(&["--check"], b"");
@@ -682,6 +710,7 @@ fn cli_check_success_and_failures_stdin_default_empty() {
 
 #[test]
 fn cli_check_success_and_failures_stdin_default_garbage() {
+    skip_without_reference!();
     // --check with no FILE and garbage stdin → "stdin: no properly formatted..."
     let (rust_out, rust_err, rust_code) = run_rust_stdin(&["--check"], b"garbage line\n");
     let (ref_out, ref_err, ref_code) = run_ref_stdin(&["--check"], b"garbage line\n");
@@ -694,6 +723,7 @@ fn cli_check_success_and_failures_stdin_default_garbage() {
 
 #[test]
 fn cli_check_success_and_failures_stdin_default_valid() {
+    skip_without_reference!();
     // --check with no FILE and valid checksum on stdin → verifies successfully
     let dir = test_dir("stdin_valid");
     let file = dir.join("test.txt");
@@ -722,6 +752,7 @@ fn cli_check_success_and_failures_stdin_default_valid() {
 
 #[test]
 fn cli_check_success_and_failures_nonexistent_checksum_file() {
+    skip_without_reference!();
     // --check on a non-existent file surfaces an explicit diagnostic
     let path = "/tmp/xxhash_nonexistent_checksum_file_ZZZZ.xxh";
     // Make sure it doesn't exist
@@ -746,6 +777,7 @@ fn cli_check_success_and_failures_nonexistent_checksum_file() {
 
 #[test]
 fn cli_check_success_and_failures_unreadable_checksum_file() {
+    skip_without_reference!();
     // --check on an unreadable checksum file surfaces a permission diagnostic
     let dir = test_dir("unreadable_checksum");
     let checksum_file = dir.join("sums.xxh");
@@ -777,6 +809,7 @@ fn cli_check_success_and_failures_unreadable_checksum_file() {
 
 #[test]
 fn cli_check_success_and_failures_binary_after_valid_lines() {
+    skip_without_reference!();
     // A checksum file containing valid entries followed by a line with
     // non-UTF-8 bytes should still verify the valid entries and treat the
     // binary line as malformed, matching the reference CLI.
@@ -814,6 +847,7 @@ fn cli_check_success_and_failures_binary_after_valid_lines() {
 
 #[test]
 fn cli_check_success_and_failures_binary_before_valid_lines() {
+    skip_without_reference!();
     // Non-UTF-8 bytes BEFORE valid checksum lines should not prevent the
     // valid lines from being processed.
     let dir = test_dir("binary_before_valid");
@@ -847,6 +881,7 @@ fn cli_check_success_and_failures_binary_before_valid_lines() {
 
 #[test]
 fn cli_check_success_and_failures_all_binary_data() {
+    skip_without_reference!();
     // A checksum file containing only non-UTF-8 binary data should yield
     // "no properly formatted xxHash checksum lines found", matching the
     // reference CLI.
@@ -871,6 +906,7 @@ fn cli_check_success_and_failures_all_binary_data() {
 
 #[test]
 fn cli_check_success_and_failures_binary_stdin_stream() {
+    skip_without_reference!();
     // Same test via stdin: piping binary-mixed checksum data should match
     // the reference behavior.
     let dir = test_dir("binary_stdin_stream");

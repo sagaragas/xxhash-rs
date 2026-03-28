@@ -12,6 +12,16 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 /// Returns the path to the Rust CLI binary built by cargo.
+
+macro_rules! skip_without_reference {
+    () => {
+        if reference_binary().is_none() {
+            eprintln!("Skipped: reference binary not available (set XXHASH_REFERENCE_ROOT)");
+            return;
+        }
+    };
+}
+
 fn rust_binary() -> PathBuf {
     env!("CARGO_BIN_EXE_xxhash-rs").into()
 }
@@ -95,6 +105,7 @@ fn generate_checksums_ref(args: &[&str]) -> String {
 
 #[test]
 fn cli_check_escaped_and_little_endian_gnu_backslash() {
+    skip_without_reference!();
     let dir = test_dir("gnu_backslash");
     let file = dir.join("back\\slash.txt");
     fs::write(&file, b"hello\n").unwrap();
@@ -128,6 +139,7 @@ fn cli_check_escaped_and_little_endian_gnu_backslash() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_gnu_newline() {
+    skip_without_reference!();
     let dir = test_dir("gnu_newline");
     let name = "new\nline.txt";
     let file = dir.join(name);
@@ -150,6 +162,7 @@ fn cli_check_escaped_and_little_endian_gnu_newline() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_gnu_cr() {
+    skip_without_reference!();
     let dir = test_dir("gnu_cr");
     let name = "cr\rret.txt";
     let file = dir.join(name);
@@ -176,6 +189,7 @@ fn cli_check_escaped_and_little_endian_gnu_cr() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_bsd_backslash() {
+    skip_without_reference!();
     let dir = test_dir("bsd_backslash");
     let file = dir.join("back\\slash.txt");
     fs::write(&file, b"hello\n").unwrap();
@@ -197,6 +211,7 @@ fn cli_check_escaped_and_little_endian_bsd_backslash() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_bsd_newline() {
+    skip_without_reference!();
     let dir = test_dir("bsd_newline");
     let name = "new\nline.txt";
     let file = dir.join(name);
@@ -219,6 +234,7 @@ fn cli_check_escaped_and_little_endian_bsd_newline() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_bsd_cr() {
+    skip_without_reference!();
     let dir = test_dir("bsd_cr");
     let name = "cr\rret.txt";
     let file = dir.join(name);
@@ -245,6 +261,7 @@ fn cli_check_escaped_and_little_endian_bsd_cr() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_mixed_escaped_gnu() {
+    skip_without_reference!();
     let dir = test_dir("mixed_escaped_gnu");
     let file_bs = dir.join("back\\slash.txt");
     let file_nl = dir.join("new\nline.txt");
@@ -277,6 +294,7 @@ fn cli_check_escaped_and_little_endian_mixed_escaped_gnu() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_gnu_le_xxh64() {
+    skip_without_reference!();
     let dir = test_dir("gnu_le_xxh64");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -298,6 +316,7 @@ fn cli_check_escaped_and_little_endian_gnu_le_xxh64() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_gnu_le_xxh32() {
+    skip_without_reference!();
     let dir = test_dir("gnu_le_xxh32");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -319,6 +338,7 @@ fn cli_check_escaped_and_little_endian_gnu_le_xxh32() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_gnu_le_xxh3_64() {
+    skip_without_reference!();
     let dir = test_dir("gnu_le_xxh3_64");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -340,6 +360,7 @@ fn cli_check_escaped_and_little_endian_gnu_le_xxh3_64() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_gnu_le_xxh128() {
+    skip_without_reference!();
     let dir = test_dir("gnu_le_xxh128");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -365,6 +386,7 @@ fn cli_check_escaped_and_little_endian_gnu_le_xxh128() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_gnu_le_without_flag_fails() {
+    skip_without_reference!();
     let dir = test_dir("gnu_le_no_flag");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -390,6 +412,7 @@ fn cli_check_escaped_and_little_endian_gnu_le_without_flag_fails() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_bsd_le_xxh64_no_flag() {
+    skip_without_reference!();
     let dir = test_dir("bsd_le_xxh64");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -414,6 +437,7 @@ fn cli_check_escaped_and_little_endian_bsd_le_xxh64_no_flag() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_bsd_le_xxh32_no_flag() {
+    skip_without_reference!();
     let dir = test_dir("bsd_le_xxh32");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -438,6 +462,7 @@ fn cli_check_escaped_and_little_endian_bsd_le_xxh32_no_flag() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_bsd_le_xxh3_64_no_flag() {
+    skip_without_reference!();
     let dir = test_dir("bsd_le_xxh3_64");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -462,6 +487,7 @@ fn cli_check_escaped_and_little_endian_bsd_le_xxh3_64_no_flag() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_bsd_le_xxh128_no_flag() {
+    skip_without_reference!();
     let dir = test_dir("bsd_le_xxh128");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -490,6 +516,7 @@ fn cli_check_escaped_and_little_endian_bsd_le_xxh128_no_flag() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_bsd_le_explicit_flag() {
+    skip_without_reference!();
     let dir = test_dir("bsd_le_explicit");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -518,6 +545,7 @@ fn cli_check_escaped_and_little_endian_bsd_le_explicit_flag() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_bsd_le_multi_algo() {
+    skip_without_reference!();
     let dir = test_dir("bsd_le_multi_algo");
     let file = dir.join("test.txt");
     fs::write(&file, b"multi algo test\n").unwrap();
@@ -552,6 +580,7 @@ fn cli_check_escaped_and_little_endian_bsd_le_multi_algo() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh64() {
+    skip_without_reference!();
     // BSD tagged non-_LE checksum should NOT be reinterpreted by --little-endian.
     // The tag is authoritative for endianness; --little-endian only affects GNU lines.
     let dir = test_dir("bsd_non_le_under_flag_xxh64");
@@ -579,6 +608,7 @@ fn cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh64() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh32() {
+    skip_without_reference!();
     let dir = test_dir("bsd_non_le_under_flag_xxh32");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -600,6 +630,7 @@ fn cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh32() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh3() {
+    skip_without_reference!();
     let dir = test_dir("bsd_non_le_under_flag_xxh3");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -621,6 +652,7 @@ fn cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh3() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh128() {
+    skip_without_reference!();
     let dir = test_dir("bsd_non_le_under_flag_xxh128");
     let file = dir.join("test.txt");
     fs::write(&file, b"hello world\n").unwrap();
@@ -646,6 +678,7 @@ fn cli_check_escaped_and_little_endian_bsd_non_le_under_le_flag_xxh128() {
 
 #[test]
 fn cli_check_escaped_and_little_endian_mixed_bsd_le_and_non_le_under_flag() {
+    skip_without_reference!();
     // A checksum file with both BSD _LE and non-_LE entries should verify
     // correctly under --check --little-endian: _LE uses LE, non-_LE uses BE.
     let dir = test_dir("mixed_bsd_le_non_le");
