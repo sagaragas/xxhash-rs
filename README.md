@@ -42,7 +42,7 @@ The study covers:
 
 The study's claims are backed by machine-readable evidence artifacts under
 [`publication/evidence/`](publication/evidence/), each pinned to the measured
-revision [`a7cd8e5`](https://github.com/sagaragas/xxhash-rs/commit/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab).
+revision [`evidence-v1`](https://github.com/sagaragas/xxhash-rs/tree/evidence-v1).
 
 ## Clean-Room Implementation
 

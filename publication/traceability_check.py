@@ -13,6 +13,7 @@ Usage:
 
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -79,10 +80,14 @@ def check_revision_lineage() -> list:
             f"{json.dumps(revisions, indent=2)}"
         )
 
-    # Check that the revision is a valid-looking git hash (40 hex chars)
+    # Check that the revision is a valid git ref (40-char hex hash or tag name)
     for name, rev in revisions.items():
-        if rev and (len(rev) != 40 or not all(c in "0123456789abcdef" for c in rev)):
-            errors.append(f"{name}: measured_revision is not a valid 40-char hex hash: {rev}")
+        if not rev:
+            continue
+        is_hex_hash = len(rev) == 40 and all(c in "0123456789abcdef" for c in rev)
+        is_tag_ref = bool(re.match(r'^[a-zA-Z0-9._-]+$', rev)) and len(rev) >= 3
+        if not is_hex_hash and not is_tag_ref:
+            errors.append(f"{name}: measured_revision is not a valid git ref: {rev}")
 
     return errors
 

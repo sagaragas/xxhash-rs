@@ -1,13 +1,13 @@
 {
   "schema_version": "1.0.0",
   "description": "Clean-checkout provenance artifact proving the cited revision can reproduce linked benchmark and parity evidence",
-  "measured_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+  "measured_revision": "evidence-v1",
   "generated_utc": "2026-03-07T02:40:50.110524+00:00",
   "clone_url": "https://github.com/sagaragas/xxhash-rs.git",
-  "checkout_command": "git checkout a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+  "checkout_command": "git checkout evidence-v1",
   "manifest_hashes": {
     "scenarios": "9e18d9ad105b9805aa90cc8166062fa5543d4e7b02bf86aa9f53024c690663e3",
-    "comparators": "062b7c1c36320e75685e2c995088ad1a7a0727b65a77848336941006a3e5f994",
+    "comparators": "e11f3c31aa8c6b25ca472cde5c7a71858460a4dfc4ad33284f200b2ee545b3f7",
     "policy": "19e93029184aeaa616fc5e232ce6cb2e246a06619922c401c4aa49706451944c"
   },
   "produced_run_ids": [
@@ -39,16 +39,16 @@
   },
   "script_checksums": {
     "benchmarks/scenarios.json": "9e18d9ad105b9805aa90cc8166062fa5543d4e7b02bf86aa9f53024c690663e3",
-    "benchmarks/comparators.json": "062b7c1c36320e75685e2c995088ad1a7a0727b65a77848336941006a3e5f994",
+    "benchmarks/comparators.json": "e11f3c31aa8c6b25ca472cde5c7a71858460a4dfc4ad33284f200b2ee545b3f7",
     "benchmarks/policy.json": "19e93029184aeaa616fc5e232ce6cb2e246a06619922c401c4aa49706451944c",
     "benchmarks/harness.py": "96485929fb23b6886824358ef073a4f9f70f27910d4f5f78dbc101672746ce89",
     "benchmarks/seed_run_set.py": "35ba9ddb496d5487fd8d6b5a2a6e4f431108f6fb614a14d8ae817f88e7a76e99",
     "benchmarks/reconcile.py": "689742afcc33e715d0015d1fe7328903f4f03115dcc1eb2a9d39aa35ee0be44e",
     "benchmarks/claim_gate.py": "2ea521ef63697ee80d47c3147e3bc05e7076418aef83cd908c760a1f8b9b43e8",
-    "publication/generate_evidence.py": "b4d4c2241e0334b70c8c6c957eecf408254097c303056ae5778ccc8740a42843",
+    "publication/generate_evidence.py": "391b5a6e89554b63ca0161e1fa0a2002c75854dfd277487634b0f1834939695c",
     "publication/claim_map.py": "130fa569a0f8f11a64b7fbc9de2d627365420b0cd01a007ce14ca01153213ce5",
-    "publication/traceability_check.py": "effc96e8d9d81d7a41cb19219f5a4b1a5c607b87bb2aa6a9185a857669523586",
-    "publication/style_gate.py": "847be3dd2feca528cce5fc3e137e02f514e7991f9f95ddff8697b9908258cad9"
+    "publication/traceability_check.py": "d047d1f0cb6e585566626d57d0014f33c89d44cc700778e94c72dc222bb21d43",
+    "publication/style_gate.py": "6b813decfb7fba7ad17c65ce2191db83060a5a2450750c05a7124e4c269a4686"
   },
   "artifact_references": {
     "parity_summary": "publication/evidence/parity_summary.json",

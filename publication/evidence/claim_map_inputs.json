@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "description": "Claim-to-evidence mapping inputs for publication traceability",
-  "measured_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+  "measured_revision": "evidence-v1",
   "generated_utc": "2026-03-07T02:40:50.109575+00:00",
   "claims": [
     {
@@ -9,21 +9,21 @@
       "claim": "Rust implementation produces bit-exact output for XXH32, XXH64, XXH3_64, and XXH3_128 across all tested input lengths and seeds",
       "evidence_type": "parity_test",
       "evidence_path": "publication/evidence/parity_summary.json",
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "evidence-v1"
     },
     {
       "claim_id": "simd-parity",
       "claim": "NEON-optimized XXH3 long-input paths produce bit-exact output matching the scalar reference on Apple Silicon",
       "evidence_type": "parity_test",
       "evidence_path": "publication/evidence/parity_summary.json",
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "evidence-v1"
     },
     {
       "claim_id": "cli-behavioral-parity",
       "claim": "CLI achieves behavioral parity with the reference xxhsum for the validated output formats, check modes, and input flows",
       "evidence_type": "parity_test",
       "evidence_path": "publication/evidence/parity_summary.json",
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "evidence-v1"
     },
     {
       "claim_id": "benchmark-correctness-gate",
@@ -35,7 +35,7 @@
         "run-20260307T024049Z-76533",
         "run-20260307T024049Z-76247"
       ],
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "evidence-v1"
     },
     {
       "claim_id": "benchmark-xxh3-128-1m",
@@ -51,7 +51,7 @@
         "run-20260307T024049Z-76533",
         "run-20260307T024049Z-76247"
       ],
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+      "pinned_revision": "evidence-v1",
       "numeric_values": {
         "c_xxhsum": {
           "cross_run_median_throughput_mbs": 447.8,
@@ -161,7 +161,7 @@
         "run-20260307T024049Z-76533",
         "run-20260307T024049Z-76247"
       ],
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+      "pinned_revision": "evidence-v1",
       "numeric_values": {
         "c_xxhsum": {
           "cross_run_median_throughput_mbs": 3693.9,
@@ -271,7 +271,7 @@
         "run-20260307T024049Z-76533",
         "run-20260307T024049Z-76247"
       ],
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+      "pinned_revision": "evidence-v1",
       "numeric_values": {
         "c_xxhsum": {
           "cross_run_median_throughput_mbs": 564.6,
@@ -381,7 +381,7 @@
         "run-20260307T024049Z-76533",
         "run-20260307T024049Z-76247"
       ],
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+      "pinned_revision": "evidence-v1",
       "numeric_values": {
         "c_xxhsum": {
           "cross_run_median_throughput_mbs": 2.2,
@@ -483,7 +483,7 @@
       "claim_class": "methodology",
       "evidence_type": "benchmark_metadata",
       "evidence_path": "publication/evidence/benchmark_summary.json",
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "evidence-v1"
     },
     {
       "claim_id": "methodology-median-after-warmup",
@@ -491,7 +491,7 @@
       "claim_class": "methodology",
       "evidence_type": "benchmark_metadata",
       "evidence_path": "publication/evidence/benchmark_summary.json",
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "evidence-v1"
     },
     {
       "claim_id": "methodology-correctness-gate",
@@ -499,7 +499,7 @@
       "claim_class": "methodology",
       "evidence_type": "benchmark_metadata",
       "evidence_path": "publication/evidence/benchmark_summary.json",
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "evidence-v1"
     },
     {
       "claim_id": "limitation-single-platform",
@@ -507,7 +507,7 @@
       "claim_class": "limitation",
       "evidence_type": "benchmark_metadata",
       "evidence_path": "publication/evidence/benchmark_summary.json",
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "evidence-v1"
     },
     {
       "claim_id": "limitation-cli-level-measurement",
@@ -515,7 +515,7 @@
       "claim_class": "limitation",
       "evidence_type": "benchmark_metadata",
       "evidence_path": "publication/evidence/benchmark_summary.json",
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "evidence-v1"
     },
     {
       "claim_id": "limitation-smoke-sample-count",
@@ -523,7 +523,7 @@
       "claim_class": "limitation",
       "evidence_type": "benchmark_metadata",
       "evidence_path": "publication/evidence/benchmark_summary.json",
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "evidence-v1"
     },
     {
       "claim_id": "limitation-scenario-subset",
@@ -531,7 +531,7 @@
       "claim_class": "limitation",
       "evidence_type": "benchmark_metadata",
       "evidence_path": "publication/evidence/benchmark_summary.json",
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "evidence-v1"
     },
     {
       "claim_id": "limitation-no-production-evidence",
@@ -539,7 +539,7 @@
       "claim_class": "limitation",
       "evidence_type": "parity_test",
       "evidence_path": "publication/evidence/parity_summary.json",
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "evidence-v1"
     },
     {
       "claim_id": "licensing-clean-room-boundary",
@@ -547,7 +547,7 @@
       "claim_class": "licensing",
       "evidence_type": "legal_artifact",
       "evidence_path": "LEGAL.md",
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "evidence-v1"
     },
     {
       "claim_id": "licensing-no-gpl-vendoring",
@@ -555,7 +555,7 @@
       "claim_class": "licensing",
       "evidence_type": "legal_artifact",
       "evidence_path": "LEGAL.md",
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "evidence-v1"
     },
     {
       "claim_id": "licensing-dual-license",
@@ -566,7 +566,7 @@
         "LICENSE-MIT",
         "LICENSE-APACHE"
       ],
-      "pinned_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+      "pinned_revision": "evidence-v1"
     }
   ]
 }

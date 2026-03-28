@@ -5,7 +5,7 @@ Style and hygiene gate for the xxhash-rs publication artifacts.
 Checks that publication-facing files do not contain:
 - TODO/TBD/FIXME markers
 - Raw HTML comments
-- Mission-internal tokens
+- Internal tooling tokens that should not appear in public artifacts
 - Absolute local paths that would not resolve in public context
 - Unscoped superlative claims
 
@@ -26,7 +26,7 @@ EVIDENCE_DIR = PUBLICATION_DIR / "evidence"
 # Patterns that should not appear in public-facing publication artifacts
 DRAFT_MARKERS = re.compile(r'\b(TODO|TBD|FIXME|HACK|XXX)\b', re.IGNORECASE)
 HTML_COMMENTS = re.compile(r'<!--.*?-->', re.DOTALL)
-MISSION_TOKENS = re.compile(r'(mission-worker|EndFeatureRun|worker-base|skill_name)', re.IGNORECASE)
+INTERNAL_TOKENS = re.compile(r'(mission-worker|EndFeatureRun|worker-base|skill_name)', re.IGNORECASE)
 ABSOLUTE_LOCAL = re.compile(r'/Users/\w+/')
 
 # Unscoped superlative claims that require qualification
@@ -63,8 +63,8 @@ def scan_file(path: Path) -> list:
         if HTML_COMMENTS.search(line):
             errors.append(f"{rel}:{lineno}: Raw HTML comment found")
 
-        if MISSION_TOKENS.search(line):
-            errors.append(f"{rel}:{lineno}: Mission-internal token found: {line.strip()[:80]}")
+        if INTERNAL_TOKENS.search(line):
+            errors.append(f"{rel}:{lineno}: Internal tooling token found: {line.strip()[:80]}")
 
         if ABSOLUTE_LOCAL.search(line):
             # Allow in evidence JSON where paths are recorded from test runs

@@ -12,7 +12,7 @@ The work follows a correctness-first methodology: algorithm parity is validated
 before benchmarking, and benchmark claims are tied to pinned artifacts rather than
 cherry-picked runs.
 
-**Measured revision:** [`a7cd8e5`](https://github.com/sagaragas/xxhash-rs/commit/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab)
+**Measured revision:** [`evidence-v1`](https://github.com/sagaragas/xxhash-rs/tree/evidence-v1)
 
 **Published article:** [Rewriting xxHash in Rust](https://ragas.dev/blog/rewriting-xxhash-in-rust)
 
@@ -300,7 +300,7 @@ For the full clean-room boundary and attribution details, see [LEGAL.md](../LEGA
 ### Source and artifacts
 
 The measured revision for all evidence in this study is
-[`a7cd8e5`](https://github.com/sagaragas/xxhash-rs/commit/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab).
+[`evidence-v1`](https://github.com/sagaragas/xxhash-rs/tree/evidence-v1).
 
 The evidence pack is committed under `publication/evidence/` and includes:
 
@@ -328,7 +328,7 @@ To reproduce the core validation from a clean checkout of the measured revision:
 # Clone and checkout the measured revision
 git clone https://github.com/sagaragas/xxhash-rs.git
 cd xxhash-rs
-git checkout a7cd8e53bd71c7498b75f8d1857c2f7b609315ab
+git checkout evidence-v1
 
 # Build the workspace
 cargo build --workspace --release

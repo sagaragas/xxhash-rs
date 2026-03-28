@@ -1,20 +1,20 @@
 {
   "schema_version": "1.0.0",
   "description": "Cross-repo release traceability for the xxhash-rs rewrite study publication",
-  "measured_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+  "measured_revision": "evidence-v1",
   "repo": {
     "name": "sagaragas/xxhash-rs",
     "url": "https://github.com/sagaragas/xxhash-rs",
-    "measured_commit": "https://github.com/sagaragas/xxhash-rs/commit/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+    "measured_commit": "https://github.com/sagaragas/xxhash-rs/commit/evidence-v1",
     "publication_surface": "publication/REWRITE_STUDY.md",
     "evidence_pack": "publication/evidence/",
     "pinned_evidence_urls": {
-      "parity_summary": "https://github.com/sagaragas/xxhash-rs/blob/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/parity_summary.json",
-      "benchmark_summary": "https://github.com/sagaragas/xxhash-rs/blob/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/benchmark_summary.json",
-      "claim_map_inputs": "https://github.com/sagaragas/xxhash-rs/blob/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/claim_map_inputs.json",
-      "artifact_manifest": "https://github.com/sagaragas/xxhash-rs/blob/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/artifact_manifest.json",
-      "benchmark_runs": "https://github.com/sagaragas/xxhash-rs/tree/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/benchmark_runs",
-      "clean_checkout_provenance": "https://github.com/sagaragas/xxhash-rs/blob/dc941d96b9d412175bdd8503421b708158fd2175/publication/evidence/clean_checkout_provenance.json"
+      "parity_summary": "https://github.com/sagaragas/xxhash-rs/blob/evidence-v1/publication/evidence/parity_summary.json",
+      "benchmark_summary": "https://github.com/sagaragas/xxhash-rs/blob/evidence-v1/publication/evidence/benchmark_summary.json",
+      "claim_map_inputs": "https://github.com/sagaragas/xxhash-rs/blob/evidence-v1/publication/evidence/claim_map_inputs.json",
+      "artifact_manifest": "https://github.com/sagaragas/xxhash-rs/blob/evidence-v1/publication/evidence/artifact_manifest.json",
+      "benchmark_runs": "https://github.com/sagaragas/xxhash-rs/tree/evidence-v1/publication/evidence/benchmark_runs",
+      "clean_checkout_provenance": "https://github.com/sagaragas/xxhash-rs/blob/evidence-v1/publication/evidence/clean_checkout_provenance.json"
     }
   },
   "website": {
@@ -31,23 +31,23 @@
       },
       {
         "source": "body evidence links",
-        "target": "https://github.com/sagaragas/xxhash-rs/blob/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/parity_summary.json"
+        "target": "https://github.com/sagaragas/xxhash-rs/blob/evidence-v1/publication/evidence/parity_summary.json"
       },
       {
         "source": "body evidence links",
-        "target": "https://github.com/sagaragas/xxhash-rs/blob/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication/evidence/benchmark_summary.json"
+        "target": "https://github.com/sagaragas/xxhash-rs/blob/evidence-v1/publication/evidence/benchmark_summary.json"
       },
       {
         "source": "Repo and evidence section",
-        "target": "https://github.com/sagaragas/xxhash-rs/commit/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab"
+        "target": "https://github.com/sagaragas/xxhash-rs/commit/evidence-v1"
       },
       {
         "source": "Repo and evidence section",
-        "target": "https://github.com/sagaragas/xxhash-rs/tree/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/publication"
+        "target": "https://github.com/sagaragas/xxhash-rs/tree/evidence-v1/publication"
       },
       {
         "source": "Repo and evidence section",
-        "target": "https://github.com/sagaragas/xxhash-rs/tree/a7cd8e53bd71c7498b75f8d1857c2f7b609315ab/benchmarks"
+        "target": "https://github.com/sagaragas/xxhash-rs/tree/evidence-v1/benchmarks"
       }
     ],
     "repo_to_website": [
@@ -62,7 +62,7 @@
     ]
   },
   "revision_lineage": {
-    "measured_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+    "measured_revision": "evidence-v1",
     "artifacts_citing_revision": [
       "publication/evidence/artifact_manifest.json",
       "publication/evidence/parity_summary.json",
@@ -76,7 +76,7 @@
   "clean_checkout_reproducibility": {
     "instructions_location": "publication/REWRITE_STUDY.md#reproducing-from-a-clean-checkout",
     "clone_url": "https://github.com/sagaragas/xxhash-rs.git",
-    "checkout_command": "git checkout a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+    "checkout_command": "git checkout evidence-v1",
     "validation_commands": [
       "cargo build --workspace --release",
       "cargo test --workspace --all-targets -- --test-threads=3",

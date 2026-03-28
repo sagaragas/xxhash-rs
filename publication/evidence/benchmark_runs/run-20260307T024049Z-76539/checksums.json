@@ -1,7 +1,7 @@
 {
-  "manifest.json": "b6ed20a9665c8c27965eebca7739c371061d806495c8d2aa76ee88f7bdfc065c",
-  "samples/xxh3-128-1m.json": "5177912b11228682f94e4b5ed83c8dd5b707deaa1e15d921460973d8f2de72a7",
-  "samples/xxh64-16m.json": "0c1f0f8eaede8a96947d1ea601db990ca2810cf7ac9f5230ed134c48c37e5159",
-  "samples/xxh64-1m.json": "2b266633400839564c5fe0449c61cc44eb186229e286a7e060052fb52a3fbb35",
-  "samples/xxh64-4k.json": "b00fd1ead50ff49e29b74630a6a12582ea2a9c16544cf04263029ecaec8c1e8e"
+  "manifest.json": "c7fc9386e00318b1c3d224f4fea0b70388347d21f0c79838bff0c9488a291cb6",
+  "samples/xxh3-128-1m.json": "19bb19701a31d942ab98cca41d46ca34fc1e899448b0c779de1d168a21d3d3b3",
+  "samples/xxh64-16m.json": "5dcc1a7e53770192ab8ebd42fe5d067ec6f7d2a17ea2d9c41b0a09baef22ceeb",
+  "samples/xxh64-1m.json": "bc76751d928bad17b8c10ac3546d9d6f82eacd4bb8d4602a6aec6ae7e2e0c718",
+  "samples/xxh64-4k.json": "f8edfcec07716b88913061867199ce0da2aab4b072465b501ffb2a1bebbccbd6"
 }

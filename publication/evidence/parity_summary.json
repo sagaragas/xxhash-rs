@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "description": "Machine-readable parity test results for xxhash-rs",
-  "measured_revision": "a7cd8e53bd71c7498b75f8d1857c2f7b609315ab",
+  "measured_revision": "evidence-v1",
   "generated_utc": "2026-03-07T02:40:50.103087+00:00",
   "total_passed": 508,
   "total_failed": 0,
